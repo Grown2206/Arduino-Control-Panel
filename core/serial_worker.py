@@ -71,12 +71,14 @@ class SerialWorker(QThread):
             try:
                 # KORREKTUR: 'QMutexLocker' wird hier korrekt verwendet.
                 # Es stellt sicher, dass der Zugriff auf die 'command_queue' threadsicher ist.
-                if self.command_queue:
-                    with QMutexLocker(self.lock):
-                        if self.command_queue:
-                            command = self.command_queue.popleft()
-                            self._send_command_internal(command)
-                    
+                command = None
+                with QMutexLocker(self.lock):
+                    if self.command_queue:
+                        command = self.command_queue.popleft()
+
+                if command:
+                    self._send_command_internal(command)
+
                     if self.burst_mode:
                         self.msleep(self.burst_delay)
                 

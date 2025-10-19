@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QMessageBox,
                              QPushButton, QGroupBox, QSplitter, QProgressBar, QListWidgetItem, QStackedWidget, QGridLayout)
 from PyQt6.QtCore import pyqtSignal, Qt
 
 from .visual_editor.editor_widget import VisualEditorWidget
+
 
 class SequenceTab(QWidget):
     """Der komplette UI-Tab für die Verwaltung und Steuerung von Sequenzen."""

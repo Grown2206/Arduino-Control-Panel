@@ -5,3 +5,4 @@ reportlab
 pandas
 openpyxl
 matplotlib
+numpy  # Für Oszilloskop

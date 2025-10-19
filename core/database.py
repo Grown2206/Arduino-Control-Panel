@@ -72,3 +72,15 @@ class Database(QObject):
                     details['log'] = {'events': [], 'sensors': {}}
                 return details
             return None
+        
+        
+    def add_events_batch(self, run_id, events):
+        """Fügt mehrere Events auf einmal hinzu"""
+        with sqlite3.connect(self.db_file) as conn:
+            c = conn.cursor()
+            c.executemany(
+                "INSERT INTO run_events VALUES (?, ?, ?, ?, ?)",
+                [(run_id, e['time'], e['pin'], e['action'], e['cycle']) 
+                 for e in events]
+        )
+        conn.commit()

@@ -43,34 +43,41 @@ class LiveChartWidget(QWidget):
         layout.addWidget(self.plot_widget)
     
     def add_data_point(self, data_key, value, timestamp):
-        """Sammelt neue Datenpunkte im Puffer, anstatt sofort zu zeichnen."""
+        """Sammelt neue Datenpunkte im Puffer"""
         self.data_buffer.append((data_key, value, timestamp))
-    
+        # Timer kümmert sich um Updates!
     def batch_update_plot(self):
-        """Verarbeitet alle gepufferten Datenpunkte und zeichnet das Diagramm neu."""
+        """Verarbeitet alle gepufferten Datenpunkte"""
         if not self.data_buffer:
             return
-
+        
+        print(f"🔄 Chart-Update: {len(self.data_buffer)} neue Punkte")  # ← DEBUG
+        
         for data_key, value, timestamp in self.data_buffer:
             if data_key not in self.pin_data:
-                # Erstelle eine neue Datenreihe, falls noch nicht vorhanden
                 pen_color = self._get_pen_color(data_key)
                 self.pin_data[data_key] = {
                     'x': deque(maxlen=self.max_points),
                     'y': deque(maxlen=self.max_points),
                     'plot': self.plot_widget.plot(pen=pg.mkPen(pen_color, width=2), name=data_key)
                 }
+                print(f"✅ Neue Datenreihe erstellt: {data_key}")  # ← DEBUG
             
-            # Füge Datenpunkte hinzu
             self.pin_data[data_key]['x'].append(timestamp)
             self.pin_data[data_key]['y'].append(value)
         
         self.data_buffer.clear()
 
-        # Aktualisiere die Daten der Plots
+        # Update
         for data_key, data in self.pin_data.items():
-            data['plot'].setData(list(data['x']), list(data['y']))
-
+            try:
+                x_list = list(data['x'])
+                y_list = list(data['y'])
+                print(f"📊 Update {data_key}: {len(x_list)} Punkte")  # ← DEBUG
+                data['plot'].setData(x_list, y_list)
+            except Exception as e:
+                print(f"❌ Fehler bei {data_key}: {e}")
+    
     def _get_pen_color(self, data_key):
         """Weist Farben basierend auf dem Schlüssel zu."""
         color_map = {
@@ -92,3 +99,16 @@ class LiveChartWidget(QWidget):
         self.pin_data.clear()
         self.plot_widget.clear()
         self.plot_widget.addLegend()
+
+    def downsample_data(self, data, target_points=500):
+        """Reduziert Datenpunkte für bessere Performance"""
+        if len(data) <= target_points:
+            return data
+        
+            step = len(data) // target_points
+            return data[::step]
+
+
+    def closeEvent(self, event):
+        self.update_timer.stop()
+        super().closeEvent(event)

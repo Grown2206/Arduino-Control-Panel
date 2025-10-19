@@ -1,0 +1,7 @@
+PyQt6
+pyserial
+pyqtgraph
+reportlab
+pandas
+openpyxl
+matplotlib

@@ -1,165 +1,139 @@
-import json
 import serial
-import serial.tools.list_ports
+import json
 import time
-from collections import deque
-from PyQt6.QtCore import QThread, pyqtSignal, QMutex, QMutexLocker, QTimer
+import uuid
+from PyQt6.QtCore import QThread, pyqtSignal
+import random
 
-# ==================== ENHANCED SERIAL WORKER ====================
 class SerialWorker(QThread):
+    """
+    Handles serial communication with the Arduino in a separate thread.
+    KORRIGIERT: Implementiert einen sauberen Shutdown-Mechanismus, um
+    OSError unter Windows zu vermeiden.
+    """
     data_received = pyqtSignal(dict)
     status_changed = pyqtSignal(str)
-    stats_updated = pyqtSignal(dict)
-    
+
     def __init__(self):
         super().__init__()
-        self.serial = None
-        self.running = False
-        self.simulation = False
-        self.sim_pins = {}
-        self.lock = QMutex()
-        self._stop_requested = False
-        
-        self.command_queue = deque()
-        self.burst_mode = False
-        self.burst_delay = 10
-        
-        self.stats = {
-            'commands_sent': 0, 'responses_received': 0,
-            'errors': 0, 'avg_response_time': 0
-        }
-        self.response_times = deque(maxlen=100)
-    
-    def connect_serial(self, port, baud=115200):
+        self.ser = None
+        self.running = False  # Flag to control the run loop
+
+    def connect_serial(self, port, baudrate=115200):
+        """Connects to the specified serial port."""
         try:
-            self.serial = serial.Serial(port, baud, timeout=0.1)
-            time.sleep(0.5)
+            self.ser = serial.Serial(port, baudrate, timeout=1)
+            # Warten, bis der Arduino bereit ist
+            time.sleep(2)
             self.running = True
-            self.simulation = False
-            self._stop_requested = False
-            self.status_changed.emit(f"Verbunden: {port}")
             self.start()
-        except Exception as e:
+            self.status_changed.emit(f"Verbunden mit: {port}")
+            print(f"Verbindung zu {port} hergestellt.")
+        except serial.SerialException as e:
             self.status_changed.emit(f"Fehler: {e}")
-    
+            print(f"Fehler bei der Verbindung: {e}")
+
     def connect_simulation(self):
-        self.simulation = True
+        """Starts the simulation mode."""
         self.running = True
-        self.sim_pins = {}
-        self._stop_requested = False
-        self.status_changed.emit("Simulation aktiv")
+        self.ser = "SIMULATION" # Set sentinel for simulation
         self.start()
-    
+        self.status_changed.emit("Simulation gestartet")
+        print("Simulationsmodus gestartet.")
+
     def disconnect_serial(self):
-        self._stop_requested = True
-        self.running = False
-        if self.serial and self.serial.is_open:
-            try: self.serial.close()
-            except: pass
-        self.wait(2000)
-        self.status_changed.emit("Getrennt")
-    
-    def is_connected(self):
-        return self.running and not self._stop_requested
-    
-    def set_burst_mode(self, enabled, delay_ms=10):
-        self.burst_mode = enabled
-        self.burst_delay = delay_ms
-    
-    def run(self):
-        while self.running and not self._stop_requested:
+        """Gracefully disconnects from the serial port."""
+        if self.running:
+            self.running = False
+            self.wait(2000) # Warte max. 2 Sekunden, bis der Thread beendet ist
+            if self.ser and self.ser != "SIMULATION":
+                self.ser.close()
+            self.ser = None
+            self.status_changed.emit("Verbindung getrennt")
+            print("Verbindung getrennt.")
+
+    def send_command(self, command_dict):
+        """Sends a JSON command to the Arduino."""
+        if self.is_connected():
             try:
-                # KORREKTUR: 'QMutexLocker' wird hier korrekt verwendet.
-                # Es stellt sicher, dass der Zugriff auf die 'command_queue' threadsicher ist.
-                command = None
-                with QMutexLocker(self.lock):
-                    if self.command_queue:
-                        command = self.command_queue.popleft()
+                # Füge immer eine ID hinzu, falls nicht vorhanden
+                if "id" not in command_dict:
+                    command_dict["id"] = str(uuid.uuid4())
+                
+                command_str = json.dumps(command_dict) + '\n'
+                
+                if self.ser == "SIMULATION":
+                    print(f"SIM -> Arduino: {command_str.strip()}")
+                else:
+                    self.ser.write(command_str.encode('utf-8'))
+                
+                # Sende eine "ok" Antwort in der Simulation
+                if self.ser == "SIMULATION":
+                    response = {"type": "response", "id": command_dict["id"], "status": "ok"}
+                    self.data_received.emit(response)
 
-                if command:
-                    self._send_command_internal(command)
+            except (serial.SerialException, TypeError, AttributeError) as e:
+                self.status_changed.emit(f"Sendefehler: {e}")
+                print(f"Fehler beim Senden: {e}")
 
-                    if self.burst_mode:
-                        self.msleep(self.burst_delay)
-                
-                if self.simulation:
-                    self.msleep(100)
-                    continue
-                
-                if self.serial and self.serial.is_open and self.serial.in_waiting:
-                    line = self.serial.readline().decode('utf-8', errors='ignore').strip()
-                    if line:
-                        try:
-                            data = json.loads(line)
-                            self.data_received.emit(data)
-                            if data.get('type') == 'response':
-                                self.stats['responses_received'] += 1
-                        except json.JSONDecodeError:
-                            # Ignoriere fehlerhafte JSON-Daten vom Arduino
-                            pass
-                
-                self.msleep(10 if self.burst_mode else 50)
-                
-                if self.stats['commands_sent'] > 0 and self.stats['commands_sent'] % 20 == 0:
-                    self.stats_updated.emit(self.stats.copy())
-                
-            except Exception as e:
-                if self.running:
-                    # Der Fehler wird jetzt in der Konsole ausgegeben, um das Problem zu identifizieren.
-                    print(f"Serial Worker Error: {e}")
-                    self.stats['errors'] += 1
-                self.msleep(100)
-    
-    def send_command(self, command):
-        if not self.is_connected(): return
-        with QMutexLocker(self.lock):
-            self.command_queue.append(command)
-        self.stats['commands_sent'] += 1
-    
-    def _send_command_internal(self, command):
-        try:
-            if self.simulation:
-                QTimer.singleShot(10, lambda: self._exec_simulation(command))
-            elif self.serial and self.serial.is_open:
-                send_time = time.time()
-                cmd_json = json.dumps(command) + '\n'
-                self.serial.write(cmd_json.encode('utf-8'))
-                self.serial.flush()
-                
-                response_time = (time.time() - send_time) * 1000
-                self.response_times.append(response_time)
-                self.stats['avg_response_time'] = sum(self.response_times) / len(self.response_times)
-        except Exception as e:
-            print(f"Send Error: {e}")
-            self.stats['errors'] += 1
-    
-    def _exec_simulation(self, command):
-        cmd_type = command.get("command")
-        pin = command.get("pin", "")
-        msg_id = command.get("id", "")
-        response = {"type": "response", "status": "ok", "response_to": msg_id}
+    def is_connected(self):
+        """Checks if the connection is active."""
+        return self.running and self.ser is not None
+
+    def run(self):
+        """The main loop of the thread, reads data from serial or simulates it."""
+        while self.running:
+            if self.ser == "SIMULATION":
+                # Simuliere Pin- und Sensor-Daten
+                self._run_simulation_cycle()
+                time.sleep(0.1) # Simuliere Leseintervall
+            elif self.ser and self.ser.is_open:
+                try:
+                    if self.ser.in_waiting > 0:
+                        line = self.ser.readline().decode('utf-8').strip()
+                        if line:
+                            try:
+                                data = json.loads(line)
+                                self.data_received.emit(data)
+                            except json.JSONDecodeError:
+                                # Manchmal sendet der Arduino Debug-Infos
+                                print(f"Ungültiges JSON empfangen: {line}")
+                except serial.SerialException:
+                    # Port wurde wahrscheinlich geschlossen
+                    self.status_changed.emit("Fehler: Port nicht verfügbar.")
+                    break
+                except Exception as e:
+                    print(f"Unerwarteter Fehler im Lesethread: {e}")
+                    break
+            else:
+                # Beende den Thread, wenn keine Verbindung mehr besteht
+                break
         
-        if cmd_type == "digital_write":
-            value = command.get("value", 0)
-            self.sim_pins[pin] = value
-            self.data_received.emit(response)
-            self.data_received.emit({"type": "pin_update", "pin_name": pin, "value": value})
+        # Aufräumen, falls der Thread unerwartet endet
+        self.running = False
+        print("Serial-Worker-Thread beendet.")
+    
+    def _run_simulation_cycle(self):
+        """Generates a cycle of simulated data."""
+        # Simuliere ein Pin-Update (z.B. ein pulsierender Analog-Pin)
+        pin_update = {
+            "type": "pin_update",
+            "pin_name": "A0",
+            "value": int(512 + 511 * (0.5 + 0.5 * random.random()))
+        }
+        self.data_received.emit(pin_update)
         
-        elif cmd_type in ["analog_read", "digital_read"]:
-            import random
-            value = random.randint(0, 1023) if 'analog' in cmd_type else self.sim_pins.get(pin, 0)
-            response["value"] = value
-            self.data_received.emit(response)
-            self.data_received.emit({"type": "pin_update", "pin_name": pin, "value": value})
-
-        elif cmd_type == "read_sensor":
-            import random
-            if command.get("sensor") == "B24_TEMP_HUMIDITY":
-                temp = 22.5 + (random.random() - 0.5)
-                humid = 45.0 + (random.random() - 0.5) * 5
-                self.data_received.emit({"type": "sensor_update", "sensor": "B24_TEMP", "value": temp})
-                self.data_received.emit({"type": "sensor_update", "sensor": "B24_HUMIDITY", "value": humid})
-            self.data_received.emit(response)
-        else:
-            self.data_received.emit(response)
-
+        # Simuliere alle paar Zyklen ein Sensor-Update
+        if random.random() < 0.1: # ca. jede Sekunde
+             sensor_update = {
+                "type": "sensor_update",
+                "sensor": "B24_TEMP",
+                "value": round(20 + 5 * random.random(), 2)
+            }
+             self.data_received.emit(sensor_update)
+             sensor_update = {
+                "type": "sensor_update",
+                "sensor": "B24_HUMIDITY",
+                "value": round(40 + 10 * random.random(), 2)
+            }
+             self.data_received.emit(sensor_update)

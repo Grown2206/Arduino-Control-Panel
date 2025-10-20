@@ -73,6 +73,7 @@ class MainWindow(QMainWindow):
         self.db_thread.start()
         print("Asynchroner Datenbank-Worker gestartet.")
 
+        # HIER WIRD DER NEUE (Stateful) ConfigManager geladen
         self.config_manager = ConfigManager(config_file="arduino_config.json")
         self.worker = SerialWorker()
         self.seq_runner = SequenceRunner()
@@ -136,165 +137,118 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Bereit")
 
     def _add_optional_tabs(self):
-        """Fügt optionale Tabs hinzu, falls verfügbar"""
+        """
+        Diese Funktion muss alle optionalen Tabs laden.
+        (Komplett ersetzen)
+        """
+        """Adds optional feature tabs if their files exist."""
         
-        # Data Logger
         try:
             from ui.data_logger_widget import DataLoggerWidget
             self.data_logger_tab = DataLoggerWidget()
-            self.tabs.addTab(self.data_logger_tab, "📊 Data Logger")
+            self.tabs.addTab(self.data_logger_tab, "📝 Data Logger")
             print("✅ Data Logger geladen")
-        except Exception as e:
-            print(f"⚠️ Data Logger nicht verfügbar: {e}")
-            self.data_logger_tab = None
+        except ImportError: self.data_logger_tab = None
         
-        # LED Matrix Simulator
         try:
             from ui.led_matrix_simulator import LEDMatrixSimulator
             self.led_matrix_tab = LEDMatrixSimulator()
             self.tabs.addTab(self.led_matrix_tab, "💡 LED Matrix")
             print("✅ LED Matrix Simulator geladen")
-        except Exception as e:
-            print(f"⚠️ LED Matrix Simulator nicht verfügbar: {e}")
-            self.led_matrix_tab = None
+        except ImportError: self.led_matrix_tab = None
         
-        # Oszilloskop
         try:
             from ui.oscilloscope_widget import OscilloscopeWidget
             self.oscilloscope_tab = OscilloscopeWidget()
             self.tabs.addTab(self.oscilloscope_tab, "📡 Oszilloskop")
             print("✅ Oszilloskop geladen")
-        except Exception as e:
-            print(f"⚠️ Oszilloskop nicht verfügbar: {e}")
-            self.oscilloscope_tab = None
+        except ImportError: self.oscilloscope_tab = None
         
-        # PWM/Servo Steuerung
         try:
             from ui.pwm_servo_control import PWMServoControl
             self.pwm_servo_tab = PWMServoControl()
             self.tabs.addTab(self.pwm_servo_tab, "⚡ PWM/Servo")
             print("✅ PWM/Servo Steuerung geladen")
-        except Exception as e:
-            print(f"⚠️ PWM/Servo Steuerung nicht verfügbar: {e}")
-            self.pwm_servo_tab = None
+        except ImportError: self.pwm_servo_tab = None
         
-        # Makro-Recorder
         try:
             from ui.macro_system import MacroRecorder
             self.macro_tab = MacroRecorder()
             self.tabs.addTab(self.macro_tab, "🤖 Makros")
             print("✅ Makro-Recorder geladen")
-        except Exception as e:
-            print(f"⚠️ Makro-Recorder nicht verfügbar: {e}")
-            self.macro_tab = None
+        except ImportError: self.macro_tab = None
         
-        # Sensor-Konfiguration
         try:
             from ui.sensor_config_tab import SensorConfigTab
             self.sensor_config_tab = SensorConfigTab()
             self.tabs.addTab(self.sensor_config_tab, "🔧 Sensor-Setup")
             print("✅ Sensor-Konfiguration geladen")
-        except Exception as e:
-            print(f"⚠️ Sensor-Konfiguration nicht verfügbar: {e}")
-            self.sensor_config_tab = None    
+        except ImportError: self.sensor_config_tab = None
+            
+        try:
+            from ui.relay_control_tab import RelayControlTab
+            self.relay_tab = RelayControlTab(self.config_manager)
+            self.tabs.addTab(self.relay_tab, "🔩 Relais Steuerung")
+            print("✅ Relais Steuerung geladen")
+        except ImportError as e:
+            self.relay_tab = None
+            print(f"⚠️ Relais Steuerung nicht verfügbar: {e}")
 
     def _add_optional_tabs_to_dashboard(self):
-        """Fügt neue Feature-Widgets zum Dashboard hinzu"""
+        """
+        Diese Funktion integriert alle optionalen Widgets ins Dashboard
+        und verbindet deren Signale.
+        (Komplett ersetzen)
+        """
+        """Adds widgets for optional features to the dashboard."""
         
-        # Data Logger
         if hasattr(self, 'data_logger_tab') and self.data_logger_tab:
             from ui.data_logger_widget import DataLoggerWidget
             dashboard_logger = DataLoggerWidget()
-            
-            self.dashboard_tab.add_optional_widget(
-                widget_id='data_logger',
-                title='Data Logger',
-                icon='📊',
-                widget_instance=dashboard_logger,
-                geometry=(860, 10, 400, 300),
-                category='Erweitert'
-            )
-            
-            # Synchronisiere mit Haupt-Logger
+            self.dashboard_tab.add_optional_widget('data_logger', 'Data Logger', '📝', dashboard_logger, (860, 10, 400, 300), 'Erweitert')
             def sync_logger(data):
                 if data.get('type') == 'pin_update':
-                    pin = data.get('pin_name')
-                    value = data.get('value')
-                    if pin and value is not None:
-                        dashboard_logger.log_pin_value(pin, value)
-            
+                    pin, value = data.get('pin_name'), data.get('value')
+                    if pin and value is not None: dashboard_logger.log_pin_value(pin, value)
             self.worker.data_received.connect(sync_logger)
-        
-        # LED Matrix Simulator (Mini)
+
         if hasattr(self, 'led_matrix_tab') and self.led_matrix_tab:
             from ui.led_matrix_simulator import LEDMatrixWidget
-            
             dashboard_matrix = LEDMatrixWidget(rows=8, cols=8, led_size=15)
-            
-            self.dashboard_tab.add_optional_widget(
-                widget_id='led_matrix',
-                title='LED Matrix',
-                icon='💡',
-                widget_instance=dashboard_matrix,
-                geometry=(860, 320, 400, 300),
-                category='Ausgabe'
-            )
-        
-        # Oszilloskop Kompakt
+            self.dashboard_tab.add_optional_widget('led_matrix', 'LED Matrix', '💡', dashboard_matrix, (860, 320, 400, 300), 'Ausgabe')
+
         if hasattr(self, 'oscilloscope_tab') and self.oscilloscope_tab:
             from ui.live_chart_widget import LiveChartWidget
-            
             dashboard_scope = LiveChartWidget(title="Oszilloskop (A0-A1)")
-            
-            self.dashboard_tab.add_optional_widget(
-                widget_id='oscilloscope',
-                title='Oszilloskop',
-                icon='📡',
-                widget_instance=dashboard_scope,
-                geometry=(860, 630, 400, 170),
-                category='Messung'
-            )
-            
-            # Nur A0 und A1
+            self.dashboard_tab.add_optional_widget('oscilloscope', 'Oszilloskop', '📡', dashboard_scope, (860, 630, 400, 170), 'Messung')
             def forward_to_dash_scope(data):
                 if data.get('type') == 'pin_update':
-                    pin = data.get('pin_name')
-                    value = data.get('value')
-                    if pin in ['A0', 'A1'] and value is not None:
-                        dashboard_scope.add_data_point(pin, value, time.time())
-            
+                    pin, value = data.get('pin_name'), data.get('value')
+                    if pin in ['A0', 'A1'] and value is not None: dashboard_scope.add_data_point(pin, value, time.time())
             self.worker.data_received.connect(forward_to_dash_scope)
         
-        # PWM Schnellzugriff
         if hasattr(self, 'pwm_servo_tab') and self.pwm_servo_tab:
             from ui.pwm_quick_widget import PWMQuickWidget
-            
             dashboard_pwm = PWMQuickWidget()
             dashboard_pwm.command_signal.connect(self.send_command)
-            
-            self.dashboard_tab.add_optional_widget(
-                widget_id='pwm_quick',
-                title='PWM Schnellzugriff',
-                icon='⚡',
-                widget_instance=dashboard_pwm,
-                geometry=(1270, 10, 280, 200),
-                category='Steuerung'
-            )
+            self.dashboard_tab.add_optional_widget('pwm_quick','PWM Schnellzugriff','⚡',dashboard_pwm,(1270, 10, 280, 200),'Steuerung')
         
-        # Makro Schnellstart
         if hasattr(self, 'macro_tab') and self.macro_tab:
             from ui.macro_quick_widget import MacroQuickWidget
-            
             dashboard_macros = MacroQuickWidget()
+            self.dashboard_tab.add_optional_widget('macro_quick','Makro Schnellstart','🤖',dashboard_macros,(1270, 220, 280, 200),'Automatisierung')
             
-            self.dashboard_tab.add_optional_widget(
-                widget_id='macro_quick',
-                title='Makro Schnellstart',
-                icon='🤖',
-                widget_instance=dashboard_macros,
-                geometry=(1270, 220, 280, 200),
-                category='Automatisierung'
-            )
+        if hasattr(self, 'relay_tab') and self.relay_tab:
+            try:
+                from ui.relay_quick_widget import RelayQuickWidget
+                dashboard_relay = RelayQuickWidget(self.config_manager)
+                # KORREKTUR: Das Signal wird hier direkt verbunden
+                dashboard_relay.command_signal.connect(self.send_command)
+                self.dashboard_tab.add_optional_widget('relay_quick','Relais Schnellzugriff','🔩',dashboard_relay,(1270, 430, 280, 200),'Steuerung')
+                print("✅ Relais Schnellzugriff geladen und verbunden.")
+            except ImportError as e:
+                print(f"⚠️ Relais Schnellzugriff nicht verfügbar: {e}")
+
 
     def _create_menu_bar(self):
         menubar = self.menuBar()
@@ -438,10 +392,7 @@ class MainWindow(QMainWindow):
         # -------------------------------------------------------------------------
         if hasattr(self, 'led_matrix_tab') and self.led_matrix_tab:
             print("🔗 Verbinde LED Matrix Simulator...")
-            
-            # Commands vom Matrix-Widget an Arduino
-            # (Falls du später LED-Matrix-Befehle implementierst)
-            # self.led_matrix_tab.command_signal.connect(self.send_command)
+            # (Keine Signale zum Verbinden)
         
         # -------------------------------------------------------------------------
         # OSZILLOSKOP TAB
@@ -449,30 +400,24 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'oscilloscope_tab') and self.oscilloscope_tab:
             print("🔗 Verbinde Oszilloskop...")
             
-            # Analog-Werte an Oszilloskop weiterleiten
             def forward_to_oscilloscope(data):
                 if data.get('type') == 'pin_update':
                     pin = data.get('pin_name')
                     value = data.get('value')
-                    if pin and value is not None:
-                        # Nur Analog-Pins (A0-A5) ans Oszilloskop
-                        if pin.startswith('A'):
-                            self.oscilloscope_tab.add_sample(pin, value)
+                    if pin and value is not None and pin.startswith('A'):
+                        self.oscilloscope_tab.add_sample(pin, value)
             
             self.worker.data_received.connect(forward_to_oscilloscope)
             
-            # Plot regelmäßig aktualisieren
             self.oscilloscope_update_timer = QTimer(self)
             self.oscilloscope_update_timer.timeout.connect(self.oscilloscope_tab.update_plot)
-            self.oscilloscope_update_timer.start(100)  # 10 Hz Update
+            self.oscilloscope_update_timer.start(100)
         
         # -------------------------------------------------------------------------
         # PWM/SERVO CONTROL TAB
         # -------------------------------------------------------------------------
         if hasattr(self, 'pwm_servo_tab') and self.pwm_servo_tab:
             print("🔗 Verbinde PWM/Servo Control...")
-            
-            # PWM/Servo-Commands an Arduino weiterleiten
             self.pwm_servo_tab.command_signal.connect(self.send_command)
         
         # -------------------------------------------------------------------------
@@ -480,24 +425,11 @@ class MainWindow(QMainWindow):
         # -------------------------------------------------------------------------
         if hasattr(self, 'macro_tab') and self.macro_tab:
             print("🔗 Verbinde Makro-Recorder...")
-            
-            # Makro-Commands an Arduino
             self.macro_tab.command_signal.connect(self.send_command)
             
-            # Pin-Aktionen aufzeichnen wenn Recording aktiv
             def record_pin_action(data):
-                if not self.macro_tab.recording:
-                    return
-                
-                msg_type = data.get('type')
-                
-                # Digital Write aufzeichnen
-                if msg_type == 'response' and data.get('status') == 'ok':
-                    # Hier könnte man den Original-Command tracken
-                    pass
-                
-                # Pin-Updates aufzeichnen
-                elif msg_type == 'pin_update':
+                if not self.macro_tab.recording: return
+                if data.get('type') == 'pin_update':
                     pin = data.get('pin_name')
                     value = data.get('value')
                     if pin and value is not None:
@@ -506,7 +438,6 @@ class MainWindow(QMainWindow):
                             parameters={'pin': pin, 'value': value},
                             description=f"{pin} → {value}"
                         )
-            
             self.worker.data_received.connect(record_pin_action)
         
         # -------------------------------------------------------------------------
@@ -514,33 +445,42 @@ class MainWindow(QMainWindow):
         # -------------------------------------------------------------------------
         if hasattr(self, 'sensor_config_tab') and self.sensor_config_tab:
             print("🔗 Verbinde Sensor-Konfiguration...")
-            
-            # Sensor-Updates an Config-Tab weiterleiten
-            def forward_to_sensor_config(data):
-                if data.get('type') == 'sensor_update':
-                    # Hier könnte man Live-Updates an die Sensor-Cards senden
-                    pass
-            
-            self.worker.data_received.connect(forward_to_sensor_config)
+            # (Keine Signale zum Verbinden)
+
+        # -------------------------------------------------------------------------
+        # NEU: RELAY CONTROL TAB (GEÄNDERT)
+        # -------------------------------------------------------------------------
+        if hasattr(self, 'relay_tab') and self.relay_tab:
+            self.relay_tab.command_signal.connect(self.send_command)
+            def forward_to_relay_widgets(data):
+                if data.get('type') == 'pin_update':
+                    pin_name = data.get('pin_name', '')
+                    value = data.get('value')
+                    if pin_name.startswith('D') and pin_name[1:].isdigit() and value is not None:
+                        pin_int = int(pin_name[1:])
+                        self.relay_tab.update_pin_state(pin_int, value)
+                        try:
+                            dash_widget = self.dashboard_tab.get_widget_by_id('relay_quick')
+                            if dash_widget: dash_widget.update_pin_state(pin_int, value)
+                        except AttributeError: pass
+            self.worker.data_received.connect(forward_to_relay_widgets)
+
+        # -------------------------------------------------------------------------
+        # NEU: RELAY DASHBOARD WIDGET (GEÄNDERT)
+        # -------------------------------------------------------------------------
+        try:
+            # Verbinde das Signal des Dashboard-Widgets (falls vorhanden)
+            dash_relay_widget = self.dashboard_tab.get_widget_by_id('relay_quick')
+            if dash_relay_widget:
+                dash_relay_widget.command_signal.connect(self.send_command)
+                print("🔗 Verbinde Relais Schnellzugriff...")
+        except Exception as e:
+            pass # Widget nicht vorhanden oder noch nicht erstellt
 
 
     # =========================================================================
-    # HILFSMETHODEN für neue Tabs
+    # HILFSMETHODEN
     # =========================================================================
-
-    def update_oscilloscope(self, data):
-        """
-        Legacy-Methode - Wird jetzt direkt in setup_connections() gehandhabt
-        Kann entfernt werden, falls nicht mehr verwendet
-        """
-        if not hasattr(self, 'oscilloscope_tab') or not self.oscilloscope_tab:
-            return
-        
-        if data.get('type') == 'pin_update':
-            pin = data.get('pin_name')
-            value = data.get('value')
-            if pin and value is not None and pin.startswith('A'):
-                self.oscilloscope_tab.add_sample(pin, value)
                 
     def handle_dashboard_connect(self, port):
         """Verbindet über das Dashboard"""
@@ -548,22 +488,35 @@ class MainWindow(QMainWindow):
         self.toggle_connection()
 
     def send_command(self, command):
-        """Sendet einen Befehl an den Arduino"""
-        if self.worker.is_connected():
-            self.worker.send_command(command)
-        else:
-            print(f"⚠️ Nicht verbunden - Befehl ignoriert: {command}")
+        """
+        Diese Funktion übersetzt die einfachen Text-Befehle der Relais-Widgets
+        in das korrekte JSON-Format.
+        (Komplett ersetzen)
+        """
+        if isinstance(command, dict):
+            if self.worker.is_connected(): self.worker.send_command(command)
+        elif isinstance(command, str):
+            parts = command.split()
+            try:
+                if len(parts) >= 3 and parts[0] == 'digital_write':
+                    pin_str = parts[1] if parts[1].startswith('D') else f"D{parts[1]}"
+                    json_cmd = {"id": str(uuid.uuid4()), "command": "digital_write", "pin": pin_str, "value": int(parts[2])}
+                    self.send_command(json_cmd)
+                elif len(parts) >= 3 and parts[0] == 'pin_mode':
+                    pin_str = parts[1] if parts[1].startswith('D') else f"D{parts[1]}"
+                    json_cmd = {"id": str(uuid.uuid4()), "command": "pin_mode", "pin": pin_str, "mode": "OUTPUT"}
+                    self.send_command(json_cmd)
+            except Exception as e: print(f"⚠️ Fehler bei Konvertierung von Befehl '{command}': {e}")
+
             
     def handle_data(self, data):
         """Verarbeitet eingehende Daten vom Arduino"""
         msg_type = data.get("type")
         
-        # === DEBUG ===
-        print(f"📨 Daten empfangen: {msg_type}")
-        
         # Response-Feedback
         if msg_type == "response":
             if data.get("status") == "ok":
+                # Kurzes grünes Aufleuchten der Statusleiste
                 QTimer.singleShot(0, lambda: self.status_bar.setStyleSheet("background-color: #27ae60;"))
                 QTimer.singleShot(1000, lambda: self.status_bar.setStyleSheet(""))
         
@@ -571,7 +524,6 @@ class MainWindow(QMainWindow):
         elif msg_type == "pin_update":
             pin = data.get("pin_name")
             value = data.get("value")
-            print(f"📍 Pin-Update: {pin} = {value}")  # ← DEBUG
             
             if pin is not None and value is not None:
                 current_time = time.time() - self.chart_start_time
@@ -581,26 +533,18 @@ class MainWindow(QMainWindow):
                 self.pin_overview_tab.update_pin_state(pin, value)
                 self.chart_tab.add_data_point(pin, value, current_time)
                 
-                # === DASHBOARD - PRÜFEN ===
+                # Dashboard-Widgets
                 try:
                     self.dashboard_tab.pin_overview_widget.update_pin_state(pin, value)
-                    print(f"✅ Dashboard Pin-Übersicht aktualisiert")
-                except Exception as e:
-                    print(f"❌ Dashboard Pin-Übersicht Fehler: {e}")
-                
-                try:
                     self.dashboard_tab.live_chart_widget.add_data_point(pin, value, current_time)
-                    print(f"✅ Dashboard Chart aktualisiert")
                 except Exception as e:
-                    print(f"❌ Dashboard Chart Fehler: {e}")
+                    pass # Dashboard-Widgets vielleicht nicht sichtbar
                 
                 # An Sequence Runner weiterleiten
                 self.pin_update_for_runner.emit(pin, value)
         
         # Sensor-Updates
         elif msg_type == "sensor_update":
-            print(f"🌡️ Sensor-Update: {data.get('sensor')}")  # ← DEBUG
-            
             # Log für Testläufe
             if self.current_test_id is not None:
                 data['time_ms'] = (time.time() - self.test_start_time) * 1000
@@ -609,16 +553,14 @@ class MainWindow(QMainWindow):
             # An Sensor-Tab weiterleiten
             self.sensor_tab.handle_sensor_data(data)
             
-            # === DASHBOARD - PRÜFEN ===
+            # An Dashboard-Widgets
             try:
                 if data.get("sensor") == "B24_TEMP":
                     self.dashboard_tab.sensor_display_widget.update_temperature(data.get("value", 0))
-                    print(f"✅ Dashboard Temperatur aktualisiert: {data.get('value')}°C")
                 elif data.get("sensor") == "B24_HUMIDITY":
                     self.dashboard_tab.sensor_display_widget.update_humidity(data.get("value", 0))
-                    print(f"✅ Dashboard Luftfeuchtigkeit aktualisiert: {data.get('value')}%")
             except Exception as e:
-                print(f"❌ Dashboard Sensor Fehler: {e}")
+                pass # Dashboard-Widgets vielleicht nicht sichtbar
         
         # An registrierte Handler weiterleiten
         for handler in self.data_handlers:
@@ -703,42 +645,22 @@ class MainWindow(QMainWindow):
                 humids = [s['value'] for s in self.sensor_log if s.get('sensor') == 'B24_HUMIDITY' and s.get('value') is not None]
                 
                 if temps:
-                    sensor_stats['temp'] = {
-                        'min': min(temps),
-                        'max': max(temps),
-                        'avg': np.mean(temps)
-                    }
-                
+                    sensor_stats['temp'] = { 'min': min(temps), 'max': max(temps), 'avg': np.mean(temps) }
                 if humids:
-                    sensor_stats['humid'] = {
-                        'min': min(humids),
-                        'max': max(humids),
-                        'avg': np.mean(humids)
-                    }
+                    sensor_stats['humid'] = { 'min': min(humids), 'max': max(humids), 'avg': np.mean(humids) }
                 
-                # Log zusammenstellen
-                full_log = {
-                    'events': event_log,
-                    'sensors': sensor_stats,
-                    'sensors_raw': self.sensor_log
-                }
+                full_log = { 'events': event_log, 'sensors': sensor_stats, 'sensors_raw': self.sensor_log }
                 
                 # In Datenbank speichern
                 self.db.update_run(self.current_test_id, cycles, status, full_log)
                 
-                QMessageBox.information(
-                    self, "Testlauf beendet",
-                    f"Daten für ID {self.current_test_id} gespeichert."
-                )
+                QMessageBox.information(self, "Testlauf beendet", f"Daten für ID {self.current_test_id} gespeichert.")
                 
                 self.current_test_id = None
                 QTimer.singleShot(100, self.load_archive)
             
             elif status == "Abgeschlossen":
-                QMessageBox.information(
-                    self, "Sequenz beendet",
-                    f"Sequenz nach {cycles} Zyklen abgeschlossen."
-                )
+                QMessageBox.information(self, "Sequenz beendet", f"Sequenz nach {cycles} Zyklen abgeschlossen.")
                     
     def start_sequence(self, seq_id):
         """Startet eine Sequenz"""
@@ -758,11 +680,7 @@ class MainWindow(QMainWindow):
             return
         
         seq = self.sequences[seq_id]
-        name, ok = QInputDialog.getText(
-            self, "Testlauf starten",
-            "Name für den Testlauf:",
-            text=f"Test: {seq['name']}"
-        )
+        name, ok = QInputDialog.getText(self, "Testlauf starten", "Name für den Testlauf:", text=f"Test: {seq['name']}")
         
         if not ok or not name:
             return
@@ -782,6 +700,7 @@ class MainWindow(QMainWindow):
             self.sequences[seq_id].update(updated_data)
             self.sequence_tab.update_sequence_list(self.sequences)
             self.auto_save_config()
+            
     def new_sequence(self):
         dialog = SequenceDialog(self)
         if dialog.exec():
@@ -792,10 +711,12 @@ class MainWindow(QMainWindow):
             self.sequence_tab.update_sequence_list(self.sequences)
             self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
             self.auto_save_config()
+            
     def edit_sequence(self, seq_id):
         if seq_id in self.sequences:
             sequence_data = self.sequences[seq_id]
             self.sequence_tab.open_visual_editor_for_sequence(seq_id, sequence_data)
+            
     def delete_sequence(self, seq_id):
         reply = QMessageBox.question(self, "Löschen", f"Soll die Sequenz '{self.sequences[seq_id]['name']}' wirklich gelöscht werden?")
         if reply == QMessageBox.StandardButton.Yes:
@@ -803,27 +724,34 @@ class MainWindow(QMainWindow):
             self.sequence_tab.update_sequence_list(self.sequences)
             self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
             self.auto_save_config()
+            
     def save_dashboard_layout(self, name, layout_config):
         self.dashboard_layouts[name] = layout_config
         self.dashboard_tab.update_layout_list(list(self.dashboard_layouts.keys()))
         self.dashboard_tab.layout_combo.setCurrentText(name)
         self.auto_save_config()
         self.status_bar.showMessage(f"Layout '{name}' gespeichert.", 2000)
+        
     def delete_dashboard_layout(self, name):
         if name in self.dashboard_layouts:
             del self.dashboard_layouts[name]
             self.dashboard_tab.update_layout_list(list(self.dashboard_layouts.keys()))
             self.auto_save_config()
             self.status_bar.showMessage(f"Layout '{name}' gelöscht.", 2000)
+            
     def load_dashboard_layout(self, name):
         layout_config = self.dashboard_layouts.get(name)
         if layout_config:
             self.dashboard_tab.apply_layout(layout_config)
             self.status_bar.showMessage(f"Layout '{name}' geladen.", 2000)
+            
     def load_saved_config(self):
+        """
+        Diese Funktion muss beim Laden der Konfig auch die Relais-Einstellungen laden.
+        (Komplett ersetzen)
+        """
         config = self.config_manager.load_config()
-        if not config:
-            return
+        if not config: return
         self.sequences = config.get("sequences", {})
         self.sequence_tab.update_sequence_list(self.sequences)
         self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
@@ -835,18 +763,34 @@ class MainWindow(QMainWindow):
         if self.dashboard_layouts:
             first_layout_name = list(self.dashboard_layouts.keys())[0]
             self.load_dashboard_layout(first_layout_name)
-            self.dashboard_tab.layout_combo.setCurrentText(first_layout_name)
+        if hasattr(self, 'relay_tab') and self.relay_tab:
+            self.relay_tab.load_settings()
+            try:
+                dash_widget = self.dashboard_tab.get_widget_by_id('relay_quick')
+                if dash_widget: dash_widget.load_pin_map()
+            except AttributeError: pass
         self.status_bar.showMessage("Konfiguration geladen.", 2000)
+
+        
     def auto_save_config(self):
+        """
+        Diese Funktion muss beim Speichern auch die Relais-Einstellungen berücksichtigen.
+        (Komplett ersetzen)
+        """
         pin_configs = self.pin_control_tab.get_pin_configs()
         current_layout_name = self.dashboard_tab.layout_combo.currentText()
         if current_layout_name:
             self.dashboard_layouts[current_layout_name] = self.dashboard_tab.get_current_layout_config()
+        if hasattr(self, 'relay_tab') and self.relay_tab:
+            self.relay_tab.save_settings()
         self.config_manager.save_config(self.sequences, pin_configs, self.dashboard_layouts)
         self.status_bar.showMessage("Konfiguration automatisch gespeichert.", 2000)
+
+        
     def load_archive(self):
         runs = self.db.get_all_runs()
         self.archive_tab.update_archive_list(runs)
+        
     def export_pdf(self, run_id):
         run_details = self.db.get_run_details(run_id)
         if not run_details: return
@@ -856,6 +800,7 @@ class MainWindow(QMainWindow):
                 ReportGenerator.generate_pdf(run_details, file_path)
                 QMessageBox.information(self, "Erfolg", "PDF-Bericht erfolgreich exportiert!")
             except Exception as e: QMessageBox.critical(self, "Export-Fehler", f"PDF konnte nicht erstellt werden:\n{e}")
+            
     def export_excel(self, run_id):
         run_details = self.db.get_run_details(run_id)
         if not run_details: return
@@ -867,7 +812,6 @@ class MainWindow(QMainWindow):
             except Exception as e: QMessageBox.critical(self, "Export-Fehler", f"Excel konnte nicht erstellt werden:\n{e}")
 
     def show_report_viewer(self, run_id):
-        # ... (code unchanged) ...
         run_details = self.db.get_run_details(run_id)
         if not run_details: return
         event_log = run_details.get('log', {}).get('events', [])
@@ -881,7 +825,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
         
     def show_trend_analysis(self, run_id):
-        # ... (code unchanged) ...
         run_details = self.db.get_run_details(run_id)
         event_log = run_details.get('log', {}).get('events', [])
         if not event_log:
@@ -896,7 +839,6 @@ class MainWindow(QMainWindow):
         <p>Anomalien: <b>{len(analysis['cycle_analysis'].get('anomalies', []))}</b></p>"""
         text_edit.setHtml(stats_html); layout.addWidget(text_edit); dialog.exec()
 
-    # NEUE Methode zur Anzeige des Vergleichsberichts
     def show_comparison_report(self, run_ids):
         if len(run_ids) < 2:
             QMessageBox.information(self, "Hinweis", "Bitte mindestens zwei Testläufe für einen Vergleich auswählen.")
@@ -905,17 +847,13 @@ class MainWindow(QMainWindow):
         run_details_list = [self.db.get_run_details(rid) for rid in run_ids]
         analysis_results = [TrendAnalyzer.analyze_timing(rd.get('log', {}).get('events', [])) for rd in run_details_list]
 
-        # HTML-Teil generieren
         comparison_html = ReportGenerator.generate_comparison_html(run_details_list, analysis_results)
-
-        # Diagramm-Teil generieren
         chart_buffer = ReportGenerator.create_comparison_chart(run_details_list, analysis_results)
         charts_base64 = []
         if chart_buffer:
             charts_base64.append(base64.b64encode(chart_buffer.getvalue()).decode('utf-8'))
             chart_buffer.close()
 
-        # Dialog anzeigen
         dialog = ComparisonViewerDialog(comparison_html, charts_base64, self)
         dialog.exec()
 
@@ -976,4 +914,3 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
-

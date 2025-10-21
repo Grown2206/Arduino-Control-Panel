@@ -40,7 +40,9 @@ from ui.branding import get_full_stylesheet, LOGO_PATH
 from ui.sequence_info_widget import SequenceInfoWidget
 # NEU: Board Config Tab importieren
 from ui.board_config_tab import BoardConfigTab
+from ui.sensor_library_manager_tab import SensorLibraryManagerTab
 
+from sensor_library import SensorLibrary # Dieser Import lädt jetzt auch User-Sensoren
 
 # --- ADVANCED FEATURES ---
 try:
@@ -73,6 +75,9 @@ class MainWindow(QMainWindow):
         self.chart_start_time = time.time()
         self.active_sensor_config_for_polling = {} # Speichert, welche Sensoren gepollt werden sollen
 
+        SensorLibrary.load_all_sensors() # Stellt sicher, dass die kombinierte Liste verfügbar ist
+        
+        
         self.setup_ui()
         self.setup_connections()
         self.setStyleSheet(get_full_stylesheet())
@@ -104,8 +109,9 @@ class MainWindow(QMainWindow):
         self.chart_tab = LiveChartWidget(title="Live Pin-Aufzeichnung")
         self.archive_tab = ArchiveTab()
         # NEU: Board Config Tab Instanz erstellen
-        self.board_config_tab = BoardConfigTab(self.config_manager)
-
+        self.board_config_tab = BoardConfigTab(self.config_manager) # Nutzt jetzt kombinierte Sensorliste
+        # NEU: Sensor Library Manager Tab Instanz
+        self.sensor_manager_tab = SensorLibraryManagerTab()
 
         self._create_menu_bar()
         main_layout.addLayout(self._create_connection_bar())
@@ -116,6 +122,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.pin_control_tab, "🔌 Pin Steuerung")
         self.tabs.addTab(self.pin_overview_tab, "📊 Pin Übersicht")
         self.tabs.addTab(self.sensor_tab, "🌡️ Sensoren")
+        self.tabs.addTab(self.sensor_manager_tab, "📚 Sensor Bibliothek")
         self.tabs.addTab(self.sequence_tab, "⚙️ Sequenzen")
         self.tabs.addTab(self.chart_tab, "📈 Live-Aufzeichnung")
         self.tabs.addTab(self.archive_tab, "🗄️ Archiv")
@@ -212,7 +219,13 @@ class MainWindow(QMainWindow):
 
     def setup_connections(self):
         """ Verbindet Signale und Slots """
-        # --- Core ---
+        # ... (Alle bisherigen Verbindungen bleiben bestehen) ...
+
+        # NEU: Verbindung für Sensor Library Manager
+        self.sensor_manager_tab.sensors_updated_signal.connect(self.handle_sensors_updated)
+
+        # Stelle sicher, dass Board Config Tab auch verbunden ist
+        self.board_config_tab.apply_config_signal.connect(self.apply_config_and_connect)
         self.worker.data_received.connect(self.handle_data)
         self.worker.status_changed.connect(self.update_status)
         self.db.add_run_requested.connect(self.db_worker.add_run)
@@ -311,6 +324,23 @@ class MainWindow(QMainWindow):
         try: # Relay Quick Widget
             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.command_signal.connect(self.send_command)
         except AttributeError: pass
+
+# --- NEUE Methode zum Reagieren auf Sensor-Updates ---
+    def handle_sensors_updated(self):
+        """ Wird aufgerufen, wenn Sensoren im Manager gespeichert wurden """
+        print("Sensorbibliothek wurde aktualisiert. Lade Board Config neu...")
+        # Lade die Sensorbibliothek neu (wichtig, damit BoardConfigTab die neuen Daten hat)
+        SensorLibrary.load_all_sensors(force_reload=True)
+        # Informiere den BoardConfigTab, dass er seine Funktionslisten neu aufbauen soll
+        # (Wir müssen eine Methode dafür im BoardConfigTab hinzufügen)
+        self.board_config_tab.update_available_functions()
+        QMessageBox.information(self, "Sensorbibliothek", "Die Sensorbibliothek wurde aktualisiert. Bitte überprüfen Sie die Pin-Konfiguration im 'Board Konfiguration' Tab.")
+
+
+
+
+
+
 
     # --- Connection Handling ---
     def initiate_connection(self):

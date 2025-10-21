@@ -1,0 +1,18 @@
+{
+    "LM35": {
+        "id": "LM35",
+        "name": "LM35 Analog Temperature",
+        "sensor_type": "temperature",
+        "pins": {
+            "analog": "A0"
+        },
+        "protocol": "analog",
+        "value_range": [
+            -55.0,
+            150.0
+        ],
+        "unit": "°C",
+        "icon": "🌡️",
+        "description": ""
+    }
+}

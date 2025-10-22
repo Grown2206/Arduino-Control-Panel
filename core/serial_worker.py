@@ -22,31 +22,17 @@ class SerialWorker(QThread):
     def connect_serial(self, port, baudrate=115200):
         """Connects to the specified serial port."""
         try:
-            # WICHTIG: Zuerst alte Verbindung komplett beenden!
-            if self.running:
-                self.running = False
-                self.wait(1000)
-            
-            if self.ser and self.ser != "SIMULATION":
-                try:
-                    self.ser.close()
-                except:
-                    pass
-            
-            self.ser = None
-            time.sleep(0.5)
-            
-            # Jetzt neu verbinden
             self.ser = serial.Serial(port, baudrate, timeout=1)
+            # Warten, bis der Arduino bereit ist
             time.sleep(2)
             self.running = True
             self.start()
             self.status_changed.emit(f"Verbunden mit: {port}")
             print(f"Verbindung zu {port} hergestellt.")
         except serial.SerialException as e:
-            self.status_changed.emit(f"Fehler bei der Verbindung: {e}")
+            self.status_changed.emit(f"Fehler: {e}")
             print(f"Fehler bei der Verbindung: {e}")
-        
+
     def connect_simulation(self):
         """Starts the simulation mode."""
         self.running = True
@@ -70,19 +56,17 @@ class SerialWorker(QThread):
         """Sends a JSON command to the Arduino."""
         if self.is_connected():
             try:
+                # Füge immer eine ID hinzu, falls nicht vorhanden
                 if "id" not in command_dict:
                     command_dict["id"] = str(uuid.uuid4())
                 
                 command_str = json.dumps(command_dict) + '\n'
                 
-                # DEBUG: Zeige was gesendet wird
-                print(f"→ Sende: {command_str.strip()}")
-                
                 if self.ser == "SIMULATION":
                     print(f"SIM -> Arduino: {command_str.strip()}")
                 else:
                     self.ser.write(command_str.encode('utf-8'))
-                    
+                
                 # Sende eine "ok" Antwort in der Simulation
                 if self.ser == "SIMULATION":
                     response = {"type": "response", "id": command_dict["id"], "status": "ok"}
@@ -106,7 +90,7 @@ class SerialWorker(QThread):
             elif self.ser and self.ser.is_open:
                 try:
                     if self.ser.in_waiting > 0:
-                        line = self.ser.readline().decode('utf-8', errors='ignore').strip()  # errors='ignore' hinzufügen!
+                        line = self.ser.readline().decode('utf-8').strip()
                         if line:
                             try:
                                 data = json.loads(line)

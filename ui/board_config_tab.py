@@ -11,41 +11,31 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBo
 from PyQt6.QtGui import QPixmap, QPainter, QColor, QPen, QFont
 from PyQt6.QtCore import Qt, pyqtSignal, QRect
 
-# --- Angepasster Import für sensor_library ---
+# --- Korrigierter Import ---
+# Gehe davon aus, dass sensor_library.py im übergeordneten Verzeichnis liegt
+# Füge das übergeordnete Verzeichnis zum sys.path hinzu, falls nötig (vor allem für Tests)
 try:
-    from sensor_library import SensorLibrary, SensorDefinition, SensorType
-    SENSOR_LIB_AVAILABLE = True
-    print("INFO (Board Config): sensor_library direkt importiert.")
+    # Direkter Import (funktioniert meistens, wenn main.py im Hauptverzeichnis gestartet wird)
+    from sensor_library import SensorLibrary, SensorDefinition # SensorDefinition importieren
 except ImportError:
+    # Fallback, wenn der direkte Import fehlschlägt (z.B. beim direkten Ausführen dieser Datei)
     try:
+        # Füge das Parent-Verzeichnis hinzu, um sensor_library zu finden
         import sys
         import os
         parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
-            print(f"INFO (Board Config): Füge '{parent_dir}' zu sys.path hinzu.")
-        from sensor_library import SensorLibrary, SensorDefinition, SensorType
-        SENSOR_LIB_AVAILABLE = True
-        print("INFO (Board Config): sensor_library über sys.path importiert.")
+        from sensor_library import SensorLibrary, SensorDefinition
+        print("INFO: sensor_library.py über sys.path importiert.")
     except ImportError as e:
-        print(f"WARNUNG (Board Config): sensor_library.py konnte nicht importiert werden: {e}. Sensor-spezifische Pin-Auswahl nicht verfügbar.")
-        SENSOR_LIB_AVAILABLE = False
-        class SensorDefinition: pass
-        class SensorType:
-             OTHER = "other" # Minimaler Fallback
-             @classmethod
-             def __members__(cls): return {'OTHER': cls.OTHER}
-             def __init__(self, value): self.value = value
-        class SensorLibrary:
-             @classmethod
-             def get_all_sensors(cls): return {} # Leeres Dict als Fallback
-             @classmethod
-             def load_all_sensors(cls, force_reload=False): pass # Dummy Methode
-             
-             
+        print(f"WARNUNG: sensor_library.py konnte nicht importiert werden: {e}. Sensor-spezifische Pin-Auswahl nicht verfügbar.")
+        SensorLibrary = None
+        SensorDefinition = None # Sicherstellen, dass die Variable existiert
+
 class ArduinoPinWidget(QWidget):
-    """Kleines Widget für einen einzelnen Pin auf dem Board-Diagramm"""
-    pin_config_changed = pyqtSignal(str, str)  # pin_name, function
+    """ Kleines Widget für einen einzelnen Pin auf dem Board-Diagramm """
+    pin_config_changed = pyqtSignal(str, str) # pin_name, function
 
     def __init__(self, pin_name, available_functions, default_function="INPUT", parent=None):
         super().__init__(parent)
@@ -87,37 +77,6 @@ class ArduinoPinWidget(QWidget):
         self.combo.setCurrentText(function_name)
         self.combo.blockSignals(False)
 
-    def update_functions(self, new_functions):
-        """
-        Aktualisiert die verfügbaren Funktionen in der ComboBox.
-        Behält die aktuelle Auswahl bei, falls sie noch in der neuen Liste vorhanden ist.
-        
-        Args:
-            new_functions: Liste der neuen verfügbaren Funktionen
-        """
-        current_selection = self.combo.currentText()
-        
-        # ComboBox Signale blockieren während des Updates
-        self.combo.blockSignals(True)
-        
-        # Alte Einträge löschen und neue hinzufügen
-        self.combo.clear()
-        self.combo.addItems(new_functions)
-        
-        # Versuche, die vorherige Auswahl wiederherzustellen
-        if current_selection in new_functions:
-            self.combo.setCurrentText(current_selection)
-        else:
-            # Falls die vorherige Auswahl nicht mehr verfügbar ist,
-            # setze auf den ersten Eintrag (normalerweise "UNUSED")
-            if len(new_functions) > 0:
-                self.combo.setCurrentIndex(0)
-        
-        # Signale wieder aktivieren
-        self.combo.blockSignals(False)
-        
-        # Speichere die neue Funktionsliste
-        self.available_functions = new_functions
 
 class BoardContainerWidget(QWidget):
      # (Unverändert von der vorherigen Antwort)
@@ -152,49 +111,29 @@ class BoardConfigTab(QWidget):
         self.config_manager = config_manager
         self.pin_widgets = {}
         self.arduino_image_path = os.path.join("assets", "arduino_uno_pinout.png")
-        self.digital_functions = []
-        self.analog_functions = []
-        # Fülle die Listen initial, bevor UI erstellt wird
-        self.update_available_functions()
-        self.setup_ui()
-        self.load_config()
 
-    def update_available_functions(self):
-        """ Lädt die verfügbaren Funktionen (Basis + Sensoren) neu """
-        print("Aktualisiere verfügbare Pin-Funktionen...")
         self.digital_functions = ["UNUSED", "INPUT", "OUTPUT", "INPUT_PULLUP"]
         self.analog_functions = ["UNUSED", "ANALOG_INPUT"]
 
-        if SENSOR_LIB_AVAILABLE and SensorDefinition:
-            # Stelle sicher, dass die Bibliothek geladen ist
-            SensorLibrary.load_all_sensors(force_reload=True)
-            # --- KORREKTUR: Verwende get_all_sensors() statt SENSORS ---
-            all_sensors = SensorLibrary.get_all_sensors()
-            # -----------------------------------------------------------
-            print(f"  Gefundene Sensoren für Funktionsliste: {len(all_sensors)}")
-
-            for sensor_id, sensor_def in all_sensors.items():
+        # Fülle Funktionen nur, wenn SensorLibrary erfolgreich importiert wurde
+        if SensorLibrary and SensorDefinition:
+            for sensor_id, sensor_def in SensorLibrary.SENSORS.items():
+                # Prüfe, ob das Objekt die erwarteten Attribute hat (Sicherheitscheck)
                 if not isinstance(sensor_def, SensorDefinition): continue
-                if not hasattr(sensor_def, 'protocol') or not hasattr(sensor_def, 'pins'): continue
-                if not isinstance(sensor_def.pins, dict): continue
 
-                if sensor_def.protocol in ["digital", "analog", "onewire"]:
-                    for pin_role, default_pin in sensor_def.pins.items():
-                         if not isinstance(default_pin, str): continue
-                         func_name = f"{getattr(sensor_def, 'name', 'Unbekannt')} ({pin_role})"
-                         if default_pin.startswith("A"):
-                             if func_name not in self.analog_functions: self.analog_functions.append(func_name)
-                         elif default_pin.startswith("D"):
-                              if func_name not in self.digital_functions: self.digital_functions.append(func_name)
-        else:
-             print("  SensorBibliothek nicht verfügbar, nur Basis-Funktionen.")
+                if hasattr(sensor_def, 'protocol') and sensor_def.protocol in ["digital", "analog", "onewire"]:
+                    if hasattr(sensor_def, 'pins') and isinstance(sensor_def.pins, dict):
+                        for pin_role, default_pin in sensor_def.pins.items():
+                             if not isinstance(default_pin, str): continue # Sicherstellen, dass default_pin ein String ist
+                             func_name = f"{sensor_def.name} ({pin_role})"
+                             if default_pin.startswith("A"):
+                                 if func_name not in self.analog_functions: self.analog_functions.append(func_name)
+                             elif default_pin.startswith("D"):
+                                  if func_name not in self.digital_functions: self.digital_functions.append(func_name)
 
-        # Aktualisiere ComboBoxen der vorhandenen Pin-Widgets
-        for pin_name, pin_widget in self.pin_widgets.items():
-             if pin_name.startswith("D"):
-                 pin_widget.update_functions(self.digital_functions)
-             elif pin_name.startswith("A"):
-                 pin_widget.update_functions(self.analog_functions)
+        self.setup_ui()
+        # Lade Konfiguration *nachdem* die UI und Pin-Widgets erstellt wurden
+        self.load_config()
 
     def setup_ui(self):
         # (Unverändert von der vorherigen Antwort)
@@ -255,7 +194,7 @@ class BoardConfigTab(QWidget):
         print(f"Pin {pin_name} geändert zu: {function}")
 
     def get_current_board_config(self):
-        """Sammelt die aktuelle Konfiguration aller Pin-Widgets"""
+        """ Sammelt die aktuelle Konfiguration aller Pin-Widgets """
         config = {}
         active_sensors = {}
         sensor_pin_map = {}
@@ -267,7 +206,7 @@ class BoardConfigTab(QWidget):
 
             if function != "UNUSED":
                 if pin_name in pin_usage_check:
-                    raise ValueError(f"Pin {pin_name} wird mehrfach verwendet: '{pin_usage_check[pin_name]}' und '{function}'")
+                     raise ValueError(f"Pin {pin_name} wird mehrfach verwendet: '{pin_usage_check[pin_name]}' und '{function}'")
                 pin_usage_check[pin_name] = function
 
             # Sensor-Pins separat sammeln (nur wenn SensorLibrary geladen wurde)
@@ -276,26 +215,27 @@ class BoardConfigTab(QWidget):
                     sensor_name_part = function.split(" (")[0]
                     pin_role = function.split(" (")[1][:-1]
                     sensor_id = None
-                    sensor_def = None
-                    
-                    # WICHTIG: Verwende get_all_sensors() statt SENSORS
-                    for sid, sdef_search in SensorLibrary.get_all_sensors().items():
+                    sensor_def = None # Sensor-Definition speichern
+                    for sid, sdef_search in SensorLibrary.SENSORS.items():
                         # Sicherstellen, dass sdef_search ein SensorDefinition Objekt ist
                         if isinstance(sdef_search, SensorDefinition) and hasattr(sdef_search, 'name') and sdef_search.name == sensor_name_part:
                             sensor_id = sid
-                            sensor_def = sdef_search
+                            sensor_def = sdef_search # Definition merken
                             break
 
                     if sensor_id and sensor_def:
                         if sensor_id not in active_sensors:
+                            # --- HIER WAR DER FEHLER ---
+                            # Verwende sensor_def.id statt sdef.id
                             active_sensors[sensor_id] = {'sensor_type': sensor_def.id, 'pin_config': {}}
                         pin_number = pinToNumber(pin_name)
                         if pin_number == -1:
-                            raise ValueError(f"Ungültiger Pin-Name '{pin_name}' für Sensor '{function}'")
+                             raise ValueError(f"Ungültiger Pin-Name '{pin_name}' für Sensor '{function}'")
                         active_sensors[sensor_id]['pin_config'][pin_role] = pin_number
                         sensor_pin_map[function] = pin_name
                     elif sensor_id is None:
-                        print(f"Warnung: Konnte Sensor-ID für Funktion '{function}' nicht finden.")
+                         print(f"Warnung: Konnte Sensor-ID für Funktion '{function}' nicht finden.")
+
 
                 except Exception as e:
                     print(f"Fehler beim Parsen der Sensorfunktion: {function} - {e}")

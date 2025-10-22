@@ -38,14 +38,9 @@ from ui.sensor_tab import SensorTab
 from ui.enhanced_dashboard_tab import EnhancedDashboardTab
 from ui.branding import get_full_stylesheet, LOGO_PATH
 from ui.sequence_info_widget import SequenceInfoWidget
-from ui.sensor_dashboard_tab import SensorDashboardTab
-from ui.pin_polling_settings import PinPollingSettings
-
 # NEU: Board Config Tab importieren
 from ui.board_config_tab import BoardConfigTab
-from ui.sensor_library_manager_tab import SensorLibraryManagerTab
 
-from sensor_library import SensorLibrary # Dieser Import lädt jetzt auch User-Sensoren
 
 # --- ADVANCED FEATURES ---
 try:
@@ -72,18 +67,12 @@ class MainWindow(QMainWindow):
         self.db_worker.moveToThread(self.db_thread); self.db_thread.start()
         print("Asynchroner Datenbank-Worker gestartet.")
         self.config_manager = ConfigManager(config_file="arduino_config.json")
-        self.active_sensor_config_for_polling = {}
-        self.active_polling_pins = [f'D{i}' for i in range(14)] + [f'A{i}' for i in range(6)]
-        self.pin_poll_interval = 500  # Default 500ms
         self.worker = SerialWorker()
         self.seq_runner = SequenceRunner()
         self.current_test_id = None; self.sensor_log = []; self.test_start_time = 0
         self.chart_start_time = time.time()
         self.active_sensor_config_for_polling = {} # Speichert, welche Sensoren gepollt werden sollen
 
-        SensorLibrary.load_all_sensors() # Stellt sicher, dass die kombinierte Liste verfügbar ist
-        
-        
         self.setup_ui()
         self.setup_connections()
         self.setStyleSheet(get_full_stylesheet())
@@ -96,10 +85,6 @@ class MainWindow(QMainWindow):
             print("✅ Advanced Features erfolgreich integriert!")
         self.auto_save_timer = QTimer(self, timeout=self.auto_save_config, interval=30000); self.auto_save_timer.start()
         self.sensor_poll_timer = QTimer(self, timeout=self.poll_sensors)
-        self.pin_poll_timer = QTimer(self)
-        self.pin_poll_timer.timeout.connect(self.poll_pins)
-        
-        
         print("\nAnwendung bereit.")
 
 
@@ -120,12 +105,7 @@ class MainWindow(QMainWindow):
         self.archive_tab = ArchiveTab()
         # NEU: Board Config Tab Instanz erstellen
         self.board_config_tab = BoardConfigTab(self.config_manager)
-        self.sensor_dashboard_tab = SensorDashboardTab()
-        self.pin_polling_tab = PinPollingSettings()
 
-        # Nutzt jetzt kombinierte Sensorliste
-        # NEU: Sensor Library Manager Tab Instanz
-        self.sensor_manager_tab = SensorLibraryManagerTab()
 
         self._create_menu_bar()
         main_layout.addLayout(self._create_connection_bar())
@@ -136,11 +116,6 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.pin_control_tab, "🔌 Pin Steuerung")
         self.tabs.addTab(self.pin_overview_tab, "📊 Pin Übersicht")
         self.tabs.addTab(self.sensor_tab, "🌡️ Sensoren")
-        self.tabs.addTab(self.sensor_manager_tab, "📚 Sensor Bibliothek")
-        self.tabs.addTab(self.sensor_dashboard_tab, "📊 Sensor Dashboard")
-        self.tabs.addTab(self.pin_polling_tab, "⚙️ Pin Polling")
-
-
         self.tabs.addTab(self.sequence_tab, "⚙️ Sequenzen")
         self.tabs.addTab(self.chart_tab, "📈 Live-Aufzeichnung")
         self.tabs.addTab(self.archive_tab, "🗄️ Archiv")
@@ -237,43 +212,14 @@ class MainWindow(QMainWindow):
 
     def setup_connections(self):
         """ Verbindet Signale und Slots """
-        # ... (Alle bisherigen Verbindungen bleiben bestehen) ...
-        self.pin_control_tab.command_signal.connect(self.send_command)
-
-
-        # NEU: Verbindung für Sensor Library Manager
-        self.sensor_manager_tab.sensors_updated_signal.connect(self.handle_sensors_updated)
-        self.pin_polling_tab.polling_changed.connect(self.update_pin_polling)
-
-        # Stelle sicher, dass Board Config Tab auch verbunden ist
-        self.board_config_tab.apply_config_signal.connect(self.apply_config_and_connect)
+        # --- Core ---
         self.worker.data_received.connect(self.handle_data)
         self.worker.status_changed.connect(self.update_status)
         self.db.add_run_requested.connect(self.db_worker.add_run)
         self.db.update_run_requested.connect(self.db_worker.update_run)
 
         # --- Pin Control ---
-
-    def poll_pins(self):
-        """Fragt Pin-Stati regelmäßig ab für Live-Updates"""
-        if not self.worker.is_connected():
-            return
-        
-        # Frage nur ausgewählte Pins ab
-        for pin in self.active_polling_pins:
-            if pin.startswith('A'):
-                self.send_command({
-                    "id": f"poll_{pin}",
-                    "command": "analog_read",
-                    "pin": pin
-                })
-            elif pin.startswith('D'):
-                self.send_command({
-                    "id": f"poll_{pin}",
-                    "command": "digital_read",
-                    "pin": pin
-                })
-            time.sleep(0.05)  # LÄNGER warten zwischen Pins (war 0.02)
+        self.pin_control_tab.command_signal.connect(self.send_command)
 
         # --- Sequence ---
         self.seq_runner.command_signal.connect(self.send_command)
@@ -365,40 +311,6 @@ class MainWindow(QMainWindow):
         try: # Relay Quick Widget
             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.command_signal.connect(self.send_command)
         except AttributeError: pass
-        
-    def update_pin_polling(self, pin_list, interval_ms):
-        """Aktualisiert welche Pins gepollt werden"""
-        self.active_polling_pins = pin_list
-        self.pin_poll_interval = interval_ms
-        
-        print(f"Pin Polling aktualisiert: {len(pin_list)} Pins, Intervall: {interval_ms}ms")
-        
-        # Timer neu starten mit neuem Intervall
-        if self.worker.is_connected():
-            self.pin_poll_timer.stop()
-            if pin_list:  # Nur starten wenn Pins ausgewählt
-                self.pin_poll_timer.start(interval_ms)
-                print(f"Pin Polling gestartet: {', '.join(pin_list)}")
-            else:
-                print("Pin Polling gestoppt (keine Pins ausgewählt)")
-        
-
-# --- NEUE Methode zum Reagieren auf Sensor-Updates ---
-    def handle_sensors_updated(self):
-        """ Wird aufgerufen, wenn Sensoren im Manager gespeichert wurden """
-        print("Sensorbibliothek wurde aktualisiert. Lade Board Config neu...")
-        # Lade die Sensorbibliothek neu (wichtig, damit BoardConfigTab die neuen Daten hat)
-        SensorLibrary.load_all_sensors(force_reload=True)
-        # Informiere den BoardConfigTab, dass er seine Funktionslisten neu aufbauen soll
-        # (Wir müssen eine Methode dafür im BoardConfigTab hinzufügen)
-        self.board_config_tab.update_available_functions()
-        QMessageBox.information(self, "Sensorbibliothek", "Die Sensorbibliothek wurde aktualisiert. Bitte überprüfen Sie die Pin-Konfiguration im 'Board Konfiguration' Tab.")
-
-
-
-
-
-
 
     # --- Connection Handling ---
     def initiate_connection(self):
@@ -430,67 +342,65 @@ class MainWindow(QMainWindow):
 
         print(f"Empfangene Konfiguration zum Senden an {port}: {config_data}")
         self.active_sensor_config_for_polling = config_data.get('active_sensors', {})
-        
-        # Lade Sensoren ins Dashboard
-        self.sensor_dashboard_tab.load_active_sensors(self.active_sensor_config_for_polling)
 
-        # Konfigurationsbefehle senden (sobald Verbindung steht)
+        # 1. Konfigurationsbefehle senden (sobald Verbindung steht)
         def send_config_after_connect(status_message):
             if "Verbunden" in status_message:
-                print("Verbindung hergestellt, sende Pin-Konfiguration...")
-                try: 
-                    self.worker.status_changed.disconnect(send_config_after_connect)
-                except TypeError: 
-                    pass
+                print("Verbindung hergestellt, sende Sensor-Konfiguration...")
+                # Trenne dieses Signal, um Endlosschleife zu vermeiden
+                try: self.worker.status_changed.disconnect(send_config_after_connect)
+                except TypeError: pass # Falls schon getrennt
 
-                # Sende Pin Modi
+                # Sende Pin Modi zuerst (OUTPUT für Trigger etc.)
                 pin_functions = config_data.get('pin_functions', {})
                 for pin_name, function in pin_functions.items():
                     if function == "OUTPUT":
                         cmd = {"id": f"cfg_pm_{pin_name}", "command": "pin_mode", "pin": pin_name, "mode": "OUTPUT"}
                         self.send_command(cmd)
-                        time.sleep(0.1)
-                    elif function == "INPUT_PULLUP":
-                        cmd = {"id": f"cfg_pm_{pin_name}", "command": "pin_mode", "pin": pin_name, "mode": "INPUT_PULLUP"}
-                        self.send_command(cmd)
-                        time.sleep(0.1)
+                        time.sleep(0.01) # Kleine Pause
+                    # INPUT/INPUT_PULLUP werden standardmäßig gesetzt oder können hier auch gesetzt werden
 
-                print("Pin-Konfiguration gesendet.")
-                
-                # Starte Polling Timer
-                self.sensor_poll_timer.setInterval(self.sensor_tab.get_poll_interval())
+                # Sende Sensor-Konfigurationen
+                active_sensors = config_data.get('active_sensors', {})
+                for sensor_id, sensor_config in active_sensors.items():
+                    cmd = {
+                        "id": f"cfg_sens_{sensor_id}",
+                        "command": "configure_sensor_pin",
+                        "sensor_type": sensor_config['sensor_type'],
+                        "pin_config": sensor_config['pin_config']
+                    }
+                    self.send_command(cmd)
+                    time.sleep(0.02) # Etwas längere Pause nach Konfig-Befehlen
+
+                print("Sensor-Konfiguration gesendet.")
+                # Starte Polling Timer NACHDEM Konfig gesendet wurde
+                self.sensor_poll_timer.setInterval(self.sensor_tab.get_poll_interval()) # Nutze Intervall vom SensorTab
                 self.sensor_poll_timer.start()
-                
-                # Starte Pin-Polling mit aktuellen Settings
-                if self.active_polling_pins:
-                    self.pin_poll_timer.start(self.pin_poll_interval)
-                    print(f"Pin Polling gestartet: {len(self.active_polling_pins)} Pins, {self.pin_poll_interval}ms")
-                
+                print(f"Sensor Polling gestartet (Intervall: {self.sensor_poll_timer.interval()}ms).")
                 self.connect_btn.setText("Trennen")
+                # Wechsle zurück zum Dashboard nach erfolgreicher Konfiguration/Verbindung
                 self.tabs.setCurrentWidget(self.dashboard_tab)
+
 
             elif "Fehler" in status_message:
                  print("Verbindungsfehler, Konfiguration nicht gesendet.")
-                 try: 
-                     self.worker.status_changed.disconnect(send_config_after_connect)
-                 except TypeError: 
-                     pass
+                 try: self.worker.status_changed.disconnect(send_config_after_connect)
+                 except TypeError: pass
 
+        # Verbinde das Signal *bevor* der Verbindungsversuch gestartet wird
         self.worker.status_changed.connect(send_config_after_connect)
         print(f"Versuche Verbindung zu {port}...")
         self.worker.connect_serial(port)
-
-
+        # Button wird erst in send_config_after_connect auf "Trennen" gesetzt
 
     def disconnect_connection(self):
         """ Trennt die Verbindung und stoppt Timer """
         if self.worker.is_connected():
             print("Trenne Verbindung...")
             self.sensor_poll_timer.stop()
-            self.pin_poll_timer.stop()  # NEU
             self.worker.disconnect_serial()
             self.connect_btn.setText("Verbinden")
-            self.active_sensor_config_for_polling = {}
+            self.active_sensor_config_for_polling = {} # Polling-Liste leeren
 
     def handle_dashboard_connect(self, port):
         """ Verbindet über das Dashboard, zeigt aber auch erst Config Tab """
@@ -517,76 +427,36 @@ class MainWindow(QMainWindow):
                     self.send_command(json_cmd)
             except Exception as e: print(f"⚠️ Fehler bei Konvertierung von Befehl '{command}': {e}")
 
-    def handle_data(self, data):
-        """Verarbeitet empfangene Daten vom Arduino"""
-        msg_type = data.get("type")
-        
-        if msg_type == "response":
-            if data.get("status") == "ok":
-                pass
-            else:
-                print(f"Arduino Response: {data}")
-        
-        elif msg_type == "pin_update":
-            pin_name = data.get("pin_name")
-            value = data.get("value")
-            if pin_name and value is not None:
-                self.pin_control_tab.update_pin_value(pin_name, value)
-                self.pin_overview_tab.update_pin_state(pin_name, value)
-                
-                if hasattr(self.dashboard_tab, 'pin_overview_widget'):
-                    self.dashboard_tab.pin_overview_widget.update_pin_state(pin_name, value)
-                
-                if pin_name.startswith('A'):
-                    elapsed = time.time() - self.chart_start_time
-                    self.chart_tab.add_data_point(pin_name, elapsed, value)
-                    if hasattr(self.dashboard_tab, 'live_chart_widget'):
-                        self.dashboard_tab.live_chart_widget.add_data_point(pin_name, elapsed, value)
-        
-        elif msg_type == "sensor_update":
-            sensor_name = data.get("sensor")
-            value = data.get("value")
-            
-            if sensor_name and value is not None:
-                self.sensor_dashboard_tab.update_sensor_value(sensor_name, value)
-            
-            if "intensity" in data:
-                intensity = data.get("intensity")
-                if sensor_name and intensity is not None:
-                    self.sensor_dashboard_tab.update_sensor_value(sensor_name, intensity)
-            
-            if hasattr(self.dashboard_tab, 'sensor_display_widget') and sensor_name and value is not None:
-                try:
-                    self.dashboard_tab.sensor_display_widget.update_sensor(sensor_name, value)
-                except:
-                    pass
-        
-        elif msg_type == "status":
-            message = data.get("message", "")
-            print(f"Arduino Status: {message}")
-            self.status_bar.showMessage(message, 3000)
-        
-        elif msg_type == "error":
-            error_msg = data.get("message", "Unbekannter Fehler")
-            print(f"Arduino Fehler: {error_msg}")
-            self.status_bar.showMessage(f"❌ Fehler: {error_msg}", 5000)
-        
-        elif msg_type == "pin_states":
-            digital_pins = data.get("digital", [])
-            for pin_data in digital_pins:
-                pin_name = pin_data.get("pin")
-                value = pin_data.get("value")
-                if pin_name and value is not None:
-                    self.pin_control_tab.update_pin_value(pin_name, value)
-                    self.pin_overview_tab.update_pin_state(pin_name, value)
-            
-            analog_pins = data.get("analog", [])
-            for pin_data in analog_pins:
-                pin_name = pin_data.get("pin")
-                value = pin_data.get("value")
-                if pin_name and value is not None:
-                    self.pin_control_tab.update_pin_value(pin_name, value)
-                    self.pin_overview_tab.update_pin_state(pin_name, value)
+
+    def handle_data(self, data): # Unverändert von letzter Version
+         msg_type = data.get("type")
+         if msg_type == "response":
+             if data.get("status") == "ok":
+                 QTimer.singleShot(0, lambda: self.status_bar.setStyleSheet("background-color: #27ae60;"))
+                 QTimer.singleShot(1000, lambda: self.status_bar.setStyleSheet(""))
+         elif msg_type == "pin_update":
+             pin = data.get("pin_name"); value = data.get("value")
+             if pin is not None and value is not None:
+                 current_time = time.time() - self.chart_start_time
+                 self.pin_control_tab.update_pin_value(pin, value)
+                 self.pin_overview_tab.update_pin_state(pin, value)
+                 self.chart_tab.add_data_point(pin, value, current_time)
+                 try:
+                     self.dashboard_tab.pin_overview_widget.update_pin_state(pin, value)
+                     self.dashboard_tab.live_chart_widget.add_data_point(pin, value, current_time)
+                 except AttributeError: pass
+                 self.pin_update_for_runner.emit(pin, value)
+         elif msg_type == "sensor_update":
+             if self.current_test_id is not None: data['time_ms'] = (time.time() - self.test_start_time) * 1000; self.sensor_log.append(data)
+             self.sensor_tab.handle_sensor_data(data)
+             try:
+                 if data.get("sensor") == "B24_TEMP": self.dashboard_tab.sensor_display_widget.update_temperature(data.get("value", 0))
+                 elif data.get("sensor") == "B24_HUMIDITY": self.dashboard_tab.sensor_display_widget.update_humidity(data.get("value", 0))
+             except AttributeError: pass
+         for handler in self.data_handlers:
+             try: handler(data)
+             except Exception as e: print(f"❌ Handler-Fehler: {e}")
+
 
     def update_status(self, message): # Unverändert von letzter Version
          self.status_bar.showMessage(message)
@@ -609,15 +479,19 @@ class MainWindow(QMainWindow):
     def poll_sensors(self):
         """ Fragt die *aktiv konfigurierten* Sensoren ab """
         if self.worker.is_connected():
+            # print(f"Polling Sensoren: {list(self.active_sensor_config_for_polling.keys())}") # Debug
             for sensor_id in self.active_sensor_config_for_polling.keys():
+                # Finde die 'offizielle' ID aus der Konfiguration
                 sensor_type = self.active_sensor_config_for_polling[sensor_id].get('sensor_type', sensor_id)
-                
+                # print(f"  - Sende read_sensor für: {sensor_type}") # Debug
                 self.send_command({
-                    "id": f"poll_{sensor_type}",
+                    "id": f"poll_{sensor_type}_{uuid.uuid4()}",
                     "command": "read_sensor",
-                    "sensor": sensor_type
+                    "sensor": sensor_type # Sende die ID, die der Sketch erwartet (z.B. DHT11)
                 })
-                time.sleep(0.05)  # 50ms Pause zwischen Befehlen!
+                # Optional: Kurze Pause zwischen Abfragen, falls nötig
+                # time.sleep(0.01)
+
     # --- Restliche Methoden wie load_saved_config, auto_save_config etc. ---
     # Wichtig: load_saved_config muss ggf. die Konfig vom BoardConfigTab laden
     # Wichtig: auto_save_config muss ggf. die Konfig vom BoardConfigTab speichern
@@ -647,13 +521,7 @@ class MainWindow(QMainWindow):
             except AttributeError: pass
         self.status_bar.showMessage("Konfiguration geladen.", 2000)
 
-        if "pin_polling_settings" in config:
-            self.pin_polling_tab.load_settings(config["pin_polling_settings"])
-            self.active_polling_pins = config["pin_polling_settings"].get("selected_pins", ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'])
-            self.pin_poll_interval = config["pin_polling_settings"].get("interval", 500)
-            
-            
-            
+
     def auto_save_config(self):
         pin_configs = self.pin_control_tab.get_pin_configs()
         current_layout_name = ""
@@ -667,13 +535,9 @@ class MainWindow(QMainWindow):
         # -> save_config_to_file() muss hier oder im BoardConfigTab aufgerufen werden.
 
         if hasattr(self, 'relay_tab') and self.relay_tab: self.relay_tab.save_settings()
-        
-        pin_polling_settings = self.pin_polling_tab.save_settings()
-        self.config_manager.set("pin_polling_settings", pin_polling_settings)
 
         # Speichere ALLES (inkl. Board Config, die vorher via .set() gesetzt wurde)
         self.config_manager.save_config(self.sequences, pin_configs, self.dashboard_layouts) # Diese Methode ruft intern save_config_to_file() auf
-        
 
         self.status_bar.showMessage("Konfiguration automatisch gespeichert.", 2000)
 

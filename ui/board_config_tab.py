@@ -44,8 +44,8 @@ except ImportError:
              
              
 class ArduinoPinWidget(QWidget):
-    """ Kleines Widget für einen einzelnen Pin auf dem Board-Diagramm """
-    pin_config_changed = pyqtSignal(str, str) # pin_name, function
+    """Kleines Widget für einen einzelnen Pin auf dem Board-Diagramm"""
+    pin_config_changed = pyqtSignal(str, str)  # pin_name, function
 
     def __init__(self, pin_name, available_functions, default_function="INPUT", parent=None):
         super().__init__(parent)
@@ -87,6 +87,37 @@ class ArduinoPinWidget(QWidget):
         self.combo.setCurrentText(function_name)
         self.combo.blockSignals(False)
 
+    def update_functions(self, new_functions):
+        """
+        Aktualisiert die verfügbaren Funktionen in der ComboBox.
+        Behält die aktuelle Auswahl bei, falls sie noch in der neuen Liste vorhanden ist.
+        
+        Args:
+            new_functions: Liste der neuen verfügbaren Funktionen
+        """
+        current_selection = self.combo.currentText()
+        
+        # ComboBox Signale blockieren während des Updates
+        self.combo.blockSignals(True)
+        
+        # Alte Einträge löschen und neue hinzufügen
+        self.combo.clear()
+        self.combo.addItems(new_functions)
+        
+        # Versuche, die vorherige Auswahl wiederherzustellen
+        if current_selection in new_functions:
+            self.combo.setCurrentText(current_selection)
+        else:
+            # Falls die vorherige Auswahl nicht mehr verfügbar ist,
+            # setze auf den ersten Eintrag (normalerweise "UNUSED")
+            if len(new_functions) > 0:
+                self.combo.setCurrentIndex(0)
+        
+        # Signale wieder aktivieren
+        self.combo.blockSignals(False)
+        
+        # Speichere die neue Funktionsliste
+        self.available_functions = new_functions
 
 class BoardContainerWidget(QWidget):
      # (Unverändert von der vorherigen Antwort)
@@ -224,7 +255,7 @@ class BoardConfigTab(QWidget):
         print(f"Pin {pin_name} geändert zu: {function}")
 
     def get_current_board_config(self):
-        """ Sammelt die aktuelle Konfiguration aller Pin-Widgets """
+        """Sammelt die aktuelle Konfiguration aller Pin-Widgets"""
         config = {}
         active_sensors = {}
         sensor_pin_map = {}
@@ -236,7 +267,7 @@ class BoardConfigTab(QWidget):
 
             if function != "UNUSED":
                 if pin_name in pin_usage_check:
-                     raise ValueError(f"Pin {pin_name} wird mehrfach verwendet: '{pin_usage_check[pin_name]}' und '{function}'")
+                    raise ValueError(f"Pin {pin_name} wird mehrfach verwendet: '{pin_usage_check[pin_name]}' und '{function}'")
                 pin_usage_check[pin_name] = function
 
             # Sensor-Pins separat sammeln (nur wenn SensorLibrary geladen wurde)
@@ -245,27 +276,26 @@ class BoardConfigTab(QWidget):
                     sensor_name_part = function.split(" (")[0]
                     pin_role = function.split(" (")[1][:-1]
                     sensor_id = None
-                    sensor_def = None # Sensor-Definition speichern
-                    for sid, sdef_search in SensorLibrary.SENSORS.items():
+                    sensor_def = None
+                    
+                    # WICHTIG: Verwende get_all_sensors() statt SENSORS
+                    for sid, sdef_search in SensorLibrary.get_all_sensors().items():
                         # Sicherstellen, dass sdef_search ein SensorDefinition Objekt ist
                         if isinstance(sdef_search, SensorDefinition) and hasattr(sdef_search, 'name') and sdef_search.name == sensor_name_part:
                             sensor_id = sid
-                            sensor_def = sdef_search # Definition merken
+                            sensor_def = sdef_search
                             break
 
                     if sensor_id and sensor_def:
                         if sensor_id not in active_sensors:
-                            # --- HIER WAR DER FEHLER ---
-                            # Verwende sensor_def.id statt sdef.id
                             active_sensors[sensor_id] = {'sensor_type': sensor_def.id, 'pin_config': {}}
                         pin_number = pinToNumber(pin_name)
                         if pin_number == -1:
-                             raise ValueError(f"Ungültiger Pin-Name '{pin_name}' für Sensor '{function}'")
+                            raise ValueError(f"Ungültiger Pin-Name '{pin_name}' für Sensor '{function}'")
                         active_sensors[sensor_id]['pin_config'][pin_role] = pin_number
                         sensor_pin_map[function] = pin_name
                     elif sensor_id is None:
-                         print(f"Warnung: Konnte Sensor-ID für Funktion '{function}' nicht finden.")
-
+                        print(f"Warnung: Konnte Sensor-ID für Funktion '{function}' nicht finden.")
 
                 except Exception as e:
                     print(f"Fehler beim Parsen der Sensorfunktion: {function} - {e}")

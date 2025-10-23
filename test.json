@@ -1,0 +1,1218 @@
+{
+  "metadata": {
+    "id": 23,
+    "name": "Test: Test",
+    "sequence_name": "Test",
+    "start_time": "23.10.2025 20:21:12",
+    "end_time": "23.10.2025 20:21:33",
+    "duration": 21.15468,
+    "cycles": 25,
+    "status": "Abgeschlossen"
+  },
+  "log": {
+    "events": [
+      {
+        "action": "HIGH",
+        "cycle": 0,
+        "pin": "D8",
+        "time": 4.619836807250977
+      },
+      {
+        "action": "HIGH",
+        "cycle": 0,
+        "pin": "D9",
+        "time": 114.01534080505371
+      },
+      {
+        "action": "HIGH",
+        "cycle": 0,
+        "pin": "D10",
+        "time": 214.74266052246094
+      },
+      {
+        "action": "HIGH",
+        "cycle": 0,
+        "pin": "D11",
+        "time": 315.77324867248535
+      },
+      {
+        "action": "LOW",
+        "cycle": 0,
+        "pin": "D8",
+        "time": 415.94910621643066
+      },
+      {
+        "action": "LOW",
+        "cycle": 0,
+        "pin": "D9",
+        "time": 516.9718265533447
+      },
+      {
+        "action": "LOW",
+        "cycle": 0,
+        "pin": "D10",
+        "time": 617.910623550415
+      },
+      {
+        "action": "LOW",
+        "cycle": 0,
+        "pin": "D11",
+        "time": 718.8379764556885
+      },
+      {
+        "action": "HIGH",
+        "cycle": 1,
+        "pin": "D8",
+        "time": 820.3761577606201
+      },
+      {
+        "action": "HIGH",
+        "cycle": 1,
+        "pin": "D9",
+        "time": 921.2048053741455
+      },
+      {
+        "action": "HIGH",
+        "cycle": 1,
+        "pin": "D10",
+        "time": 1022.1776962280273
+      },
+      {
+        "action": "HIGH",
+        "cycle": 1,
+        "pin": "D11",
+        "time": 1122.924566268921
+      },
+      {
+        "action": "LOW",
+        "cycle": 1,
+        "pin": "D8",
+        "time": 1224.2553234100342
+      },
+      {
+        "action": "LOW",
+        "cycle": 1,
+        "pin": "D9",
+        "time": 1324.6848583221436
+      },
+      {
+        "action": "LOW",
+        "cycle": 1,
+        "pin": "D10",
+        "time": 1425.7147312164307
+      },
+      {
+        "action": "LOW",
+        "cycle": 1,
+        "pin": "D11",
+        "time": 1529.1900634765625
+      },
+      {
+        "action": "HIGH",
+        "cycle": 2,
+        "pin": "D8",
+        "time": 1629.9538612365723
+      },
+      {
+        "action": "HIGH",
+        "cycle": 2,
+        "pin": "D9",
+        "time": 1730.7305335998535
+      },
+      {
+        "action": "HIGH",
+        "cycle": 2,
+        "pin": "D10",
+        "time": 1831.3002586364746
+      },
+      {
+        "action": "HIGH",
+        "cycle": 2,
+        "pin": "D11",
+        "time": 1932.0054054260254
+      },
+      {
+        "action": "LOW",
+        "cycle": 2,
+        "pin": "D8",
+        "time": 2032.724142074585
+      },
+      {
+        "action": "LOW",
+        "cycle": 2,
+        "pin": "D9",
+        "time": 2133.671522140503
+      },
+      {
+        "action": "LOW",
+        "cycle": 2,
+        "pin": "D10",
+        "time": 2234.1527938842773
+      },
+      {
+        "action": "LOW",
+        "cycle": 2,
+        "pin": "D11",
+        "time": 2335.0861072540283
+      },
+      {
+        "action": "HIGH",
+        "cycle": 3,
+        "pin": "D8",
+        "time": 2435.8723163604736
+      },
+      {
+        "action": "HIGH",
+        "cycle": 3,
+        "pin": "D9",
+        "time": 2536.609172821045
+      },
+      {
+        "action": "HIGH",
+        "cycle": 3,
+        "pin": "D10",
+        "time": 2636.827230453491
+      },
+      {
+        "action": "HIGH",
+        "cycle": 3,
+        "pin": "D11",
+        "time": 2737.9019260406494
+      },
+      {
+        "action": "LOW",
+        "cycle": 3,
+        "pin": "D8",
+        "time": 2838.5119438171387
+      },
+      {
+        "action": "LOW",
+        "cycle": 3,
+        "pin": "D9",
+        "time": 2939.361572265625
+      },
+      {
+        "action": "LOW",
+        "cycle": 3,
+        "pin": "D10",
+        "time": 3040.1363372802734
+      },
+      {
+        "action": "LOW",
+        "cycle": 3,
+        "pin": "D11",
+        "time": 3140.9912109375
+      },
+      {
+        "action": "HIGH",
+        "cycle": 4,
+        "pin": "D8",
+        "time": 3241.7423725128174
+      },
+      {
+        "action": "HIGH",
+        "cycle": 4,
+        "pin": "D9",
+        "time": 3342.5114154815674
+      },
+      {
+        "action": "HIGH",
+        "cycle": 4,
+        "pin": "D10",
+        "time": 3443.3746337890625
+      },
+      {
+        "action": "HIGH",
+        "cycle": 4,
+        "pin": "D11",
+        "time": 3543.65873336792
+      },
+      {
+        "action": "LOW",
+        "cycle": 4,
+        "pin": "D8",
+        "time": 3644.658088684082
+      },
+      {
+        "action": "LOW",
+        "cycle": 4,
+        "pin": "D9",
+        "time": 3745.7282543182373
+      },
+      {
+        "action": "LOW",
+        "cycle": 4,
+        "pin": "D10",
+        "time": 3846.2109565734863
+      },
+      {
+        "action": "LOW",
+        "cycle": 4,
+        "pin": "D11",
+        "time": 3946.9614028930664
+      },
+      {
+        "action": "HIGH",
+        "cycle": 5,
+        "pin": "D8",
+        "time": 4047.7211475372314
+      },
+      {
+        "action": "HIGH",
+        "cycle": 5,
+        "pin": "D9",
+        "time": 4148.373126983643
+      },
+      {
+        "action": "HIGH",
+        "cycle": 5,
+        "pin": "D10",
+        "time": 4249.4707107543945
+      },
+      {
+        "action": "HIGH",
+        "cycle": 5,
+        "pin": "D11",
+        "time": 4349.905729293823
+      },
+      {
+        "action": "LOW",
+        "cycle": 5,
+        "pin": "D8",
+        "time": 4450.238466262817
+      },
+      {
+        "action": "LOW",
+        "cycle": 5,
+        "pin": "D9",
+        "time": 4551.4075756073
+      },
+      {
+        "action": "LOW",
+        "cycle": 5,
+        "pin": "D10",
+        "time": 4651.925563812256
+      },
+      {
+        "action": "LOW",
+        "cycle": 5,
+        "pin": "D11",
+        "time": 4752.132892608643
+      },
+      {
+        "action": "HIGH",
+        "cycle": 6,
+        "pin": "D8",
+        "time": 4852.927446365356
+      },
+      {
+        "action": "HIGH",
+        "cycle": 6,
+        "pin": "D9",
+        "time": 4953.9954662323
+      },
+      {
+        "action": "HIGH",
+        "cycle": 6,
+        "pin": "D10",
+        "time": 5054.6863079071045
+      },
+      {
+        "action": "HIGH",
+        "cycle": 6,
+        "pin": "D11",
+        "time": 5154.922246932983
+      },
+      {
+        "action": "LOW",
+        "cycle": 6,
+        "pin": "D8",
+        "time": 5256.127119064331
+      },
+      {
+        "action": "LOW",
+        "cycle": 6,
+        "pin": "D9",
+        "time": 5357.698917388916
+      },
+      {
+        "action": "LOW",
+        "cycle": 6,
+        "pin": "D10",
+        "time": 5458.638906478882
+      },
+      {
+        "action": "LOW",
+        "cycle": 6,
+        "pin": "D11",
+        "time": 5559.627056121826
+      },
+      {
+        "action": "HIGH",
+        "cycle": 7,
+        "pin": "D8",
+        "time": 5660.268306732178
+      },
+      {
+        "action": "HIGH",
+        "cycle": 7,
+        "pin": "D9",
+        "time": 5761.242866516113
+      },
+      {
+        "action": "HIGH",
+        "cycle": 7,
+        "pin": "D10",
+        "time": 5861.938714981079
+      },
+      {
+        "action": "HIGH",
+        "cycle": 7,
+        "pin": "D11",
+        "time": 5962.404012680054
+      },
+      {
+        "action": "LOW",
+        "cycle": 7,
+        "pin": "D8",
+        "time": 6064.227104187012
+      },
+      {
+        "action": "LOW",
+        "cycle": 7,
+        "pin": "D9",
+        "time": 6164.8108959198
+      },
+      {
+        "action": "LOW",
+        "cycle": 7,
+        "pin": "D10",
+        "time": 6266.043424606323
+      },
+      {
+        "action": "LOW",
+        "cycle": 7,
+        "pin": "D11",
+        "time": 6366.839647293091
+      },
+      {
+        "action": "HIGH",
+        "cycle": 8,
+        "pin": "D8",
+        "time": 6467.146635055542
+      },
+      {
+        "action": "HIGH",
+        "cycle": 8,
+        "pin": "D9",
+        "time": 6567.943572998047
+      },
+      {
+        "action": "HIGH",
+        "cycle": 8,
+        "pin": "D10",
+        "time": 6669.002056121826
+      },
+      {
+        "action": "HIGH",
+        "cycle": 8,
+        "pin": "D11",
+        "time": 6769.93989944458
+      },
+      {
+        "action": "LOW",
+        "cycle": 8,
+        "pin": "D8",
+        "time": 6870.839357376099
+      },
+      {
+        "action": "LOW",
+        "cycle": 8,
+        "pin": "D9",
+        "time": 6971.51255607605
+      },
+      {
+        "action": "LOW",
+        "cycle": 8,
+        "pin": "D10",
+        "time": 7071.7926025390625
+      },
+      {
+        "action": "LOW",
+        "cycle": 8,
+        "pin": "D11",
+        "time": 7172.364234924316
+      },
+      {
+        "action": "HIGH",
+        "cycle": 9,
+        "pin": "D8",
+        "time": 7273.175001144409
+      },
+      {
+        "action": "HIGH",
+        "cycle": 9,
+        "pin": "D9",
+        "time": 7375.113248825073
+      },
+      {
+        "action": "HIGH",
+        "cycle": 9,
+        "pin": "D10",
+        "time": 7476.269960403442
+      },
+      {
+        "action": "HIGH",
+        "cycle": 9,
+        "pin": "D11",
+        "time": 7577.072858810425
+      },
+      {
+        "action": "LOW",
+        "cycle": 9,
+        "pin": "D8",
+        "time": 7678.112030029297
+      },
+      {
+        "action": "LOW",
+        "cycle": 9,
+        "pin": "D9",
+        "time": 7782.522678375244
+      },
+      {
+        "action": "LOW",
+        "cycle": 9,
+        "pin": "D10",
+        "time": 7882.709980010986
+      },
+      {
+        "action": "LOW",
+        "cycle": 9,
+        "pin": "D11",
+        "time": 7983.025074005127
+      },
+      {
+        "action": "HIGH",
+        "cycle": 10,
+        "pin": "D8",
+        "time": 8084.055185317993
+      },
+      {
+        "action": "HIGH",
+        "cycle": 10,
+        "pin": "D9",
+        "time": 8185.733318328857
+      },
+      {
+        "action": "HIGH",
+        "cycle": 10,
+        "pin": "D10",
+        "time": 8286.746501922607
+      },
+      {
+        "action": "HIGH",
+        "cycle": 10,
+        "pin": "D11",
+        "time": 8387.88628578186
+      },
+      {
+        "action": "LOW",
+        "cycle": 10,
+        "pin": "D8",
+        "time": 8489.276885986328
+      },
+      {
+        "action": "LOW",
+        "cycle": 10,
+        "pin": "D9",
+        "time": 8589.921712875366
+      },
+      {
+        "action": "LOW",
+        "cycle": 10,
+        "pin": "D10",
+        "time": 8690.253734588623
+      },
+      {
+        "action": "LOW",
+        "cycle": 10,
+        "pin": "D11",
+        "time": 8790.7075881958
+      },
+      {
+        "action": "HIGH",
+        "cycle": 11,
+        "pin": "D8",
+        "time": 8891.75009727478
+      },
+      {
+        "action": "HIGH",
+        "cycle": 11,
+        "pin": "D9",
+        "time": 8992.547273635864
+      },
+      {
+        "action": "HIGH",
+        "cycle": 11,
+        "pin": "D10",
+        "time": 9093.083620071411
+      },
+      {
+        "action": "HIGH",
+        "cycle": 11,
+        "pin": "D11",
+        "time": 9195.167064666748
+      },
+      {
+        "action": "LOW",
+        "cycle": 11,
+        "pin": "D8",
+        "time": 9295.904159545898
+      },
+      {
+        "action": "LOW",
+        "cycle": 11,
+        "pin": "D9",
+        "time": 9396.323204040527
+      },
+      {
+        "action": "LOW",
+        "cycle": 11,
+        "pin": "D10",
+        "time": 9497.312545776367
+      },
+      {
+        "action": "LOW",
+        "cycle": 11,
+        "pin": "D11",
+        "time": 9598.318099975586
+      },
+      {
+        "action": "HIGH",
+        "cycle": 12,
+        "pin": "D8",
+        "time": 9699.00107383728
+      },
+      {
+        "action": "HIGH",
+        "cycle": 12,
+        "pin": "D9",
+        "time": 9799.864292144775
+      },
+      {
+        "action": "HIGH",
+        "cycle": 12,
+        "pin": "D10",
+        "time": 9900.441646575928
+      },
+      {
+        "action": "HIGH",
+        "cycle": 12,
+        "pin": "D11",
+        "time": 10001.326084136963
+      },
+      {
+        "action": "LOW",
+        "cycle": 12,
+        "pin": "D8",
+        "time": 10102.44345664978
+      },
+      {
+        "action": "LOW",
+        "cycle": 12,
+        "pin": "D9",
+        "time": 10203.333616256714
+      },
+      {
+        "action": "LOW",
+        "cycle": 12,
+        "pin": "D10",
+        "time": 10303.728818893433
+      },
+      {
+        "action": "LOW",
+        "cycle": 12,
+        "pin": "D11",
+        "time": 10404.304265975952
+      },
+      {
+        "action": "HIGH",
+        "cycle": 13,
+        "pin": "D8",
+        "time": 10504.87470626831
+      },
+      {
+        "action": "HIGH",
+        "cycle": 13,
+        "pin": "D9",
+        "time": 10605.754613876343
+      },
+      {
+        "action": "HIGH",
+        "cycle": 13,
+        "pin": "D10",
+        "time": 10707.254409790039
+      },
+      {
+        "action": "HIGH",
+        "cycle": 13,
+        "pin": "D11",
+        "time": 10808.18486213684
+      },
+      {
+        "action": "LOW",
+        "cycle": 13,
+        "pin": "D8",
+        "time": 10909.307479858398
+      },
+      {
+        "action": "LOW",
+        "cycle": 13,
+        "pin": "D9",
+        "time": 11010.224342346191
+      },
+      {
+        "action": "LOW",
+        "cycle": 13,
+        "pin": "D10",
+        "time": 11110.440492630005
+      },
+      {
+        "action": "LOW",
+        "cycle": 13,
+        "pin": "D11",
+        "time": 11216.875076293945
+      },
+      {
+        "action": "HIGH",
+        "cycle": 14,
+        "pin": "D8",
+        "time": 11317.801713943481
+      },
+      {
+        "action": "HIGH",
+        "cycle": 14,
+        "pin": "D9",
+        "time": 11418.330430984497
+      },
+      {
+        "action": "HIGH",
+        "cycle": 14,
+        "pin": "D10",
+        "time": 11519.020557403564
+      },
+      {
+        "action": "HIGH",
+        "cycle": 14,
+        "pin": "D11",
+        "time": 11619.24934387207
+      },
+      {
+        "action": "LOW",
+        "cycle": 14,
+        "pin": "D8",
+        "time": 11719.901084899902
+      },
+      {
+        "action": "LOW",
+        "cycle": 14,
+        "pin": "D9",
+        "time": 11820.579051971436
+      },
+      {
+        "action": "LOW",
+        "cycle": 14,
+        "pin": "D10",
+        "time": 11920.862674713135
+      },
+      {
+        "action": "LOW",
+        "cycle": 14,
+        "pin": "D11",
+        "time": 12021.759510040283
+      },
+      {
+        "action": "HIGH",
+        "cycle": 15,
+        "pin": "D8",
+        "time": 12122.202157974243
+      },
+      {
+        "action": "HIGH",
+        "cycle": 15,
+        "pin": "D9",
+        "time": 12222.75161743164
+      },
+      {
+        "action": "HIGH",
+        "cycle": 15,
+        "pin": "D10",
+        "time": 12323.57120513916
+      },
+      {
+        "action": "HIGH",
+        "cycle": 15,
+        "pin": "D11",
+        "time": 12423.914194107056
+      },
+      {
+        "action": "LOW",
+        "cycle": 15,
+        "pin": "D8",
+        "time": 12524.879693984985
+      },
+      {
+        "action": "LOW",
+        "cycle": 15,
+        "pin": "D9",
+        "time": 12628.126621246338
+      },
+      {
+        "action": "LOW",
+        "cycle": 15,
+        "pin": "D10",
+        "time": 12729.2640209198
+      },
+      {
+        "action": "LOW",
+        "cycle": 15,
+        "pin": "D11",
+        "time": 12830.107927322388
+      },
+      {
+        "action": "HIGH",
+        "cycle": 16,
+        "pin": "D8",
+        "time": 12937.788009643555
+      },
+      {
+        "action": "HIGH",
+        "cycle": 16,
+        "pin": "D9",
+        "time": 13038.738012313843
+      },
+      {
+        "action": "HIGH",
+        "cycle": 16,
+        "pin": "D10",
+        "time": 13139.085292816162
+      },
+      {
+        "action": "HIGH",
+        "cycle": 16,
+        "pin": "D11",
+        "time": 13240.662574768066
+      },
+      {
+        "action": "LOW",
+        "cycle": 16,
+        "pin": "D8",
+        "time": 13341.733455657959
+      },
+      {
+        "action": "LOW",
+        "cycle": 16,
+        "pin": "D9",
+        "time": 13443.061828613281
+      },
+      {
+        "action": "LOW",
+        "cycle": 16,
+        "pin": "D10",
+        "time": 13543.415784835815
+      },
+      {
+        "action": "LOW",
+        "cycle": 16,
+        "pin": "D11",
+        "time": 13644.354581832886
+      },
+      {
+        "action": "HIGH",
+        "cycle": 17,
+        "pin": "D8",
+        "time": 13745.931148529053
+      },
+      {
+        "action": "HIGH",
+        "cycle": 17,
+        "pin": "D9",
+        "time": 13847.047328948975
+      },
+      {
+        "action": "HIGH",
+        "cycle": 17,
+        "pin": "D10",
+        "time": 13947.773218154907
+      },
+      {
+        "action": "HIGH",
+        "cycle": 17,
+        "pin": "D11",
+        "time": 14050.747156143188
+      },
+      {
+        "action": "LOW",
+        "cycle": 17,
+        "pin": "D8",
+        "time": 14150.943517684937
+      },
+      {
+        "action": "LOW",
+        "cycle": 17,
+        "pin": "D9",
+        "time": 14251.822233200073
+      },
+      {
+        "action": "LOW",
+        "cycle": 17,
+        "pin": "D10",
+        "time": 14356.519937515259
+      },
+      {
+        "action": "LOW",
+        "cycle": 17,
+        "pin": "D11",
+        "time": 14457.033634185791
+      },
+      {
+        "action": "HIGH",
+        "cycle": 18,
+        "pin": "D8",
+        "time": 14558.006763458252
+      },
+      {
+        "action": "HIGH",
+        "cycle": 18,
+        "pin": "D9",
+        "time": 14664.472103118896
+      },
+      {
+        "action": "HIGH",
+        "cycle": 18,
+        "pin": "D10",
+        "time": 14765.978813171387
+      },
+      {
+        "action": "HIGH",
+        "cycle": 18,
+        "pin": "D11",
+        "time": 14866.528987884521
+      },
+      {
+        "action": "LOW",
+        "cycle": 18,
+        "pin": "D8",
+        "time": 14967.112064361572
+      },
+      {
+        "action": "LOW",
+        "cycle": 18,
+        "pin": "D9",
+        "time": 15068.2532787323
+      },
+      {
+        "action": "LOW",
+        "cycle": 18,
+        "pin": "D10",
+        "time": 15169.193029403687
+      },
+      {
+        "action": "LOW",
+        "cycle": 18,
+        "pin": "D11",
+        "time": 15269.570112228394
+      },
+      {
+        "action": "HIGH",
+        "cycle": 19,
+        "pin": "D8",
+        "time": 15370.617389678955
+      },
+      {
+        "action": "HIGH",
+        "cycle": 19,
+        "pin": "D9",
+        "time": 15471.77004814148
+      },
+      {
+        "action": "HIGH",
+        "cycle": 19,
+        "pin": "D10",
+        "time": 15572.65305519104
+      },
+      {
+        "action": "HIGH",
+        "cycle": 19,
+        "pin": "D11",
+        "time": 15673.564434051514
+      },
+      {
+        "action": "LOW",
+        "cycle": 19,
+        "pin": "D8",
+        "time": 15774.996519088745
+      },
+      {
+        "action": "LOW",
+        "cycle": 19,
+        "pin": "D9",
+        "time": 15875.648021697998
+      },
+      {
+        "action": "LOW",
+        "cycle": 19,
+        "pin": "D10",
+        "time": 15975.842952728271
+      },
+      {
+        "action": "LOW",
+        "cycle": 19,
+        "pin": "D11",
+        "time": 16076.615333557129
+      },
+      {
+        "action": "HIGH",
+        "cycle": 20,
+        "pin": "D8",
+        "time": 16177.08969116211
+      },
+      {
+        "action": "HIGH",
+        "cycle": 20,
+        "pin": "D9",
+        "time": 16278.061866760254
+      },
+      {
+        "action": "HIGH",
+        "cycle": 20,
+        "pin": "D10",
+        "time": 16383.353471755981
+      },
+      {
+        "action": "HIGH",
+        "cycle": 20,
+        "pin": "D11",
+        "time": 16484.139919281006
+      },
+      {
+        "action": "LOW",
+        "cycle": 20,
+        "pin": "D8",
+        "time": 16584.760904312134
+      },
+      {
+        "action": "LOW",
+        "cycle": 20,
+        "pin": "D9",
+        "time": 16688.376665115356
+      },
+      {
+        "action": "LOW",
+        "cycle": 20,
+        "pin": "D10",
+        "time": 16789.539575576782
+      },
+      {
+        "action": "LOW",
+        "cycle": 20,
+        "pin": "D11",
+        "time": 16890.49530029297
+      },
+      {
+        "action": "HIGH",
+        "cycle": 21,
+        "pin": "D8",
+        "time": 16991.241216659546
+      },
+      {
+        "action": "HIGH",
+        "cycle": 21,
+        "pin": "D9",
+        "time": 17092.12565422058
+      },
+      {
+        "action": "HIGH",
+        "cycle": 21,
+        "pin": "D10",
+        "time": 17193.29810142517
+      },
+      {
+        "action": "HIGH",
+        "cycle": 21,
+        "pin": "D11",
+        "time": 17294.89254951477
+      },
+      {
+        "action": "LOW",
+        "cycle": 21,
+        "pin": "D8",
+        "time": 17395.851135253906
+      },
+      {
+        "action": "LOW",
+        "cycle": 21,
+        "pin": "D9",
+        "time": 17496.169805526733
+      },
+      {
+        "action": "LOW",
+        "cycle": 21,
+        "pin": "D10",
+        "time": 17596.808433532715
+      },
+      {
+        "action": "LOW",
+        "cycle": 21,
+        "pin": "D11",
+        "time": 17698.042154312134
+      },
+      {
+        "action": "HIGH",
+        "cycle": 22,
+        "pin": "D8",
+        "time": 17799.163103103638
+      },
+      {
+        "action": "HIGH",
+        "cycle": 22,
+        "pin": "D9",
+        "time": 17900.004625320435
+      },
+      {
+        "action": "HIGH",
+        "cycle": 22,
+        "pin": "D10",
+        "time": 18000.91600418091
+      },
+      {
+        "action": "HIGH",
+        "cycle": 22,
+        "pin": "D11",
+        "time": 18106.531143188477
+      },
+      {
+        "action": "LOW",
+        "cycle": 22,
+        "pin": "D8",
+        "time": 18206.91204071045
+      },
+      {
+        "action": "LOW",
+        "cycle": 22,
+        "pin": "D9",
+        "time": 18307.936906814575
+      },
+      {
+        "action": "LOW",
+        "cycle": 22,
+        "pin": "D10",
+        "time": 18408.926486968994
+      },
+      {
+        "action": "LOW",
+        "cycle": 22,
+        "pin": "D11",
+        "time": 18510.07866859436
+      },
+      {
+        "action": "HIGH",
+        "cycle": 23,
+        "pin": "D8",
+        "time": 18610.52680015564
+      },
+      {
+        "action": "HIGH",
+        "cycle": 23,
+        "pin": "D9",
+        "time": 18710.948705673218
+      },
+      {
+        "action": "HIGH",
+        "cycle": 23,
+        "pin": "D10",
+        "time": 18811.46001815796
+      },
+      {
+        "action": "HIGH",
+        "cycle": 23,
+        "pin": "D11",
+        "time": 18912.50252723694
+      },
+      {
+        "action": "LOW",
+        "cycle": 23,
+        "pin": "D8",
+        "time": 19013.62133026123
+      },
+      {
+        "action": "LOW",
+        "cycle": 23,
+        "pin": "D9",
+        "time": 19114.03203010559
+      },
+      {
+        "action": "LOW",
+        "cycle": 23,
+        "pin": "D10",
+        "time": 19215.01660346985
+      },
+      {
+        "action": "LOW",
+        "cycle": 23,
+        "pin": "D11",
+        "time": 19316.067934036255
+      },
+      {
+        "action": "HIGH",
+        "cycle": 24,
+        "pin": "D8",
+        "time": 19417.208194732666
+      },
+      {
+        "action": "HIGH",
+        "cycle": 24,
+        "pin": "D9",
+        "time": 19517.9340839386
+      },
+      {
+        "action": "HIGH",
+        "cycle": 24,
+        "pin": "D10",
+        "time": 19618.234157562256
+      },
+      {
+        "action": "HIGH",
+        "cycle": 24,
+        "pin": "D11",
+        "time": 19719.13981437683
+      },
+      {
+        "action": "LOW",
+        "cycle": 24,
+        "pin": "D8",
+        "time": 19825.044631958008
+      },
+      {
+        "action": "LOW",
+        "cycle": 24,
+        "pin": "D9",
+        "time": 19925.910472869873
+      },
+      {
+        "action": "LOW",
+        "cycle": 24,
+        "pin": "D10",
+        "time": 20026.92461013794
+      },
+      {
+        "action": "LOW",
+        "cycle": 24,
+        "pin": "D11",
+        "time": 20128.028631210327
+      }
+    ],
+    "sensors": {},
+    "sensors_raw": []
+  }
+}

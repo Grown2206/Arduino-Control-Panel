@@ -1,0 +1,517 @@
+import numpy as np
+from collections import defaultdict
+from scipy import stats
+from typing import Dict, List, Tuple, Any
+
+class TrendAnalyzer:
+    """
+    Erweiterte Klasse zur professionellen Analyse von Timing-Daten mit statistischen Methoden.
+    Beinhaltet Anomalieerkennung, Trendanalyse, Qualitätsmetriken und Performance-Bewertung.
+    """
+
+    # Konfigurierbare Schwellwerte
+    ANOMALY_THRESHOLD_SIGMA = 2.5  # Sigma-Wert für Anomalieerkennung
+    TREND_SIGNIFICANCE_PERCENT = 5  # Prozent für signifikante Trends
+    STABILITY_EXCELLENT = 95
+    STABILITY_GOOD = 85
+    STABILITY_ACCEPTABLE = 70
+    
+    @staticmethod
+    def analyze_timing(event_log: List[Dict]) -> Dict[str, Any]:
+        """
+        Führt eine vollständige, professionelle Analyse des Event-Logs durch.
+        
+        Returns:
+            Dict mit erweiterten Analysedaten inkl. Qualitätsbewertung und detaillierten Statistiken
+        """
+        analysis_result = {
+            'cycle_analysis': TrendAnalyzer._get_empty_cycle_analysis(),
+            'step_analysis': {},
+            'quality_metrics': TrendAnalyzer._get_empty_quality_metrics(),
+            'statistical_summary': {},
+            'anomaly_details': {},
+            'performance_rating': {},
+            'raw_cycle_times': [],
+            'raw_step_times': defaultdict(list),
+            'raw_step_deltas': []
+        }
+
+        if not event_log or len(event_log) < 2:
+            return analysis_result
+
+        # ===== 1. ROHDATEN EXTRAKTION =====
+        analysis_result['raw_step_deltas'] = TrendAnalyzer._calculate_step_deltas(event_log)
+        cycles, step_mapping = TrendAnalyzer._group_events_by_cycle(event_log)
+        analysis_result['raw_step_times'] = TrendAnalyzer._calculate_step_times(
+            event_log, analysis_result['raw_step_deltas']
+        )
+        
+        # ===== 2. ZYKLUS-ANALYSE =====
+        raw_cycle_times = TrendAnalyzer._calculate_cycle_times(cycles)
+        analysis_result['raw_cycle_times'] = raw_cycle_times
+        
+        if len(raw_cycle_times) >= 2:
+            analysis_result['cycle_analysis'] = TrendAnalyzer._analyze_cycles(raw_cycle_times)
+            
+        # ===== 3. SCHRITT-ANALYSE =====
+        analysis_result['step_analysis'] = TrendAnalyzer._analyze_steps(
+            analysis_result['raw_step_times']
+        )
+        
+        # ===== 4. ANOMALIE-DETAILS =====
+        analysis_result['anomaly_details'] = TrendAnalyzer._detailed_anomaly_analysis(
+            raw_cycle_times, 
+            analysis_result['raw_step_times'],
+            analysis_result['cycle_analysis']
+        )
+        
+        # ===== 5. QUALITÄTSMETRIKEN =====
+        analysis_result['quality_metrics'] = TrendAnalyzer._calculate_quality_metrics(
+            analysis_result['cycle_analysis'],
+            analysis_result['step_analysis'],
+            analysis_result['anomaly_details']
+        )
+        
+        # ===== 6. STATISTISCHE ZUSAMMENFASSUNG =====
+        analysis_result['statistical_summary'] = TrendAnalyzer._create_statistical_summary(
+            raw_cycle_times,
+            analysis_result['step_analysis']
+        )
+        
+        # ===== 7. PERFORMANCE-BEWERTUNG =====
+        analysis_result['performance_rating'] = TrendAnalyzer._calculate_performance_rating(
+            analysis_result['quality_metrics'],
+            analysis_result['cycle_analysis']
+        )
+
+        return analysis_result
+
+    @staticmethod
+    def _get_empty_cycle_analysis() -> Dict[str, Any]:
+        """Gibt leere Zyklus-Analyse-Struktur zurück."""
+        return {
+            'avg': 0.0, 'std': 0.0, 'min': 0.0, 'max': 0.0, 
+            'median': 0.0, 'stability': 0.0, 'trend': 'N/A', 
+            'trend_slope': 0.0, 'anomalies': [], 'cv': 0.0,  # CV = Variationskoeffizient
+            'quartiles': {'q1': 0.0, 'q2': 0.0, 'q3': 0.0},
+            'iqr': 0.0,  # Interquartilsabstand
+            'range': 0.0
+        }
+    
+    @staticmethod
+    def _get_empty_quality_metrics() -> Dict[str, Any]:
+        """Gibt leere Qualitätsmetriken-Struktur zurück."""
+        return {
+            'overall_score': 0.0,  # 0-100
+            'consistency_score': 0.0,
+            'reliability_score': 0.0,
+            'anomaly_rate': 0.0,
+            'jitter_score': 0.0,  # Wie stark schwanken einzelne Schritte
+            'recommendations': []
+        }
+
+    @staticmethod
+    def _calculate_step_deltas(event_log: List[Dict]) -> List[float]:
+        """Berechnet Zeitdeltas zwischen aufeinanderfolgenden Events."""
+        deltas = []
+        for i in range(1, len(event_log)):
+            time_current = event_log[i].get('time', 0)
+            time_prev = event_log[i-1].get('time', 0)
+            deltas.append(time_current - time_prev)
+        return deltas
+
+    @staticmethod
+    def _group_events_by_cycle(event_log: List[Dict]) -> Tuple[Dict, Dict]:
+        """Gruppiert Events nach Zyklen und erstellt Step-Mapping."""
+        cycles = defaultdict(list)
+        step_mapping = {}
+        
+        for entry in event_log:
+            cycle_num = entry.get('cycle', 0)
+            cycles[cycle_num].append(entry.get('time', 0))
+        
+        return cycles, step_mapping
+
+    @staticmethod
+    def _calculate_step_times(event_log: List[Dict], step_deltas: List[float]) -> Dict[str, List[float]]:
+        """Berechnet Zeiten für einzelne Schritte."""
+        step_times = defaultdict(list)
+        
+        for i in range(1, len(event_log)):
+            prev_event = event_log[i-1]
+            curr_event = event_log[i]
+            
+            # Erstelle aussagekräftigen Schlüssel
+            step_key = f"{prev_event.get('action', '?')} → {curr_event.get('action', '?')}"
+            
+            if i-1 < len(step_deltas):
+                step_times[step_key].append(step_deltas[i-1])
+        
+        return step_times
+
+    @staticmethod
+    def _calculate_cycle_times(cycles: Dict) -> List[float]:
+        """Berechnet die Gesamtzeit für jeden Zyklus."""
+        cycle_times = []
+        for times in cycles.values():
+            if len(times) > 1:
+                cycle_time = max(times) - min(times)
+                cycle_times.append(cycle_time)
+        return cycle_times
+
+    @staticmethod
+    def _analyze_cycles(cycle_times: List[float]) -> Dict[str, Any]:
+        """
+        Führt detaillierte statistische Analyse der Zykluszeiten durch.
+        """
+        arr = np.array(cycle_times)
+        
+        avg = float(np.mean(arr))
+        std = float(np.std(arr))
+        median = float(np.median(arr))
+        q1, q2, q3 = np.percentile(arr, [25, 50, 75])
+        iqr = q3 - q1
+        cv = (std / avg * 100) if avg > 0 else 0  # Variationskoeffizient
+        
+        # Trend-Berechnung mit linearer Regression
+        x = np.arange(len(cycle_times))
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x, cycle_times)
+        
+        # Trend-Klassifizierung
+        trend = "stabil"
+        if abs(slope) > avg * (TrendAnalyzer.TREND_SIGNIFICANCE_PERCENT / 100):
+            if slope > 0:
+                trend = "steigend"
+            else:
+                trend = "fallend"
+        
+        # Stabilitätsberechnung (invertierter CV)
+        stability = max(0, 100 - cv)
+        
+        # Anomalieerkennung mit modifizierter Z-Score Methode
+        anomalies = TrendAnalyzer._detect_anomalies_zscore(
+            cycle_times, avg, std, TrendAnalyzer.ANOMALY_THRESHOLD_SIGMA
+        )
+        
+        return {
+            'avg': avg,
+            'std': std,
+            'min': float(np.min(arr)),
+            'max': float(np.max(arr)),
+            'median': median,
+            'quartiles': {'q1': float(q1), 'q2': float(q2), 'q3': float(q3)},
+            'iqr': float(iqr),
+            'range': float(np.max(arr) - np.min(arr)),
+            'cv': float(cv),
+            'stability': float(stability),
+            'trend': trend,
+            'trend_slope': float(slope),
+            'trend_r_squared': float(r_value ** 2),
+            'trend_p_value': float(p_value),
+            'anomalies': anomalies
+        }
+
+    @staticmethod
+    def _detect_anomalies_zscore(data: List[float], mean: float, std: float, threshold: float) -> List[Dict]:
+        """
+        Erkennt Anomalien mit Z-Score Methode.
+        """
+        anomalies = []
+        
+        if std == 0:
+            return anomalies
+        
+        for i, value in enumerate(data):
+            z_score = abs((value - mean) / std)
+            
+            if z_score > threshold:
+                deviation_percent = ((value / mean - 1) * 100) if mean > 0 else 0
+                
+                # Klassifiziere Schweregrad
+                if z_score > threshold * 1.5:
+                    severity = "kritisch"
+                elif z_score > threshold * 1.2:
+                    severity = "hoch"
+                else:
+                    severity = "mittel"
+                
+                anomalies.append({
+                    'cycle': i + 1,
+                    'time': float(value),
+                    'deviation_percent': float(deviation_percent),
+                    'z_score': float(z_score),
+                    'severity': severity,
+                    'threshold_exceeded': float(z_score - threshold)
+                })
+        
+        return anomalies
+
+    @staticmethod
+    def _analyze_steps(step_times: Dict[str, List[float]]) -> Dict[str, Dict]:
+        """
+        Analysiert einzelne Schritte mit erweiterten Statistiken.
+        """
+        step_analysis = {}
+        
+        for step_key, times in step_times.items():
+            if len(times) < 2:
+                continue
+            
+            arr = np.array(times)
+            avg = float(np.mean(arr))
+            std = float(np.std(arr))
+            
+            # Jitter-Berechnung (Variationskoeffizient für Schritte)
+            jitter = (std / avg * 100) if avg > 0 else 0
+            
+            # Anomalieerkennung für diesen Schritt
+            step_anomalies = TrendAnalyzer._detect_anomalies_zscore(
+                times, avg, std, TrendAnalyzer.ANOMALY_THRESHOLD_SIGMA
+            )
+            
+            step_analysis[step_key] = {
+                'avg': avg,
+                'std': std,
+                'min': float(np.min(arr)),
+                'max': float(np.max(arr)),
+                'median': float(np.median(arr)),
+                'jitter': float(jitter),
+                'cv': float(jitter),  # Gleich wie jitter
+                'samples': len(times),
+                'anomalies': step_anomalies,
+                'anomaly_count': len(step_anomalies)
+            }
+        
+        return step_analysis
+
+    @staticmethod
+    def _detailed_anomaly_analysis(
+        cycle_times: List[float], 
+        step_times: Dict[str, List[float]],
+        cycle_analysis: Dict
+    ) -> Dict[str, Any]:
+        """
+        Erstellt detaillierte Anomalie-Analyse mit Ursachenidentifikation.
+        """
+        cycle_anomalies = cycle_analysis.get('anomalies', [])
+        
+        # Zähle Anomalien pro Schritt
+        step_anomaly_summary = {}
+        total_step_anomalies = 0
+        
+        for step_key, times in step_times.items():
+            if len(times) < 2:
+                continue
+                
+            arr = np.array(times)
+            avg = float(np.mean(arr))
+            std = float(np.std(arr))
+            
+            anomalies = TrendAnalyzer._detect_anomalies_zscore(
+                times, avg, std, TrendAnalyzer.ANOMALY_THRESHOLD_SIGMA
+            )
+            
+            if anomalies:
+                step_anomaly_summary[step_key] = {
+                    'count': len(anomalies),
+                    'percentage': (len(anomalies) / len(times)) * 100,
+                    'avg_deviation': np.mean([a['deviation_percent'] for a in anomalies])
+                }
+                total_step_anomalies += len(anomalies)
+        
+        # Identifiziere Hauptproblem-Schritte
+        problem_steps = sorted(
+            step_anomaly_summary.items(), 
+            key=lambda x: x[1]['count'], 
+            reverse=True
+        )[:3]  # Top 3 problematische Schritte
+        
+        return {
+            'cycle_anomaly_count': len(cycle_anomalies),
+            'step_anomaly_count': total_step_anomalies,
+            'total_anomalies': len(cycle_anomalies) + total_step_anomalies,
+            'anomaly_rate': (len(cycle_anomalies) / len(cycle_times) * 100) if cycle_times else 0,
+            'step_anomaly_summary': step_anomaly_summary,
+            'problem_steps': [{'step': step, 'data': data} for step, data in problem_steps],
+            'most_severe_anomaly': max(cycle_anomalies, key=lambda x: x.get('z_score', 0)) if cycle_anomalies else None
+        }
+
+    @staticmethod
+    def _calculate_quality_metrics(
+        cycle_analysis: Dict,
+        step_analysis: Dict,
+        anomaly_details: Dict
+    ) -> Dict[str, Any]:
+        """
+        Berechnet umfassende Qualitätsmetriken.
+        """
+        # 1. Konsistenz-Score (basiert auf Stabilität)
+        consistency_score = cycle_analysis.get('stability', 0)
+        
+        # 2. Zuverlässigkeits-Score (basiert auf Anomalierate)
+        anomaly_rate = anomaly_details.get('anomaly_rate', 0)
+        reliability_score = max(0, 100 - (anomaly_rate * 2))  # Jede Anomalie kostet 2 Punkte
+        
+        # 3. Jitter-Score (durchschnittlicher Jitter aller Schritte)
+        if step_analysis:
+            jitters = [data.get('jitter', 0) for data in step_analysis.values()]
+            avg_jitter = np.mean(jitters)
+            jitter_score = max(0, 100 - avg_jitter)
+        else:
+            jitter_score = 0
+        
+        # 4. Gesamt-Score (gewichteter Durchschnitt)
+        overall_score = (
+            consistency_score * 0.4 +
+            reliability_score * 0.4 +
+            jitter_score * 0.2
+        )
+        
+        # 5. Empfehlungen generieren
+        recommendations = TrendAnalyzer._generate_recommendations(
+            cycle_analysis, anomaly_details, consistency_score, reliability_score
+        )
+        
+        return {
+            'overall_score': float(overall_score),
+            'consistency_score': float(consistency_score),
+            'reliability_score': float(reliability_score),
+            'jitter_score': float(jitter_score),
+            'anomaly_rate': float(anomaly_rate),
+            'recommendations': recommendations,
+            'rating': TrendAnalyzer._score_to_rating(overall_score)
+        }
+
+    @staticmethod
+    def _generate_recommendations(
+        cycle_analysis: Dict,
+        anomaly_details: Dict,
+        consistency_score: float,
+        reliability_score: float
+    ) -> List[str]:
+        """
+        Generiert automatische Handlungsempfehlungen basierend auf der Analyse.
+        """
+        recommendations = []
+        
+        # Stabilitätsprobleme
+        if consistency_score < TrendAnalyzer.STABILITY_ACCEPTABLE:
+            recommendations.append(
+                "⚠️ Niedrige Stabilität erkannt. Überprüfen Sie mechanische Komponenten auf Spiel oder Verschleiß."
+            )
+        
+        # Hohe Anomalierate
+        if anomaly_details.get('anomaly_rate', 0) > 10:
+            recommendations.append(
+                "🔴 Hohe Anomalierate (>10%). Prüfen Sie Stromversorgung und Signalintegrität."
+            )
+        
+        # Trend-Probleme
+        trend = cycle_analysis.get('trend', 'stabil')
+        if trend == "steigend":
+            recommendations.append(
+                "📈 Steigender Trend erkannt. Mögliche Ursachen: Erwärmung, Verschleiß, Memory Leaks."
+            )
+        elif trend == "fallend":
+            recommendations.append(
+                "📉 Fallender Trend erkannt. System wird schneller - ggf. durch Optimierung oder Cache-Effekte."
+            )
+        
+        # Problem-Schritte
+        problem_steps = anomaly_details.get('problem_steps', [])
+        if problem_steps:
+            top_problem = problem_steps[0]
+            recommendations.append(
+                f"🎯 Kritischer Schritt identifiziert: '{top_problem['step']}' mit {top_problem['data']['count']} Anomalien."
+            )
+        
+        # Positive Bewertung
+        if consistency_score >= TrendAnalyzer.STABILITY_EXCELLENT and reliability_score >= 95:
+            recommendations.append(
+                "✅ Exzellente Performance. System arbeitet stabil und zuverlässig."
+            )
+        
+        return recommendations
+
+    @staticmethod
+    def _score_to_rating(score: float) -> str:
+        """Konvertiert numerischen Score zu Bewertung."""
+        if score >= 95:
+            return "Exzellent"
+        elif score >= 85:
+            return "Sehr gut"
+        elif score >= 75:
+            return "Gut"
+        elif score >= 60:
+            return "Befriedigend"
+        elif score >= 50:
+            return "Ausreichend"
+        else:
+            return "Mangelhaft"
+
+    @staticmethod
+    def _create_statistical_summary(
+        cycle_times: List[float],
+        step_analysis: Dict
+    ) -> Dict[str, Any]:
+        """
+        Erstellt umfassende statistische Zusammenfassung.
+        """
+        if not cycle_times:
+            return {}
+        
+        arr = np.array(cycle_times)
+        
+        return {
+            'sample_size': len(cycle_times),
+            'mean': float(np.mean(arr)),
+            'median': float(np.median(arr)),
+            'mode': float(stats.mode(arr, keepdims=True)[0][0]) if len(arr) > 0 else 0,
+            'std_dev': float(np.std(arr)),
+            'variance': float(np.var(arr)),
+            'skewness': float(stats.skew(arr)),
+            'kurtosis': float(stats.kurtosis(arr)),
+            'percentiles': {
+                'p10': float(np.percentile(arr, 10)),
+                'p25': float(np.percentile(arr, 25)),
+                'p50': float(np.percentile(arr, 50)),
+                'p75': float(np.percentile(arr, 75)),
+                'p90': float(np.percentile(arr, 90)),
+                'p95': float(np.percentile(arr, 95)),
+                'p99': float(np.percentile(arr, 99))
+            },
+            'step_count': len(step_analysis),
+            'total_step_samples': sum(data.get('samples', 0) for data in step_analysis.values())
+        }
+
+    @staticmethod
+    def _calculate_performance_rating(
+        quality_metrics: Dict,
+        cycle_analysis: Dict
+    ) -> Dict[str, Any]:
+        """
+        Berechnet detailliertes Performance-Rating mit Kategorien.
+        """
+        overall_score = quality_metrics.get('overall_score', 0)
+        
+        # Kategorien-Bewertung
+        categories = {
+            'Zeitstabilität': cycle_analysis.get('stability', 0),
+            'Zuverlässigkeit': quality_metrics.get('reliability_score', 0),
+            'Präzision': quality_metrics.get('jitter_score', 0),
+            'Konsistenz': quality_metrics.get('consistency_score', 0)
+        }
+        
+        # Stärken und Schwächen identifizieren
+        strengths = [cat for cat, score in categories.items() if score >= 85]
+        weaknesses = [cat for cat, score in categories.items() if score < 70]
+        
+        return {
+            'overall_score': float(overall_score),
+            'rating': TrendAnalyzer._score_to_rating(overall_score),
+            'categories': categories,
+            'strengths': strengths,
+            'weaknesses': weaknesses,
+            'star_rating': int(overall_score / 20),  # 0-5 Sterne
+            'pass_fail': 'BESTANDEN' if overall_score >= 60 else 'NICHT BESTANDEN'
+        }

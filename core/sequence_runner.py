@@ -6,6 +6,7 @@ from PyQt6.QtCore import QThread, pyqtSignal, QEventLoop, QTimer
 class SequenceRunner(QThread):
     """Führt eine Testsequenz in einem separaten Thread aus."""
     step_update = pyqtSignal(dict)
+    cycle_completed = pyqtSignal(float, bool)  # (cycle_time, is_anomaly)
     finished = pyqtSignal(int, str, list)
     command_signal = pyqtSignal(dict)
     # KORREKTUR: Fehlendes Signal hier definieren
@@ -158,6 +159,13 @@ class SequenceRunner(QThread):
                     print(f"TIMEOUT on pin {pin}")
                     self._is_waiting_for_pin = False
                     self._stop_requested = True 
+
+                    # Live-Stats: Emittiere cycle_completed
+                    if hasattr(self, "cycle_completed"):
+                        # Konvertiere zu Millisekunden falls nötig
+                        time_ms = cycle_time if cycle_time > 10 else cycle_time * 1000
+                        is_anomaly = False  # TODO: Implementiere Anomalie-Erkennung
+                        self.cycle_completed.emit(time_ms, is_anomaly)
                     return False 
 
                 self.command_signal.emit({

@@ -211,6 +211,9 @@ class SequenceTab(QWidget):
         self.pause_btn.setEnabled(is_running)
         self.stop_btn.setEnabled(is_running)
         if not is_running:
+            # Stop Live-Stats
+            if hasattr(self, "main_window") and hasattr(self.main_window, "live_stats_widget"):
+                self.main_window.live_stats_widget.stop_monitoring()
             self.info_labels["status"].setText("Gestoppt")
             self.progress_bar.setValue(0)
 
@@ -224,6 +227,14 @@ class SequenceTab(QWidget):
         if seq_id: self.start_sequence_signal.emit(seq_id)
         
     def _on_start_test_run(self):
+
+        # Live-Stats: Starte Monitoring
+        if hasattr(self, "main_window") and hasattr(self.main_window, "live_stats_widget"):
+            cycles = 100  # TODO: Hole echte Zyklus-Anzahl
+            if hasattr(self, "cycles_spinbox"):
+                cycles = self.cycles_spinbox.value()
+            self.main_window.live_stats_widget.start_monitoring(cycles)
+
         seq_id = self._get_selected_seq_id()
         if seq_id: self.start_test_run_signal.emit(seq_id)
 

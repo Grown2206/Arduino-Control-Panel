@@ -22,7 +22,7 @@ from core.serial_worker import SerialWorker
 from core.sequence_runner import SequenceRunner
 
 # --- ANALYSIS ---
-from analysis.trend_analyzer import TrendAnalyzer
+from analysis.trend_analyzer import TrendAnalyzer  # ✅ Erweiterte Version mit Quality-Metrics  # ✅ Erweiterte Version mit Quality-Metrics
 from analysis.report_generator import ReportGenerator
 from analysis.report_viewer import ReportViewerDialog
 from analysis.comparison_viewer import ComparisonViewerDialog
@@ -36,10 +36,45 @@ from ui.live_chart_widget import LiveChartWidget
 from ui.sequence_dialog import SequenceDialog
 from ui.sensor_tab import SensorTab
 from ui.enhanced_dashboard_tab import EnhancedDashboardTab
+from live_stats_widget import LiveStatsWidget
 from ui.branding import get_full_stylesheet, LOGO_PATH
 from ui.sequence_info_widget import SequenceInfoWidget
 # NEU: Board Config Tab importieren
 from ui.board_config_tab import BoardConfigTab
+
+# === NEUE FEATURES ===
+# Hardware-Simulation
+try:
+    from hardware_simulator import ArduinoSimulator, create_simulator
+    SIMULATOR_AVAILABLE = True
+    print('✅ Hardware-Simulator verfügbar')
+except ImportError:
+    SIMULATOR_AVAILABLE = False
+    print('⚠️ Hardware-Simulator nicht gefunden')
+
+# Theme-Manager
+try:
+    from ui.theme_manager import ThemeManager
+    THEME_MANAGER_AVAILABLE = True
+except ImportError:
+    THEME_MANAGER_AVAILABLE = False
+
+# === NEUE FEATURES ===
+# Hardware-Simulation
+try:
+    from hardware_simulator import ArduinoSimulator, create_simulator
+    SIMULATOR_AVAILABLE = True
+    print('✅ Hardware-Simulator verfügbar')
+except ImportError:
+    SIMULATOR_AVAILABLE = False
+    print('⚠️ Hardware-Simulator nicht gefunden')
+
+# Theme-Manager
+try:
+    from ui.theme_manager import ThemeManager
+    THEME_MANAGER_AVAILABLE = True
+except ImportError:
+    THEME_MANAGER_AVAILABLE = False
 
 
 # --- ADVANCED FEATURES ---
@@ -73,6 +108,11 @@ class MainWindow(QMainWindow):
         self.chart_start_time = time.time()
         self.active_sensor_config_for_polling = {} # Speichert, welche Sensoren gepollt werden sollen
 
+
+        # === Live-Statistik-Widget ===
+        self.live_stats_widget = LiveStatsWidget()
+        print("✅ Live-Statistik-Widget initialisiert")
+
         self.setup_ui()
         self.setup_connections()
         self.setStyleSheet(get_full_stylesheet())
@@ -97,6 +137,39 @@ class MainWindow(QMainWindow):
 
         # --- Basis-Tabs ---
         self.dashboard_tab = EnhancedDashboardTab()
+
+        # Live-Statistik Widget
+
+        # === Live-Statistik zum Dashboard ===
+        if hasattr(self, "dashboard_tab") and hasattr(self.dashboard_tab, "add_widget"):
+            try:
+                self.dashboard_tab.add_widget(
+                    widget_id="live_stats",
+                    title="📊 Live-Statistiken",
+                    icon="📊",
+                    widget_instance=self.live_stats_widget,
+                    geometry=(10, 400, 400, 550),
+                    category="Monitoring"
+                )
+                print("✅ Live-Stats zum Dashboard hinzugefügt")
+            except Exception as e:
+                print(f"⚠️ Dashboard-Integration fehlgeschlagen: {e}")
+                # Fallback: Dock-Widget
+                # Fallback: Als Dock-Widget
+                from PyQt6.QtWidgets import QDockWidget
+                from PyQt6.QtCore import Qt
+                
+                self.live_stats_dock = QDockWidget("📊 Live-Statistiken", self)
+                self.live_stats_dock.setWidget(self.live_stats_widget)
+                self.live_stats_dock.setFeatures(
+                    QDockWidget.DockWidgetFeature.DockWidgetMovable |
+                    QDockWidget.DockWidgetFeature.DockWidgetFloatable
+                )
+                self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.live_stats_dock)
+                print("✅ Live-Stats als Dock-Widget hinzugefügt")
+
+
+        # Live-Statistik Widget
         self.pin_control_tab = PinTab()
         self.pin_overview_tab = PinOverviewWidget()
         self.sensor_tab = SensorTab() # Wird evtl. weniger relevant, behalten wir vorerst
@@ -128,6 +201,26 @@ class MainWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Bereit")
+        
+        # In main.py, nach setup_ui()
+        print(f"Live-Stats erstellt: {hasattr(self, 'live_stats_widget')}")
+        print(f"Dashboard vorhanden: {hasattr(self, 'dashboard_tab')}")
+
+
+        # === GARANTIERT: Live-Stats als Dock-Widget ===
+        # Falls Dashboard-Integration fehlschlägt, wird es hier trotzdem hinzugefügt
+        if not hasattr(self, 'live_stats_dock'):
+            from PyQt6.QtWidgets import QDockWidget
+            from PyQt6.QtCore import Qt
+            
+            self.live_stats_dock = QDockWidget('📊 Live-Statistiken', self)
+            self.live_stats_dock.setWidget(self.live_stats_widget)
+            self.live_stats_dock.setFeatures(
+                QDockWidget.DockWidgetFeature.DockWidgetMovable |
+                QDockWidget.DockWidgetFeature.DockWidgetFloatable
+            )
+            self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.live_stats_dock)
+            print('✅ Live-Stats Dock-Widget (Garantie-Code) hinzugefügt')
 
     def _add_optional_tabs(self):
         """ Fügt optionale Tabs hinzu (ohne PWM/Servo, LED Matrix) """
@@ -210,11 +303,77 @@ class MainWindow(QMainWindow):
         return conn_layout
 
 
+        # === NEUE FEATURES ===
+        # Tools-Menü erweitern
+        if hasattr(self, 'tools_menu'):
+            # Simulator Toggle
+            if SIMULATOR_AVAILABLE:
+                self.simulator_action = self.tools_menu.addAction('🎮 Simulator-Modus')
+                self.simulator_action.setCheckable(True)
+                self.simulator_action.setChecked(self.use_simulator)
+                self.simulator_action.triggered.connect(self.toggle_simulator)
+
+            # Theme-Menü
+            if THEME_MANAGER_AVAILABLE:
+                theme_menu = self.tools_menu.addMenu('🎨 Theme')
+                
+                dark_action = theme_menu.addAction('🌙 Dark')
+                dark_action.triggered.connect(lambda: self.change_theme('dark'))
+                
+                light_action = theme_menu.addAction('☀️ Light')
+                light_action.triggered.connect(lambda: self.change_theme('light'))
+                
+                contrast_action = theme_menu.addAction('🔲 High Contrast')
+                contrast_action.triggered.connect(lambda: self.change_theme('high_contrast'))
+
+            # Fullscreen
+            fullscreen_action = self.tools_menu.addAction('🖥️ Fullscreen (F11)')
+            fullscreen_action.setShortcut('F11')
+            fullscreen_action.triggered.connect(self.toggle_fullscreen)
+
+        # === NEUE FEATURES ===
+        # Tools-Menü erweitern
+        if hasattr(self, 'tools_menu'):
+            # Simulator Toggle
+            if SIMULATOR_AVAILABLE:
+                self.simulator_action = self.tools_menu.addAction('🎮 Simulator-Modus')
+                self.simulator_action.setCheckable(True)
+                self.simulator_action.setChecked(self.use_simulator)
+                self.simulator_action.triggered.connect(self.toggle_simulator)
+
+            # Theme-Menü
+            if THEME_MANAGER_AVAILABLE:
+                theme_menu = self.tools_menu.addMenu('🎨 Theme')
+                
+                dark_action = theme_menu.addAction('🌙 Dark')
+                dark_action.triggered.connect(lambda: self.change_theme('dark'))
+                
+                light_action = theme_menu.addAction('☀️ Light')
+                light_action.triggered.connect(lambda: self.change_theme('light'))
+                
+                contrast_action = theme_menu.addAction('🔲 High Contrast')
+                contrast_action.triggered.connect(lambda: self.change_theme('high_contrast'))
+
+            # Fullscreen
+            fullscreen_action = self.tools_menu.addAction('🖥️ Fullscreen (F11)')
+            fullscreen_action.setShortcut('F11')
+            fullscreen_action.triggered.connect(self.toggle_fullscreen)
+
     def setup_connections(self):
         """ Verbindet Signale und Slots """
         # --- Core ---
         self.worker.data_received.connect(self.handle_data)
         self.worker.status_changed.connect(self.update_status)
+
+        # === Live-Stats Signals ===
+        if hasattr(self, "seq_runner") and hasattr(self.seq_runner, "cycle_completed"):
+            self.seq_runner.cycle_completed.connect(
+                self.live_stats_widget.add_cycle
+            )
+            print("✅ Live-Stats Signals verbunden")
+        else:
+            print("⚠️ SequenceRunner hat kein cycle_completed Signal")
+
         self.db.add_run_requested.connect(self.db_worker.add_run)
         self.db.update_run_requested.connect(self.db_worker.update_run)
 
@@ -271,6 +430,16 @@ class MainWindow(QMainWindow):
         self.board_config_tab.apply_config_signal.connect(self.apply_config_and_connect)
 
         # --- Optionale Tabs (Rest) ---
+
+        # === Live-Stats Signals ===
+        if hasattr(self, "seq_runner") and hasattr(self.seq_runner, "cycle_completed"):
+            self.seq_runner.cycle_completed.connect(
+                self.live_stats_widget.add_cycle
+            )
+            print("✅ Live-Stats Signals verbunden")
+        else:
+            print("⚠️ SequenceRunner hat kein cycle_completed Signal")
+
         if hasattr(self, 'data_logger_tab') and self.data_logger_tab:
             def forward_to_data_logger(data):
                 if data.get('type') == 'pin_update':
@@ -572,12 +741,22 @@ class MainWindow(QMainWindow):
         elif status == "Abgeschlossen": QMessageBox.information(self, "Sequenz beendet", f"Sequenz nach {cycles} Zyklen abgeschlossen.")
 
     def start_sequence(self, seq_id): # Unverändert
+
+        # TODO: Live-Stats starten (falls Testlauf)
+        # if hasattr(self, "live_stats_widget"):
+        #     self.live_stats_widget.start_monitoring(total_cycles)
+
         if not self.worker.is_connected(): QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!"); return
         seq_name = self.sequences.get(seq_id, {}).get('name', 'Unbekannt')
         if hasattr(self.dashboard_tab, 'activity_widget'): self.dashboard_tab.activity_widget.add_entry(f"Sequenz '{seq_name}' gestartet.")
         self.sequence_tab.set_running_state(True); self.seq_runner.start_sequence(self.sequences[seq_id])
 
     def start_test_run(self, seq_id): # Unverändert
+
+        # TODO: Live-Stats starten (falls Testlauf)
+        # if hasattr(self, "live_stats_widget"):
+        #     self.live_stats_widget.start_monitoring(total_cycles)
+
         if not self.worker.is_connected(): QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!"); return
         seq = self.sequences[seq_id]; name, ok = QInputDialog.getText(self, "Testlauf starten", "Name für den Testlauf:", text=f"Test: {seq['name']}")
         if not ok or not name: return
@@ -644,7 +823,7 @@ class MainWindow(QMainWindow):
             except Exception as e: QMessageBox.critical(self, "Export-Fehler", f"Excel konnte nicht erstellt werden:\n{e}")
 
 
-    def show_report_viewer(self, run_id): # Unverändert
+    def show_report_viewer(self, run_id):
         run_details = self.db.get_run_details(run_id);
         if not run_details: return
         event_log = run_details.get('log', {}).get('events', [])
@@ -654,7 +833,7 @@ class MainWindow(QMainWindow):
         chart_buffers = ReportGenerator._create_charts(analysis, sensors_raw)
         charts_base64 = [base64.b64encode(buf.getvalue()).decode('utf-8') for buf in chart_buffers]
         for buf in chart_buffers: buf.close()
-        dialog = ReportViewerDialog(report_html, charts_base64, self); dialog.exec()
+        dialog = ReportViewerDialog(report_html, charts_base64, run_details, analysis, self); dialog.exec()
 
 
     def show_trend_analysis(self, run_id): # Unverändert
@@ -668,7 +847,7 @@ class MainWindow(QMainWindow):
         text_edit.setHtml(stats_html); layout.addWidget(text_edit); dialog.exec()
 
 
-    def show_comparison_report(self, run_ids): # Unverändert
+    def show_comparison_report(self, run_ids):
         if len(run_ids) < 2: QMessageBox.information(self, "Hinweis", "Bitte mindestens zwei Testläufe für einen Vergleich auswählen."); return
         run_details_list = [self.db.get_run_details(rid) for rid in run_ids]
         analysis_results = [TrendAnalyzer.analyze_timing(rd.get('log', {}).get('events', [])) for rd in run_details_list]
@@ -676,7 +855,7 @@ class MainWindow(QMainWindow):
         chart_buffer = ReportGenerator.create_comparison_chart(run_details_list, analysis_results)
         charts_base64 = [base64.b64encode(chart_buffer.getvalue()).decode('utf-8')] if chart_buffer else []
         if chart_buffer: chart_buffer.close()
-        dialog = ComparisonViewerDialog(comparison_html, charts_base64, self); dialog.exec()
+        dialog = ComparisonViewerDialog(comparison_html, charts_base64, run_details_list, analysis_results, self); dialog.exec()
 
 
     def register_data_handler(self, handler): # Unverändert
@@ -703,4 +882,212 @@ if __name__ == "__main__":
     except ImportError: pass
     window = MainWindow()
     window.show()
+
+    # === NEUE METHODEN ===
+
+    def toggle_simulator(self):
+        """Wechselt zwischen Simulator und echtem Arduino."""
+        if not SIMULATOR_AVAILABLE:
+            QMessageBox.warning(self, 'Nicht verfügbar', 
+                               'Hardware-Simulator ist nicht installiert.\n'
+                               'Lade hardware_simulator.py herunter.')
+            return
+        
+        # Trenne aktuelle Verbindung
+        if hasattr(self.worker, 'disconnect'):
+            self.worker.disconnect()
+        
+        # Toggle
+        self.use_simulator = not self.use_simulator
+        
+        if self.use_simulator:
+            # Wechsel zu Simulator
+            self.simulator = create_simulator('UNO')
+            self.worker = self.simulator
+            
+            # Verbinde Signals
+            self.setup_connections()  # Re-connect signals
+            
+            # Auto-Connect
+            self.worker.connect('SIM')
+            
+            self.status_bar.showMessage('🎮 Simulator-Modus aktiviert')
+            print('🎮 Simulator-Modus aktiviert')
+        else:
+            # Zurück zu echtem Arduino
+            self.worker = SerialWorker()
+            self.setup_connections()
+            self.status_bar.showMessage('🔌 Arduino-Modus aktiviert')
+            print('🔌 Arduino-Modus aktiviert')
+
+    def change_theme(self, theme_name: str):
+        """Ändert das UI-Theme."""
+        if not THEME_MANAGER_AVAILABLE:
+            return
+        
+        self.theme_manager.apply_theme(theme_name)
+        self.status_bar.showMessage(f'Theme geändert: {theme_name}')
+        print(f'🎨 Theme gewechselt zu: {theme_name}')
+
+    def toggle_fullscreen(self):
+        """Wechselt zwischen Fullscreen und Normal."""
+        if self.isFullScreen():
+            self.showNormal()
+            self.menuBar().show()
+            self.status_bar.showMessage('Fullscreen deaktiviert')
+        else:
+            self.showFullScreen()
+            self.menuBar().hide()
+            self.status_bar.showMessage('Fullscreen aktiviert (F11 zum Beenden)')
+
+    def show_simulator_config(self):
+        """Zeigt Simulator-Konfiguration."""
+        if not self.use_simulator:
+            QMessageBox.information(self, 'Nicht im Simulator-Modus',
+                                   'Aktiviere zuerst den Simulator-Modus.')
+            return
+        
+        # Zeige Config-Dialog
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QPushButton
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Simulator-Konfiguration')
+        layout = QVBoxLayout(dialog)
+        
+        # Latenz
+        layout.addWidget(QLabel('Latenz (ms):'))
+        latency_spin = QSpinBox()
+        latency_spin.setRange(0, 1000)
+        latency_spin.setValue(self.simulator.config['latency_ms'])
+        layout.addWidget(latency_spin)
+        
+        # Fehlerrate
+        layout.addWidget(QLabel('Fehlerrate (%):'))
+        error_spin = QDoubleSpinBox()
+        error_spin.setRange(0, 100)
+        error_spin.setValue(self.simulator.config['error_rate'] * 100)
+        layout.addWidget(error_spin)
+        
+        # Buttons
+        apply_btn = QPushButton('Übernehmen')
+        apply_btn.clicked.connect(lambda: [
+            self.simulator.set_latency(latency_spin.value()),
+            self.simulator.set_error_rate(error_spin.value() / 100),
+            dialog.accept()
+        ])
+        layout.addWidget(apply_btn)
+        
+        dialog.exec()
+
+
+    # === NEUE METHODEN ===
+
+    def toggle_simulator(self):
+        """Wechselt zwischen Simulator und echtem Arduino."""
+        if not SIMULATOR_AVAILABLE:
+            QMessageBox.warning(self, 'Nicht verfügbar', 
+                               'Hardware-Simulator ist nicht installiert.\n'
+                               'Lade hardware_simulator.py herunter.')
+            return
+        
+        # Trenne aktuelle Verbindung
+        if hasattr(self.worker, 'disconnect'):
+            self.worker.disconnect()
+        
+        # Toggle
+        self.use_simulator = not self.use_simulator
+        
+        if self.use_simulator:
+            # Wechsel zu Simulator
+            self.simulator = create_simulator('UNO')
+            self.worker = self.simulator
+            
+            # Verbinde Signals
+            self.setup_connections()  # Re-connect signals
+            
+            # Auto-Connect
+            self.worker.connect('SIM')
+            
+            self.status_bar.showMessage('🎮 Simulator-Modus aktiviert')
+            print('🎮 Simulator-Modus aktiviert')
+        else:
+            # Zurück zu echtem Arduino
+            self.worker = SerialWorker()
+            self.setup_connections()
+            self.status_bar.showMessage('🔌 Arduino-Modus aktiviert')
+            print('🔌 Arduino-Modus aktiviert')
+
+    def change_theme(self, theme_name: str):
+        """Ändert das UI-Theme."""
+        if not THEME_MANAGER_AVAILABLE:
+            return
+        
+        self.theme_manager.apply_theme(theme_name)
+        self.status_bar.showMessage(f'Theme geändert: {theme_name}')
+        print(f'🎨 Theme gewechselt zu: {theme_name}')
+
+    def toggle_fullscreen(self):
+        """Wechselt zwischen Fullscreen und Normal."""
+        if self.isFullScreen():
+            self.showNormal()
+            self.menuBar().show()
+            self.status_bar.showMessage('Fullscreen deaktiviert')
+        else:
+            self.showFullScreen()
+            self.menuBar().hide()
+            self.status_bar.showMessage('Fullscreen aktiviert (F11 zum Beenden)')
+
+    def show_simulator_config(self):
+        """Zeigt Simulator-Konfiguration."""
+        if not self.use_simulator:
+            QMessageBox.information(self, 'Nicht im Simulator-Modus',
+                                   'Aktiviere zuerst den Simulator-Modus.')
+            return
+        
+        # Zeige Config-Dialog
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QPushButton
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Simulator-Konfiguration')
+        layout = QVBoxLayout(dialog)
+        
+        # Latenz
+        layout.addWidget(QLabel('Latenz (ms):'))
+        latency_spin = QSpinBox()
+        latency_spin.setRange(0, 1000)
+        latency_spin.setValue(self.simulator.config['latency_ms'])
+        layout.addWidget(latency_spin)
+
+        """Fügt Live-Stats als Dock-Widget hinzu (Fallback)."""
+        from PyQt6.QtWidgets import QDockWidget
+        from PyQt6.QtCore import Qt
+        
+        self.live_stats_dock = QDockWidget("📊 Live-Statistiken", self)
+        self.live_stats_dock.setWidget(self.live_stats_widget)
+        self.live_stats_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable |
+            QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.live_stats_dock)
+        print("✅ Live-Stats als Dock-Widget hinzugefügt (Fallback)")
+
+        
+        # Fehlerrate
+        layout.addWidget(QLabel('Fehlerrate (%):'))
+        error_spin = QDoubleSpinBox()
+        error_spin.setRange(0, 100)
+        error_spin.setValue(self.simulator.config['error_rate'] * 100)
+        layout.addWidget(error_spin)
+        
+        # Buttons
+        apply_btn = QPushButton('Übernehmen')
+        apply_btn.clicked.connect(lambda: [
+            self.simulator.set_latency(latency_spin.value()),
+            self.simulator.set_error_rate(error_spin.value() / 100),
+            dialog.accept()
+        ])
+        layout.addWidget(apply_btn)
+        
+        dialog.exec()
+
     sys.exit(app.exec())

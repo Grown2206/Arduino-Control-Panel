@@ -1,0 +1,34 @@
+======================================================================
+INSTALLATIONS-BERICHT
+Erweiterte Berichterstellung & Anomalieerkennung v2.0
+======================================================================
+
+Installationsdatum: 23.10.2025 06:24:13
+Python-Version: 3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]
+Arbeitsverzeichnis: C:\Users\drexl\OneDrive\Dokumente\Software\Arduino GUI
+
+Installierte Module:
+- trend_analyzer.py (erweitert)
+- report_generator.py (erweitert)
+
+Neue Features:
+✓ Z-Score-basierte Anomalieerkennung
+✓ Qualitäts-Score (0-100)
+✓ Automatische Empfehlungen
+✓ Erweiterte Statistiken
+✓ Performance-Rating
+✓ 5 neue Diagramm-Typen
+
+Backups erstellt in: ./backups/
+
+Nächste Schritte:
+1. Anwendung starten: python main.py
+2. Testlauf durchführen (min. 20 Zyklen)
+3. Bericht anzeigen (Archiv → Einzelbericht)
+4. PDF/Excel exportieren und prüfen
+
+Dokumentation:
+- QUICK_START.md
+- ERWEITERTE_BERICHTERSTELLUNG_DOKUMENTATION.md
+- beispiele_erweiterte_features.py
+

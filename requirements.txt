@@ -1,8 +1,23 @@
-PyQt6
-pyserial
-pyqtgraph
-reportlab
-pandas
-openpyxl
-matplotlib
-numpy  # Für Oszilloskop
+# Drexler Dynamics - Arduino Control Panel
+# Requirements for Enhanced Reporting & Anomaly Detection
+# Version 2.0
+
+# Core Dependencies
+PyQt6>=6.5.0
+pyserial>=3.5
+numpy>=1.24.0
+matplotlib>=3.7.0
+
+# Enhanced Statistical Analysis (NEU in v2.0)
+scipy>=1.10.0
+
+# Report Generation
+reportlab>=4.0.0
+openpyxl>=3.1.0
+
+# Optional but recommended
+Pillow>=10.0.0  # Für Bildverarbeitung in Berichten
+
+# Development (optional)
+# pytest>=7.4.0  # Für Unit-Tests
+# black>=23.0.0  # Für Code-Formatting

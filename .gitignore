@@ -40,6 +40,17 @@ Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
 
+
+
+# Stelle sicher dass in .gitignore steht:
+backups/
+*.pyc
+__pycache__/
+.venv/
+arduino_config.json
+*.db
+
+
 Unit test / coverage reports
 
 htmlcov/

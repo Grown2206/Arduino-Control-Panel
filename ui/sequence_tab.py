@@ -17,6 +17,7 @@ class SequenceTab(QWidget):
     edit_sequence_signal = pyqtSignal(str)
     delete_sequence_signal = pyqtSignal(str)
     sequence_updated_signal = pyqtSignal(str, dict)
+    toggle_favorite_signal = pyqtSignal(str)  # NEU: Signal für Favoriten-Toggle
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -70,7 +71,9 @@ class SequenceTab(QWidget):
         new_btn = QPushButton("➕ Neu"); new_btn.clicked.connect(self.new_sequence_signal.emit)
         edit_btn = QPushButton("✏️ Bearbeiten"); edit_btn.clicked.connect(self._on_edit_sequence)
         del_btn = QPushButton("🗑️ Löschen"); del_btn.clicked.connect(self._on_delete_sequence)
-        seq_btn_layout.addWidget(new_btn); seq_btn_layout.addWidget(edit_btn); seq_btn_layout.addWidget(del_btn)
+        self.fav_btn = QPushButton("⭐ Favorit"); self.fav_btn.clicked.connect(self._on_toggle_favorite)  # NEU
+        seq_btn_layout.addWidget(new_btn); seq_btn_layout.addWidget(edit_btn)
+        seq_btn_layout.addWidget(self.fav_btn); seq_btn_layout.addWidget(del_btn)  # NEU: Favorit-Button
         seq_list_layout.addLayout(seq_btn_layout)
         left_layout.addWidget(seq_list_group)
         
@@ -193,11 +196,32 @@ class SequenceTab(QWidget):
 
 
     def update_sequence_list(self, sequences):
-        # ... (Implementation unchanged)
+        """NEU: Aktualisiert Liste mit Favoriten-Support (Favoriten zuerst)"""
         current_selection = self._get_selected_seq_id()
         self.seq_list.clear()
+
+        # Sortiere Sequenzen: Favoriten zuerst, dann alphabetisch
+        favorites = []
+        non_favorites = []
+
         for seq_id, seq_data in sequences.items():
-            item = QListWidgetItem(seq_data["name"])
+            is_fav = seq_data.get("favorite", False)
+            if is_fav:
+                favorites.append((seq_id, seq_data))
+            else:
+                non_favorites.append((seq_id, seq_data))
+
+        # Sortiere beide Listen alphabetisch
+        favorites.sort(key=lambda x: x[1]["name"])
+        non_favorites.sort(key=lambda x: x[1]["name"])
+
+        # Füge Favoriten zuerst hinzu, dann den Rest
+        for seq_id, seq_data in favorites + non_favorites:
+            is_fav = seq_data.get("favorite", False)
+            name = seq_data["name"]
+            display_name = f"⭐ {name}" if is_fav else name  # NEU: Stern für Favoriten
+
+            item = QListWidgetItem(display_name)
             item.setData(Qt.ItemDataRole.UserRole, seq_id)
             self.seq_list.addItem(item)
             if seq_id == current_selection:
@@ -241,7 +265,15 @@ class SequenceTab(QWidget):
     def _on_edit_sequence(self):
         seq_id = self._get_selected_seq_id()
         if seq_id: self.edit_sequence_signal.emit(seq_id)
-        
-    def _on_delete_sequence(self):
+
+    def _on_toggle_favorite(self):
+        """NEU: Togglet Favoriten-Status der ausgewählten Sequenz"""
         seq_id = self._get_selected_seq_id()
-        if seq_id: self.delete_sequence_signal.emit(seq_id)
+        if seq_id:
+            self.toggle_favorite_signal.emit(seq_id)
+
+    def _on_delete_sequence(self):
+        """Löscht die ausgewählte Sequenz"""
+        seq_id = self._get_selected_seq_id()
+        if seq_id:
+            self.delete_sequence_signal.emit(seq_id)

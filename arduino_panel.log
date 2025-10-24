@@ -1,0 +1,352 @@
+2025-10-24 07:26:02,963 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '07d6ad91-edff-4e13-8aef-0680f0a4cb37', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,963 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '58b04500-33ad-4e1e-9568-624276f89daa', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '6d3209d2-d8d7-4da6-b1f9-bdc5ed50b4fb', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'c3dade31-fbeb-400a-86ba-653329280eba', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'a5503655-07eb-47e7-843c-cfbad261a02d', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '22a19d60-c40a-4650-8dc6-8cfa7faec22a', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '7d4270a7-8913-4385-ad18-f7eac2be1704', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'f0b40904-666e-4f76-83ab-48d6829b3eae', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'cfc6692c-c506-417a-bb6e-053f0dc4755a', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '3f115978-e794-4b05-85f6-287d0d61f17f', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,964 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '6e2c0a3d-804c-4c05-8118-600787c373e7', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,965 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'ba88e5bf-c9e6-4c16-85f6-7bc38ef0651e', 'command': 'pin_mode', 'pin': 'D2', 'mode': 'OUTPUT'}
+2025-10-24 07:26:02,965 - ArduinoPanel - INFO - Richte Keyboard Shortcuts ein...
+2025-10-24 07:26:24,902 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '236a7963-44c0-4cb7-a986-4c459317d1a7', 'command': 'digital_write', 'pin': 'D2', 'value': 1}
+2025-10-24 07:26:24,908 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6b6ffac9-8352-416b-9b69-db044e3bb00f', 'command': 'digital_write', 'pin': 'D2', 'value': 1}
+2025-10-24 07:26:26,552 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '56fdd2f1-1c2d-4f1f-8df5-85db6b0277e6', 'command': 'digital_write', 'pin': 'D2', 'value': 0}
+2025-10-24 07:26:26,558 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '8663e427-e508-4a30-8423-99cc3662e52f', 'command': 'digital_write', 'pin': 'D2', 'value': 0}
+2025-10-24 07:26:29,014 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9fd166ec-ea1e-4a1f-b2bd-4e595d09307c', 'command': 'pin_mode', 'pin': 'D3', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,053 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '117823bc-1846-42b1-9e4b-09b7a6160794', 'command': 'pin_mode', 'pin': 'D4', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,073 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1fa44a77-d4db-47b7-aab6-70dada649213', 'command': 'pin_mode', 'pin': 'D5', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,110 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2f83686d-5e05-4461-88dd-a35aa8e89a1a', 'command': 'pin_mode', 'pin': 'D6', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,340 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '002d37d6-4ecf-47a1-bbb6-f98f183a086f', 'command': 'pin_mode', 'pin': 'D7', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,366 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '16b4999a-dc38-4f54-b9d1-c81d7298bcfb', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,388 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'eb4330c8-9c51-4365-9437-5357de47d74e', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:26:29,888 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a3e199b6-2252-4c2c-8682-5e3b2a7f8f89', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:26:30,915 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2bbe9866-c0b1-49b1-a48f-8769c378ef8f', 'command': 'pin_mode', 'pin': 'D3', 'mode': 'OUTPUT'}
+2025-10-24 07:26:31,120 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a7683a2a-98b6-4766-98e4-0b2733936b54', 'command': 'pin_mode', 'pin': 'D4', 'mode': 'OUTPUT'}
+2025-10-24 07:26:31,169 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '0cb8c13a-b554-4d84-a167-466e1f3ba7b3', 'command': 'pin_mode', 'pin': 'D5', 'mode': 'OUTPUT'}
+2025-10-24 07:26:31,489 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9847de26-e279-4f4d-8a75-3706a693020b', 'command': 'pin_mode', 'pin': 'D6', 'mode': 'OUTPUT'}
+2025-10-24 07:26:31,516 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ef25a96c-022a-48d6-9449-ee87b8f3ae00', 'command': 'pin_mode', 'pin': 'D7', 'mode': 'OUTPUT'}
+2025-10-24 07:26:31,855 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '37d777af-bd96-44a3-97b4-46056e25e81f', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:26:33,046 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '562781dc-7571-4152-bbfa-dcce1b0a82ab', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:26:33,734 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7da93196-2f07-440a-aa3c-f605e6ed7b2e', 'command': 'pin_mode', 'pin': 'D3', 'mode': 'OUTPUT'}
+2025-10-24 07:26:33,755 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '950a7b63-4b90-4338-be02-1c73ced9dfc9', 'command': 'pin_mode', 'pin': 'D4', 'mode': 'OUTPUT'}
+2025-10-24 07:26:33,823 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'abd1d30f-08d7-47eb-a539-f3253215144b', 'command': 'pin_mode', 'pin': 'D5', 'mode': 'OUTPUT'}
+2025-10-24 07:26:34,055 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '946fb76c-d37c-46d5-a68b-6ed67ea5a37a', 'command': 'pin_mode', 'pin': 'D6', 'mode': 'OUTPUT'}
+2025-10-24 07:26:34,085 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6b56d166-30f9-4d0d-bb02-1e3e513c40d0', 'command': 'pin_mode', 'pin': 'D7', 'mode': 'OUTPUT'}
+2025-10-24 07:26:34,365 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e40dbac5-4ced-40dd-b7c7-1599815dd069', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:26:34,534 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '0b18f9b2-1e00-44c3-a889-f39b7fb44f72', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:26:34,640 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5b57fc17-4e2b-438f-b680-4401f558b6fc', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:26:35,392 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '72a438c6-5cd3-4a70-8a43-5ce53c368351', 'command': 'pin_mode', 'pin': 'D3', 'mode': 'OUTPUT'}
+2025-10-24 07:26:35,408 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '86c8093b-84ca-4c1f-8484-91a74f0a5f40', 'command': 'pin_mode', 'pin': 'D4', 'mode': 'OUTPUT'}
+2025-10-24 07:26:35,448 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '264332a9-902d-4ddf-8e31-c9ddda28dccc', 'command': 'pin_mode', 'pin': 'D5', 'mode': 'OUTPUT'}
+2025-10-24 07:26:35,685 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '16fac528-bcb4-4f9a-bb36-570f35fee711', 'command': 'pin_mode', 'pin': 'D6', 'mode': 'OUTPUT'}
+2025-10-24 07:26:35,967 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '23525514-2fe2-42b0-bb1a-269bd65d0acd', 'command': 'pin_mode', 'pin': 'D7', 'mode': 'OUTPUT'}
+2025-10-24 07:26:35,988 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e6ee45a7-ad66-454c-a4a0-3850fbd05022', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:26:36,300 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'dcc05916-40aa-4ef7-8286-2edfc3416702', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:26:36,591 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5cdfec84-77c0-471f-b578-7f042f44e945', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:26:36,846 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6f03b243-7dc5-4b2b-94b7-358ef6112bfb', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:26:39,843 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '01b7c0d1-130c-4960-b02b-7009032d87b0', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:26:40,497 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ddf5c733-4bfe-4f1b-bb37-7ebda230cc7c', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:26:41,039 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cb56d6f5-fdc1-4506-b813-49deadb76ba9', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:26:41,316 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e541bdec-f38f-4213-99d9-a1c47694ad27', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:26:41,842 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e68d5deb-67ca-41ed-a7cf-c43193a337cc', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:26:43,092 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '10450776-1636-4fcc-8afe-272f2967411b', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:26:43,473 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '51de19c2-83d4-4ba8-98fc-154941720ecd', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:26:43,657 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'bfa085a6-062f-4ef1-993d-83d9af98a3b7', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:26:43,805 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'dd3e5f70-2e2d-4825-9a3d-8eccc2b3f6ea', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:26:43,939 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '210690e0-6a37-4a69-8b12-262a205557d2', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:26:44,088 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6fde8d63-b2be-4d12-a144-91132db8d8b8', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:26:44,250 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '58c6d4a8-2378-4ab8-8698-6ede87acaa6d', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:26:49,552 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '709924ed-2105-443f-8db0-414b9557a897', 'command': 'digital_read', 'pin': 'D9'}
+2025-10-24 07:26:50,772 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7413d323-6fcf-47d4-96e9-f2ebee5b460f', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:26:51,462 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd15e1fe6-d8e0-4ac1-975d-6d880d2481ea', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:26:52,560 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '45a85fe6-311a-41d6-8928-c46321389819', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:26:53,144 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6bd3ff79-0014-445d-867e-2776a4b10dd1', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:26:54,027 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b69835ba-8260-40f9-bafb-5fd259a3b523', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:26:54,439 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4a5eecd1-13f0-4006-b96d-62c91e481e18', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:26:54,968 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ac73ff81-da4f-4c0d-a666-460316510fd5', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:27:51,001 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '285517b1-d453-4c3d-a7d7-48d95b5e52f3', 'command': 'digital_write', 'pin': 'D2', 'value': 1}
+2025-10-24 07:27:51,001 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a2204dc8-7a6b-4751-a77a-6e10f330cb87', 'command': 'digital_write', 'pin': 'D2', 'value': 1}
+2025-10-24 07:27:52,507 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '710c5c37-06a0-4329-ae6e-47cfe1f08b84', 'command': 'digital_write', 'pin': 'D2', 'value': 0}
+2025-10-24 07:27:52,508 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e2514652-c137-4666-9915-0bdd578a6d87', 'command': 'digital_write', 'pin': 'D2', 'value': 0}
+2025-10-24 07:30:49,858 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D13', 'command': 'pin_mode', 'pin': 'D13', 'mode': 'OUTPUT'}
+2025-10-24 07:30:49,876 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D12', 'command': 'pin_mode', 'pin': 'D12', 'mode': 'OUTPUT'}
+2025-10-24 07:30:49,895 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D11', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:30:49,916 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D10', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:30:49,936 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D9', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:30:49,956 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D8', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:31:13,709 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '82753c44-b88e-4980-a310-c06eb0b03482', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:31:14,199 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '00b18d84-9c00-4d85-9141-8fd4bc3aa426', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:31:14,577 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6373a51e-8eff-40d2-affa-e201b379a6fc', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:31:14,905 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '51759a03-aa62-423d-a584-8338d75b8066', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:31:15,299 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '42bc123c-09bd-40c5-8f33-7075a48fd177', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:31:15,799 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '13a866b4-9009-4209-b9f0-11cb9bbb3a3a', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:31:50,451 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '985188a8-2786-431d-ad32-6f2edf26cc90', 'command': 'analog_read', 'pin': 'A0'}
+2025-10-24 07:38:14,389 - ArduinoPanel - INFO - Anwendung wird beendet...
+2025-10-24 07:38:14,396 - ArduinoPanel - INFO - Anwendung sauber beendet
+2025-10-24 07:39:37,586 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'd8e6cf51-6979-4546-a995-23c594c9a7dd', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,587 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'c8dc6c05-2a3e-4595-a5a9-d0c66852b78a', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,587 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'c313a196-4205-4f5e-bd2b-ab0351b6abe8', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,587 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'f8636b28-3516-42c2-8855-90c626c61653', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '396a4327-69a6-4859-abcb-16ce15532863', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '257eb622-9ebf-42ec-825c-c3017b250167', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'b22a3ef8-0252-46d7-835f-7c6ab590199a', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '619b20a2-dc24-44c2-985c-0748152a1141', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '24b68118-f0ce-41e1-bcb8-712d5b35e0b2', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '5b7bfd1f-429b-4fb6-a7bd-39ebbd834f05', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '8bde127c-4d10-4378-9baf-438b12d31dce', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'e87c42f9-0eef-46a4-9f74-aa8f6b995612', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'a45caaed-6d5c-4311-9863-5a95cdd53d95', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'e5f83a25-61a3-4802-95a8-00a282aa8898', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,588 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '6327eaee-02f5-4ea6-add9-266ae200e273', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,589 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '80f9efca-e267-4177-9681-f422f55728e6', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:39:37,589 - ArduinoPanel - INFO - Richte Keyboard Shortcuts ein...
+2025-10-24 07:39:43,014 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D13', 'command': 'pin_mode', 'pin': 'D13', 'mode': 'OUTPUT'}
+2025-10-24 07:39:43,031 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D12', 'command': 'pin_mode', 'pin': 'D12', 'mode': 'OUTPUT'}
+2025-10-24 07:39:43,052 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D11', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:39:43,072 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D10', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:39:43,091 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D9', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:39:43,111 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D8', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:39:55,263 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '90df7f61-7d30-4fe7-936a-adfa00cf56a9', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:39:55,269 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '659fba1f-5f21-4dbe-aa76-643e68e950f0', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:39:55,834 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c0849008-7a2f-403c-99a5-3f986ead4870', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:39:55,839 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ac4bd6db-1927-4872-8359-a24d9c4ae8a0', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:39:59,161 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '80b19e11-b6a7-40be-a212-c6b597b1f257', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:39:59,167 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b27adfe5-db48-489e-b202-d4539c31e4f0', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:39:59,548 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd193cca1-89a6-43fa-9e5f-5d0b1569c324', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:39:59,553 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cb5b4159-96f5-4d88-b0ea-226ddb490eaf', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:40:02,341 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '41f3e3ed-b0eb-4b1f-b632-ee2a5c282921', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:40:02,347 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4ca47990-2665-462d-8045-581f92b30715', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:40:02,735 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b42570a6-3daf-48d2-bf49-fb220d14e800', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:40:02,741 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4c22db16-56dc-418e-8494-312e51197830', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:42:47,358 - ArduinoPanel - INFO - Anwendung wird beendet...
+2025-10-24 07:42:47,365 - ArduinoPanel - INFO - Anwendung sauber beendet
+2025-10-24 07:44:04,350 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '26dc7992-a28d-4876-8a31-751c8be926b1', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,350 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '256a9d31-0426-4591-a507-8b35a25300c8', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '8020e61b-c203-4e56-847e-836069b45933', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '92b36f59-0cab-44d2-bf7d-ef6f92d53799', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '4efbba9e-0b05-4bd6-9e8b-33bd5dafc18c', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '75714209-55ad-46a9-b1fc-265618f25c5a', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '176b71cd-c61a-42b7-9244-498c575c1edc', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '6b236b82-b1e9-43fa-b5c6-31aef6bd1ec2', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '38f34f76-b144-4a51-a1bd-a801333c26f4', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,351 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'fb8ad060-985e-4f09-a0d5-a6382824b0b9', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'd240b639-c967-40df-ab4a-6fe8a8366bd9', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '38ff9ae6-a34c-47f2-acec-bae506436576', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'f9ad5e85-babc-4a4b-aa62-130d3a5b9f8d', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '333cf165-7f24-4c99-9aa0-42135fc216b7', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': 'c08cb985-3ec3-4ce7-b6e9-7625142be728', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - WARNING - Command kann nicht gesendet werden - nicht verbunden: {'id': '17dc7d38-d965-4cec-aef0-64fc138ccd4f', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:44:04,352 - ArduinoPanel - INFO - Richte Keyboard Shortcuts ein...
+2025-10-24 07:44:12,824 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D13', 'command': 'pin_mode', 'pin': 'D13', 'mode': 'OUTPUT'}
+2025-10-24 07:44:12,836 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D12', 'command': 'pin_mode', 'pin': 'D12', 'mode': 'OUTPUT'}
+2025-10-24 07:44:12,856 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D11', 'command': 'pin_mode', 'pin': 'D11', 'mode': 'OUTPUT'}
+2025-10-24 07:44:12,876 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D10', 'command': 'pin_mode', 'pin': 'D10', 'mode': 'OUTPUT'}
+2025-10-24 07:44:12,896 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D9', 'command': 'pin_mode', 'pin': 'D9', 'mode': 'OUTPUT'}
+2025-10-24 07:44:12,917 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cfg_pm_D8', 'command': 'pin_mode', 'pin': 'D8', 'mode': 'OUTPUT'}
+2025-10-24 07:45:16,381 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6a52e3fc-2e5b-4dbc-a330-3665439a7d6e', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:16,489 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '75b6779d-183c-4747-9d86-27dc9a41173e', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:16,589 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f7eb6630-2e07-4ffd-a01c-0ab3f9bab545', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:16,690 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '920ce84a-3c36-4faa-ac2a-2642c92a1f83', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:16,791 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '481738f9-54be-4e97-b35e-2b8f8f5ff4a5', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:16,891 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '23ed9dd2-9b68-483f-909b-f59ddc8e099d', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:16,992 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5aa85aa8-d8a2-44c5-be5a-821296c3445c', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:17,092 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'bc4a6db5-03de-4a20-8556-808e7ce95023', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:17,193 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6c5d2b2a-431a-4a47-900e-bed4227908e1', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:17,293 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd10e688c-b79c-42fe-b41d-376b328c6331', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:17,395 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1db59767-e736-43ea-a653-da0afe1bf5f6', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:17,495 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '97599321-ec8e-4820-a11d-40c91dfae11a', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:17,596 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '78715a62-45d8-4be6-9278-0c3a3ae1365f', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:17,699 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '3d500368-be95-4efd-a30b-1dc921350c02', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:17,799 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd7eb2235-0b67-40c2-80aa-db8ff71490b0', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:17,899 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b6de469f-cd28-4b02-aec7-1fe43db8401a', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:18,000 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b6820e3b-5b20-491c-89ec-4a4fe02a172b', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:18,101 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a1cad6e8-65de-4bf7-ba36-d87f7b728c97', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:18,202 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b634d403-01ae-409b-924c-b9ae6cfab035', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:18,303 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e4ee24fb-347c-4636-b4b3-b3497d8c1795', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:18,404 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '16941e64-672a-4faf-a3b6-dca9932421c2', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:18,504 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2e962932-79ae-4f5a-8c97-24308f139df7', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:18,605 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c95b538b-4ae0-487c-886c-b8791ba44d31', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:18,706 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cf3c5c61-8ca6-4e5b-be26-36843db16027', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:18,808 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1609470c-edd8-42f3-9454-e0b9667761ae', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:18,908 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a97e3755-c141-4b87-ac4f-9298d067bbd9', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:19,009 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2d6aec9d-3022-4cdb-b26a-800eaf5a5daf', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:19,109 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5b321172-69e3-447f-bd64-a4daecde55f9', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:19,210 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6f13c737-babc-4b19-94f5-08521dc20d71', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:19,310 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a9e581f1-ad4b-4c4b-9ccc-8dd5871f9101', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:19,413 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ab9f812a-d161-46a9-96f0-accd2922911a', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:19,513 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '641827b6-0c2d-4381-9d3f-d17411570890', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:19,614 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1f5d96ab-88b6-425f-8fa0-e9c4dd4383f4', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:19,714 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'dd389ae7-4c53-434e-8c2e-e0e090629d9a', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:19,815 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ccd3bdf2-6e59-40d5-8833-00ecb8139d60', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:19,916 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c703d60a-37ca-44c4-8961-c55702463741', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:20,018 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '36835223-b34f-415b-bfe7-6278355bffdf', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:20,118 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '0585e687-a035-480c-990c-290437c27f79', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:20,218 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'dca948f9-bf63-42bd-b161-f52eb9b6a8be', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:20,319 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ce811b12-b024-45a4-a234-65ec15b027d4', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:20,421 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '40522302-fede-4b1c-a793-718d3fa3eb6d', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:20,521 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '3e19d0e8-1cfa-4548-b44f-d7b210bf88c4', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:20,622 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4dc5b943-71e4-4f61-8039-402c342a15c5', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:20,723 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '04f3480a-8739-4b18-a532-bf9a9552bbe0', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:20,823 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '73ce86c9-d11d-4126-8215-5cb75836840a', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:20,924 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7dd4ed9c-403f-491f-a584-292ee68dc9da', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:21,025 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '3b46d267-b416-4a18-a127-4fe87c7fffdb', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:21,126 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'eb19f952-d870-40e6-bcfb-5069a5b8c97a', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:21,227 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e372309b-ab0d-4b88-9a8d-409be289365c', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:21,327 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd33ea23d-e17a-49be-b4f0-66cc99a02c5e', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:21,428 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '73b5f731-c3ea-4352-9131-433776c813cc', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:21,528 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '0f35cd73-4c0d-42e2-8b46-365c7473fe2f', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:21,630 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '17b08c53-5fab-4238-851c-b679128b881c', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:21,730 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd481baf1-18c5-43d8-a6b7-aab29f25180e', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:21,832 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '37211e7d-4c2d-4538-a10c-c601b86ab45b', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:21,933 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '13feaea6-2125-43b6-818e-8d1aac91e92a', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:22,033 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a21f5a96-8b52-451a-9b20-8e1e18a8d837', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:22,133 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '85e3595c-5441-4027-ae26-bafcb27f3180', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:22,235 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '71ccd3f6-39da-406c-8cc3-1c0e366bd50e', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:22,336 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '3f82c008-9280-489e-a597-155eef716bb7', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:22,437 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6b7aa9e8-df8e-4173-9e31-2e60b0b159b2', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:22,537 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '01826e23-daaa-4d3f-b53f-c6780eddc8e5', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:22,638 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '863c845c-9e70-4f06-b00e-fce9a7eae075', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:22,739 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f16f0d28-4f94-434e-8d29-306be79aedad', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:22,839 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2ab8da75-72de-41bd-b3e8-a0fa0da7c12f', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:22,941 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '20033f56-a313-4115-b5f5-f3d962939b82', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:23,042 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '34fb0447-0762-403f-97b7-4651d4750a97', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:23,143 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '10e6ec7e-f3b1-459f-bd16-f9edbedca62a', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:23,243 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c0a3374d-f6e9-4607-81a3-506f3960a5b9', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:23,344 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c224436a-e01c-4881-982c-be797c7733fc', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:23,444 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b9addfbe-f702-45f0-8633-6a9c77369e80', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:23,545 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '301cbb2c-96eb-4600-a6bf-6a376b2edf2d', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:23,647 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '35d65acb-0827-42f2-80b3-5baf645e3dd9', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:23,747 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c4da74ab-a576-4940-b4fd-704c666ac743', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:23,848 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '71d3a6e9-5e5e-40fe-99da-068bebea8a61', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:23,948 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f1cfa9e9-49ae-4943-a0e7-64e80fe782da', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:24,049 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6a759a50-6c68-4fb0-99d2-819dd56cc456', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:24,151 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7959fc3c-5706-4b98-b005-8340ba6963e8', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:24,251 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '38b8e1ae-fbee-4c7c-a366-5981dbe9c6b8', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:24,352 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ea8fc545-1269-44e1-b1b9-d8172fb807cc', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:24,455 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'eb677c69-5454-498c-9216-d1c4a71e8884', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:24,554 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd393537f-f55a-496e-8650-c8e62b0d8400', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:24,654 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '8efd4cb8-8f15-4b51-9128-6cd613fd698a', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:24,755 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '351f881b-e803-4528-a17b-c8c029eaf838', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:24,859 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f44e7fd1-ddcb-4d61-b46b-738d233019fd', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:24,955 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6912eab6-47ca-4049-b5e2-e4cd34bed522', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:25,057 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ad0c93b9-bc8d-4075-a57b-b494796eb9a9', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:25,158 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4ec3af34-c756-4b15-8b07-62e19c8125de', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:25,260 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4d0d60ea-de60-47a4-a790-340a6303213f', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:25,361 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'fc8bbbf4-5804-4a20-b97f-0ef7b9b714e0', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:25,461 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4210e943-6fab-47b4-af0a-d66a1068c450', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:25,562 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '916cb431-5ee3-4511-a939-3977f6c71cbe', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:25,662 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'aa1dcef3-75e2-4467-b616-ea5eb63e7670', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:25,763 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7dad630c-c5c6-4850-995a-b74e13711731', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:25,864 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'dd27f905-c613-46a3-ae13-a3a206eba927', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:25,966 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4fa0ccf5-19d8-4336-a18b-a2b379bb0ebb', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:26,068 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'aa0be3db-10e5-4b77-ba71-61a86b9fd77f', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:26,168 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f200741d-3028-4e7c-bfcb-ff2bc4825079', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:26,269 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '30379cb9-e8b7-4905-93dd-e7db283d7a57', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:26,370 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9c2837af-ef09-42a5-a94f-83d7130428ba', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:26,471 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '26272726-efbf-4711-a1e2-4a182ef97ce4', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:26,573 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'cab480f9-6f11-4e35-8903-f04acf2032fe', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:26,673 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '58b12397-a5fd-46e4-a0c7-f8f45534c1dc', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:26,774 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b90067fa-5ef7-4432-a2dc-4929eb72c61c', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:26,875 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '251bdd46-8420-4316-94f2-79e8bdc67b0a', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:26,975 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '8cfcd6c0-21a0-4fad-8206-808f944eda32', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:27,077 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'bf4820bc-2d43-4525-9975-0e13fb09790a', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:27,178 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5cca6ab0-034f-4704-b7e4-86ba0fb883d9', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:27,278 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1e64650d-157d-4c54-b654-281dfb91b80f', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:27,379 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7622be97-3412-4058-8c62-6f2c959c72b4', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:27,479 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '3c35425e-80b1-4424-97c2-c4289f49fdec', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:27,581 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c5a03a9e-a040-4968-9a34-c13376120af3', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:27,682 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '48ff4c24-4e24-43d1-9828-4708acb04ccd', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:27,782 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '58239501-ff13-4c17-927e-d9d574a11cc3', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:27,884 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '16f4bf70-02ee-478c-9058-19a4eec16fb0', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:27,985 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '78ed9df9-bd8c-4cfd-a229-7f86ecede437', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:28,086 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '66f96f79-1c09-4fd8-8136-c14024102729', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:28,187 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd1840afb-d3f5-41b8-8278-616adeca16b3', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:28,287 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '90030b0b-aab9-4fc2-b641-29fd73423702', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:28,389 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '01ba121f-ea80-4bf4-9743-c2486ed15f55', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:28,491 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5cb20e8a-05f6-442f-b9cb-7ab9a3906e85', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:28,591 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '88fb650a-19c6-43b9-b034-e101b82c41cc', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:28,692 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e46707a7-8f5b-49ad-a385-53cd6dd2e0a4', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:28,793 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9707417f-dd78-4f64-af2d-b1ade3aa23c7', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:28,893 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b2a3a955-6309-4baf-931a-5acd88b6a18d', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:28,994 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9adaeaa3-bdb6-4e5a-ac52-6c663e5cf8a2', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:29,095 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '952104cf-09cb-466e-95cd-a2ce8cf094ce', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:29,195 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '45b014e0-7b30-4e9c-85f9-a46b0d2a06cb', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:29,298 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4bab3427-82d5-41f8-b040-f74a09c945df', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:29,401 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9e28d1d9-1799-4283-8e17-e643b9a88fc8', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:29,500 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '61fe7a74-41b1-47a9-b23a-095c39d64b19', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:29,601 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'be2d60b5-7ded-4119-95d2-5a39f5127fa7', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:29,702 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '8f12d2c3-6b30-487b-921a-197148a45023', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:29,802 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd61e6ce6-c717-44be-b215-e7ff032e83bc', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:29,903 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2fc5ac12-fd13-4469-bfcc-906fcce34af0', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:30,004 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f73c9c16-8d94-45ef-a0fb-8791734250e7', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:30,106 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b08b2ca5-03b4-43b8-a047-d5ba3d9b1248', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:30,206 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9d2cb77c-5a09-439a-857b-9e01dadbed30', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:30,307 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '74a25558-7191-452d-a0be-265d233d0340', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:30,407 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'abee9ca6-32f0-4c62-8bbc-f6367142d30a', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:30,508 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '8a493115-a715-4a88-9c94-34469c76b2c9', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:30,608 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '47a8cf94-9add-4c33-b685-26af2b03712b', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:30,709 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '27fb45aa-317b-4073-ac73-89d2d2d58865', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:30,810 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2d4b77df-8a13-4c96-b9a3-880d86ac81e5', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:30,911 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '761ee6f8-a2aa-4c2b-9c5d-f51915acf30e', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:31,012 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e603d10b-f763-44f0-ac54-521150ffb6d2', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:31,112 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '01a7ec1f-bc0d-44f6-9160-bb7bf6a2a980', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:31,213 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd8fe723b-0eb0-4527-bf28-f0e26e3323de', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:31,313 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c22987e0-312d-4526-9995-91c52d27f1fe', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:31,414 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'fa837db4-efdb-48a5-beb9-195acf0582de', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:31,515 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f50c58ed-2e4e-4b7f-9335-9c88b2099100', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:31,616 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6c73356e-3178-491b-b029-5b0ec28f35d6', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:31,717 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '262a1aa8-975a-480f-ad1a-98d4670c167f', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:31,818 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7f27353f-2b2b-48de-aa62-02ef0720250d', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:31,919 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e7e42ac3-87f4-4404-a901-e243db0d61cf', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:32,020 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e422f3c7-31d7-441a-9d91-2b7103c35b51', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:32,122 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '110a7808-f532-426b-b816-a7ca516f6bb6', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:32,222 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ed503319-0b12-41d0-a08e-55a2a27681cc', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:32,323 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'd1d82d7b-c4fd-4a1a-82e1-cf14f03518eb', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:32,424 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '41f5c620-f14d-46ac-b835-6d9e14c7acd6', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:32,526 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '33c0a8a2-9ed1-4fdf-8316-73212b758892', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:32,626 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '18b9b8e5-cafa-4cd0-9f8e-89db6e447ab2', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:32,726 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5adbe066-c02a-40dd-86b6-b11fdac86e40', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:32,832 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '75dad106-c32e-4ddc-9ddb-10b8ee5a9847', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:32,927 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '3335f7ac-f880-47f6-a747-5575027962ee', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:33,027 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ce135fe1-c315-4fbe-8922-5a3590df3977', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:33,128 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5eedf1a7-b7b3-4718-86b0-5be8e3efad7e', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:33,230 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2f8136a2-8e60-4877-97ee-5519ee253169', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:33,332 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b3ccab33-b8ba-4a14-abe9-35ecf23c4619', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:33,431 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2c655b98-3a64-454b-93a2-8a8c55ac2920', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:33,533 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '4cd9e2ed-0497-4c75-a540-df6e1dbdcc93', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:33,633 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '019a0553-5089-44e3-8bb5-7792bc23492b', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:33,733 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b130a9d2-44c9-4d45-a14a-a268a4714d8f', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:33,836 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '5b8ac16c-cb1a-44db-9f3a-947ead6d5e04', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:33,936 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '14b30a43-d822-495b-8ae6-8de930827116', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:34,037 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '21a77ecd-b39c-498f-9d3a-3fca71f2ac14', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:34,139 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b5916ec1-9e01-4d11-863c-edb29b8ae2a4', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:34,238 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c8f67d46-8f8f-417d-ad89-5e9ec1ce18ce', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:34,339 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c68cfe74-2f0f-453f-8d9c-17a062d6d071', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:34,440 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '64e9000c-cb98-482f-875a-85901f0646b0', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:34,541 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '06ac1823-2326-4ff4-b96e-0a86f1edee3c', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:34,642 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c120c43c-18b3-4745-bea3-05fea1082aba', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:34,743 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '8d66ef60-8754-4962-9da9-d5f3c6f983d9', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:34,843 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f5902014-b1f9-4101-b8c7-25f7f9d71b08', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:34,944 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'c31c6e6c-5c19-4dda-8582-4a245e0a5d26', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:35,044 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'a63712d1-2b82-4aa4-951e-50d7e9388939', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:35,144 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '7ab641a3-1c40-4b9d-b746-9413efe9aa98', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:35,245 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b9cd5f26-8816-463b-a6dc-8a343e526e43', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:35,346 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'ab488334-5159-4625-9a78-6a93d03713a8', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:35,447 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1bc4da5a-d653-4347-ab55-43964dba9329', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:35,548 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'b4d8fbc8-e2ac-4eb1-93dc-245985fd8843', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:35,648 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '66df961e-06f8-4dbe-a196-d21c2482f92e', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:45:35,750 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '6626895e-c2f2-4215-961d-aa1acb05d983', 'command': 'digital_write', 'pin': 'D8', 'value': 1}
+2025-10-24 07:45:35,850 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '2fe535c8-c74c-471a-8d97-277a1885849e', 'command': 'digital_write', 'pin': 'D9', 'value': 1}
+2025-10-24 07:45:35,951 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'fcf927a1-1137-45cc-b202-ffcf8545f55c', 'command': 'digital_write', 'pin': 'D10', 'value': 1}
+2025-10-24 07:45:36,051 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'f3a913b0-c57d-41b9-9ea1-57cbb1a5deeb', 'command': 'digital_write', 'pin': 'D11', 'value': 1}
+2025-10-24 07:45:36,151 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '1b3a6c8b-e234-434c-a557-bfa149278cad', 'command': 'digital_write', 'pin': 'D8', 'value': 0}
+2025-10-24 07:45:36,252 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': 'e7cae45a-f523-462f-b6d9-064e62e9451d', 'command': 'digital_write', 'pin': 'D9', 'value': 0}
+2025-10-24 07:45:36,352 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '48876fed-f8c7-4689-bef0-cbb358af0444', 'command': 'digital_write', 'pin': 'D10', 'value': 0}
+2025-10-24 07:45:36,454 - ArduinoPanel - INFO - Sende Command an Arduino: {'id': '9168f52c-98fc-41d9-b123-41eb11f52da3', 'command': 'digital_write', 'pin': 'D11', 'value': 0}
+2025-10-24 07:47:48,177 - ArduinoPanel - INFO - Theme gewechselt zu: Light
+2025-10-24 07:47:56,067 - ArduinoPanel - INFO - Theme gewechselt zu: Dark
+2025-10-24 07:48:09,043 - ArduinoPanel - INFO - Anwendung wird beendet...
+2025-10-24 07:48:09,051 - ArduinoPanel - INFO - Anwendung sauber beendet

@@ -6,13 +6,25 @@ import serial.tools.list_ports
 import time
 import numpy as np
 import base64
+import logging
+
+# Setup Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('arduino_panel.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger("ArduinoPanel")
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLabel, QComboBox, QPushButton, QCheckBox, QStatusBar, QTabWidget,
                              QInputDialog, QMessageBox, QDialog, QTextEdit, QListWidget, QFileDialog,
                              QScrollArea)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap, QKeySequence, QShortcut, QAction
 
 # --- CORE ---
 from core.database import Database
@@ -20,12 +32,14 @@ from core.database_worker import DatabaseWorker
 from core.config_manager import ConfigManager
 from core.serial_worker import SerialWorker
 from core.sequence_runner import SequenceRunner
+from core.validators import PinValidator, SensorValidator, ConfigValidator
 
 # --- ANALYSIS ---
 from analysis.trend_analyzer import TrendAnalyzer  # ✅ Erweiterte Version mit Quality-Metrics  # ✅ Erweiterte Version mit Quality-Metrics
 from analysis.report_generator import ReportGenerator
 from analysis.report_viewer import ReportViewerDialog
 from analysis.comparison_viewer import ComparisonViewerDialog
+from analysis.export_manager import ExportManager  # NEU: CSV Export
 
 # --- UI ---
 from ui.pin_tab import PinTab
@@ -59,24 +73,6 @@ try:
 except ImportError:
     THEME_MANAGER_AVAILABLE = False
 
-# === NEUE FEATURES ===
-# Hardware-Simulation
-try:
-    from hardware_simulator import ArduinoSimulator, create_simulator
-    SIMULATOR_AVAILABLE = True
-    print('✅ Hardware-Simulator verfügbar')
-except ImportError:
-    SIMULATOR_AVAILABLE = False
-    print('⚠️ Hardware-Simulator nicht gefunden')
-
-# Theme-Manager
-try:
-    from ui.theme_manager import ThemeManager
-    THEME_MANAGER_AVAILABLE = True
-except ImportError:
-    THEME_MANAGER_AVAILABLE = False
-
-
 # --- ADVANCED FEATURES ---
 try:
     from advanced_features_fixed import integrate_advanced_features
@@ -107,7 +103,12 @@ class MainWindow(QMainWindow):
         self.current_test_id = None; self.sensor_log = []; self.test_start_time = 0
         self.chart_start_time = time.time()
         self.active_sensor_config_for_polling = {} # Speichert, welche Sensoren gepollt werden sollen
+        self.current_theme = "dark"  # NEU: Theme-Tracking
 
+        # Command Queue für sequentielle Befehle ohne UI-Blocking
+        self.command_queue = []
+        self.command_timer = QTimer(self)
+        self.command_timer.timeout.connect(self._process_command_queue)
 
         # === Live-Statistik-Widget ===
         self.live_stats_widget = LiveStatsWidget()
@@ -125,6 +126,10 @@ class MainWindow(QMainWindow):
             print("✅ Advanced Features erfolgreich integriert!")
         self.auto_save_timer = QTimer(self, timeout=self.auto_save_config, interval=30000); self.auto_save_timer.start()
         self.sensor_poll_timer = QTimer(self, timeout=self.poll_sensors)
+
+        # Keyboard Shortcuts einrichten
+        self.setup_shortcuts()
+
         print("\nAnwendung bereit.")
 
 
@@ -282,13 +287,21 @@ class MainWindow(QMainWindow):
                 print("✅ Relais Schnellzugriff geladen und verbunden.")
             except ImportError as e: print(f"⚠️ Relais Schnellzugriff nicht verfügbar: {e}")
 
-    def _create_menu_bar(self): # Unverändert
+    def _create_menu_bar(self):
         menubar = self.menuBar()
+
+        # Datei-Menü
         file_menu = menubar.addMenu("Datei")
         save_action = file_menu.addAction("💾 Speichern"); save_action.triggered.connect(self.auto_save_config); save_action.setShortcut("Ctrl+S")
         load_action = file_menu.addAction("📂 Laden"); load_action.triggered.connect(self.load_saved_config); load_action.setShortcut("Ctrl+O")
         file_menu.addSeparator()
         exit_action = file_menu.addAction("❌ Beenden"); exit_action.triggered.connect(self.close)
+
+        # NEU: Ansicht-Menü mit Theme Toggle
+        view_menu = menubar.addMenu("Ansicht")
+        self.theme_action = view_menu.addAction("🌓 Dark/Light Theme")
+        self.theme_action.triggered.connect(self.toggle_theme)
+        self.theme_action.setShortcut("Ctrl+T")
 
 
     def _create_connection_bar(self): # Unverändert
@@ -395,12 +408,14 @@ class MainWindow(QMainWindow):
         self.sequence_tab.new_sequence_signal.connect(self.new_sequence)
         self.sequence_tab.edit_sequence_signal.connect(self.edit_sequence)
         self.sequence_tab.delete_sequence_signal.connect(self.delete_sequence)
+        self.sequence_tab.toggle_favorite_signal.connect(self.toggle_favorite)  # NEU: Favoriten
         self.sequence_tab.sequence_updated_signal.connect(self.on_sequence_updated_from_editor)
 
         # --- Archive ---
         self.archive_tab.refresh_signal.connect(self.load_archive)
         self.archive_tab.export_pdf_signal.connect(self.export_pdf)
         self.archive_tab.export_excel_signal.connect(self.export_excel)
+        self.archive_tab.export_csv_signal.connect(self.export_csv)  # NEU: CSV Export
         self.archive_tab.show_analysis_signal.connect(self.show_trend_analysis)
         self.archive_tab.show_report_signal.connect(self.show_report_viewer)
         self.archive_tab.compare_runs_signal.connect(self.show_comparison_report)
@@ -430,15 +445,6 @@ class MainWindow(QMainWindow):
         self.board_config_tab.apply_config_signal.connect(self.apply_config_and_connect)
 
         # --- Optionale Tabs (Rest) ---
-
-        # === Live-Stats Signals ===
-        if hasattr(self, "seq_runner") and hasattr(self.seq_runner, "cycle_completed"):
-            self.seq_runner.cycle_completed.connect(
-                self.live_stats_widget.add_cycle
-            )
-            print("✅ Live-Stats Signals verbunden")
-        else:
-            print("⚠️ SequenceRunner hat kein cycle_completed Signal")
 
         if hasattr(self, 'data_logger_tab') and self.data_logger_tab:
             def forward_to_data_logger(data):
@@ -475,11 +481,118 @@ class MainWindow(QMainWindow):
                         self.relay_tab.update_pin_state(pin_int, value)
                         try:
                             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.update_pin_state(pin_int, value)
-                        except AttributeError: pass
+                        except AttributeError as e:
+                            logger.debug(f"Relay quick widget nicht verfügbar: {e}")
             self.worker.data_received.connect(forward_to_relay_widgets)
         try: # Relay Quick Widget
             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.command_signal.connect(self.send_command)
         except AttributeError: pass
+
+    def setup_shortcuts(self):
+        """Richtet Keyboard Shortcuts ein."""
+        logger.info("Richte Keyboard Shortcuts ein...")
+
+        # Ctrl+S: Konfiguration speichern
+        save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        save_shortcut.activated.connect(self.save_config_shortcut)
+
+        # Ctrl+R: Aktuell ausgewählte Sequenz starten
+        run_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
+        run_shortcut.activated.connect(self.start_sequence_shortcut)
+
+        # Ctrl+Q: Anwendung beenden
+        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
+        quit_shortcut.activated.connect(self.close)
+
+        # F5: Aktuellen Tab aktualisieren
+        refresh_shortcut = QShortcut(QKeySequence("F5"), self)
+        refresh_shortcut.activated.connect(self.refresh_current_tab)
+
+        logger.info("✅ Keyboard Shortcuts eingerichtet (Ctrl+S, Ctrl+R, Ctrl+Q, F5)")
+
+    def save_config_shortcut(self):
+        """Speichert die aktuelle Konfiguration (Ctrl+S)."""
+        try:
+            self.auto_save_config()
+            self.status_bar.showMessage("✅ Konfiguration gespeichert", 2000)
+            logger.info("Konfiguration manuell gespeichert (Ctrl+S)")
+        except Exception as e:
+            logger.error(f"Fehler beim Speichern der Konfiguration: {e}")
+            self.status_bar.showMessage(f"❌ Fehler beim Speichern: {e}", 3000)
+
+    def start_sequence_shortcut(self):
+        """Startet die aktuell ausgewählte Sequenz (Ctrl+R)."""
+        try:
+            # Versuche, die aktuell ausgewählte Sequenz zu ermitteln
+            if hasattr(self.sequence_tab, 'seq_list') and self.sequence_tab.seq_list.currentItem():
+                seq_id = self.sequence_tab.seq_list.currentItem().data(Qt.ItemDataRole.UserRole)
+                if seq_id:
+                    logger.info(f"Starte Sequenz via Ctrl+R: {seq_id}")
+                    self.start_test_run(seq_id)
+                    self.status_bar.showMessage(f"▶️ Sequenz gestartet", 2000)
+                else:
+                    self.status_bar.showMessage("⚠️ Keine Sequenz ausgewählt", 2000)
+            else:
+                self.status_bar.showMessage("⚠️ Keine Sequenz ausgewählt", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Starten der Sequenz: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def refresh_current_tab(self):
+        """Aktualisiert den aktuellen Tab (F5)."""
+        try:
+            current_widget = self.tabs.currentWidget()
+
+            if current_widget == self.archive_tab:
+                self.load_archive()
+                self.status_bar.showMessage("🔄 Archiv aktualisiert", 2000)
+                logger.info("Archiv aktualisiert (F5)")
+            elif current_widget == self.dashboard_tab:
+                # Dashboard-Daten aktualisieren
+                self.refresh_ports()
+                if hasattr(self.dashboard_tab, 'refresh'):
+                    self.dashboard_tab.refresh()
+                self.status_bar.showMessage("🔄 Dashboard aktualisiert", 2000)
+                logger.info("Dashboard aktualisiert (F5)")
+            elif current_widget == self.sequence_tab:
+                # Sequenzliste aktualisieren
+                self.sequence_tab.update_sequence_list(self.sequences)
+                self.status_bar.showMessage("🔄 Sequenzen aktualisiert", 2000)
+                logger.info("Sequenzen aktualisiert (F5)")
+            elif current_widget == self.pin_overview_tab:
+                # Pin-Übersicht aktualisieren
+                if hasattr(self.pin_overview_tab, 'refresh'):
+                    self.pin_overview_tab.refresh()
+                self.status_bar.showMessage("🔄 Pin-Übersicht aktualisiert", 2000)
+                logger.info("Pin-Übersicht aktualisiert (F5)")
+            else:
+                self.status_bar.showMessage("🔄 Tab aktualisiert", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Aktualisieren: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def toggle_theme(self):
+        """NEU: Wechselt zwischen Dark und Light Theme (Ctrl+T)"""
+        try:
+            # Toggle theme
+            self.current_theme = "light" if self.current_theme == "dark" else "dark"
+
+            # Apply new stylesheet
+            from ui.branding import get_full_stylesheet
+            self.setStyleSheet(get_full_stylesheet(self.current_theme))
+
+            # Update status
+            theme_name = "Light" if self.current_theme == "light" else "Dark"
+            self.status_bar.showMessage(f"🌓 {theme_name} Theme aktiviert", 2000)
+            logger.info(f"Theme gewechselt zu: {theme_name}")
+
+            # Save preference to config
+            self.config_manager.set("theme", self.current_theme)
+            self.config_manager.save_config_to_file()
+
+        except Exception as e:
+            logger.error(f"Fehler beim Theme-Wechsel: {e}")
+            self.status_bar.showMessage(f"❌ Theme-Fehler: {e}", 3000)
 
     # --- Connection Handling ---
     def initiate_connection(self):
@@ -520,17 +633,21 @@ class MainWindow(QMainWindow):
                 try: self.worker.status_changed.disconnect(send_config_after_connect)
                 except TypeError: pass # Falls schon getrennt
 
-                # Sende Pin Modi zuerst (OUTPUT für Trigger etc.)
-                pin_functions = config_data.get('pin_functions', {})
+                # Validiere Konfiguration mit zentralem Validator
+                validated_config = ConfigValidator.validate_config_data(config_data)
+
+                # Sammle alle Befehle in einer Liste (ohne UI-Blocking)
+                commands = []
+
+                # Sende Pin Modi (bereits validiert)
+                pin_functions = validated_config.get('pin_functions', {})
                 for pin_name, function in pin_functions.items():
                     if function == "OUTPUT":
                         cmd = {"id": f"cfg_pm_{pin_name}", "command": "pin_mode", "pin": pin_name, "mode": "OUTPUT"}
-                        self.send_command(cmd)
-                        time.sleep(0.01) # Kleine Pause
-                    # INPUT/INPUT_PULLUP werden standardmäßig gesetzt oder können hier auch gesetzt werden
+                        commands.append(cmd)
 
-                # Sende Sensor-Konfigurationen
-                active_sensors = config_data.get('active_sensors', {})
+                # Sende Sensor-Konfigurationen (bereits validiert)
+                active_sensors = validated_config.get('active_sensors', {})
                 for sensor_id, sensor_config in active_sensors.items():
                     cmd = {
                         "id": f"cfg_sens_{sensor_id}",
@@ -538,8 +655,11 @@ class MainWindow(QMainWindow):
                         "sensor_type": sensor_config['sensor_type'],
                         "pin_config": sensor_config['pin_config']
                     }
-                    self.send_command(cmd)
-                    time.sleep(0.02) # Etwas längere Pause nach Konfig-Befehlen
+                    commands.append(cmd)
+
+                # Sende alle Befehle über Queue (non-blocking)
+                if commands:
+                    self._queue_commands(commands, interval_ms=20)
 
                 print("Sensor-Konfiguration gesendet.")
                 # Starte Polling Timer NACHDEM Konfig gesendet wurde
@@ -578,13 +698,40 @@ class MainWindow(QMainWindow):
 
     # --- Restliche Methoden (handle_data, update_status, poll_sensors etc.) ---
 
-    def send_command(self, command): # Unverändert von letzter Version
-         if isinstance(command, dict):
-            if command.get('command') == 'analog_write': return
-            if command.get('command', '').startswith('servo_'): return
-            if self.worker.is_connected(): self.worker.send_command(command)
-         elif isinstance(command, str):
-            parts = command.split();
+    def send_command(self, command):
+        """Sendet Befehle an den Arduino (mit Debug-Logging)."""
+        if isinstance(command, dict):
+            # Filter veraltete Commands
+            if command.get('command') == 'analog_write':
+                logger.debug("analog_write Command ignoriert (nicht unterstützt)")
+                return
+            if command.get('command', '').startswith('servo_'):
+                logger.debug("servo Command ignoriert (nicht unterstützt)")
+                return
+
+            # Prüfe Verbindung
+            if not self.worker.is_connected():
+                logger.warning(f"Command kann nicht gesendet werden - nicht verbunden: {command}")
+                return
+
+            # NEU: Aktualisiere Pin-Modus in Overview wenn pin_mode Command
+            if command.get('command') == 'pin_mode':
+                pin = command.get('pin')
+                mode = command.get('mode')
+                if pin and mode:
+                    self.pin_overview_tab.update_pin_mode(pin, mode)
+                    try:
+                        if hasattr(self.dashboard_tab, 'pin_overview_widget'):
+                            self.dashboard_tab.pin_overview_widget.update_pin_mode(pin, mode)
+                    except AttributeError:
+                        pass
+
+            # Sende Command
+            logger.info(f"Sende Command an Arduino: {command}")
+            self.worker.send_command(command)
+
+        elif isinstance(command, str):
+            parts = command.split()
             try:
                 if len(parts) >= 3 and parts[0] == 'digital_write':
                     pin_str = parts[1] if parts[1].startswith('D') else f"D{parts[1]}"
@@ -594,7 +741,8 @@ class MainWindow(QMainWindow):
                     pin_str = parts[1] if parts[1].startswith('D') else f"D{parts[1]}"
                     json_cmd = {"id": str(uuid.uuid4()), "command": "pin_mode", "pin": pin_str, "mode": "OUTPUT"}
                     self.send_command(json_cmd)
-            except Exception as e: print(f"⚠️ Fehler bei Konvertierung von Befehl '{command}': {e}")
+            except (ValueError, IndexError, KeyError) as e:
+                logger.error(f"Fehler bei Konvertierung von Befehl '{command}': {e}", exc_info=True)
 
 
     def handle_data(self, data): # Unverändert von letzter Version
@@ -621,10 +769,12 @@ class MainWindow(QMainWindow):
              try:
                  if data.get("sensor") == "B24_TEMP": self.dashboard_tab.sensor_display_widget.update_temperature(data.get("value", 0))
                  elif data.get("sensor") == "B24_HUMIDITY": self.dashboard_tab.sensor_display_widget.update_humidity(data.get("value", 0))
-             except AttributeError: pass
+             except AttributeError as e:
+                 logger.warning(f"Dashboard sensor widget nicht verfügbar: {e}")
          for handler in self.data_handlers:
              try: handler(data)
-             except Exception as e: print(f"❌ Handler-Fehler: {e}")
+             except Exception as e:
+                 logger.error(f"Handler {handler.__name__ if hasattr(handler, '__name__') else handler} failed: {e}", exc_info=True)
 
 
     def update_status(self, message): # Unverändert von letzter Version
@@ -635,7 +785,8 @@ class MainWindow(QMainWindow):
          try:
              self.dashboard_tab.connection_widget.update_status(is_connected, port_name)
              self.dashboard_tab.activity_widget.add_entry(message)
-         except AttributeError: pass
+         except AttributeError as e:
+             logger.debug(f"Dashboard connection/activity widget nicht verfügbar: {e}")
 
     # HIER IST DIE FEHLENDE METHODE
     def update_poll_interval(self, interval_ms):
@@ -687,7 +838,17 @@ class MainWindow(QMainWindow):
             self.relay_tab.load_settings()
             try:
                 if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.load_pin_map()
-            except AttributeError: pass
+            except AttributeError as e:
+                logger.debug(f"Relay quick widget nicht beim Laden verfügbar: {e}")
+
+        # NEU: Theme laden
+        saved_theme = config.get("theme", "dark")
+        if saved_theme != self.current_theme:
+            self.current_theme = saved_theme
+            from ui.branding import get_full_stylesheet
+            self.setStyleSheet(get_full_stylesheet(self.current_theme))
+            logger.info(f"Theme geladen: {self.current_theme}")
+
         self.status_bar.showMessage("Konfiguration geladen.", 2000)
 
 
@@ -786,6 +947,20 @@ class MainWindow(QMainWindow):
             if hasattr(self.dashboard_tab, 'quick_sequence_widget'): self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
             self.auto_save_config()
 
+    def toggle_favorite(self, seq_id):
+        """NEU: Togglet den Favoriten-Status einer Sequenz"""
+        if seq_id in self.sequences:
+            current = self.sequences[seq_id].get("favorite", False)
+            self.sequences[seq_id]["favorite"] = not current
+            self.sequence_tab.update_sequence_list(self.sequences)
+            if hasattr(self.dashboard_tab, 'quick_sequence_widget'):
+                self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
+            self.auto_save_config()
+
+            status = "als Favorit markiert" if not current else "aus Favoriten entfernt"
+            self.status_bar.showMessage(f"⭐ Sequenz '{self.sequences[seq_id]['name']}' {status}", 2000)
+            logger.info(f"Sequenz {seq_id} {status}")
+
     def save_dashboard_layout(self, name, layout_config): # Unverändert
         self.dashboard_layouts[name] = layout_config
         if hasattr(self.dashboard_tab, 'update_layout_list'): self.dashboard_tab.update_layout_list(list(self.dashboard_layouts.keys()))
@@ -822,6 +997,32 @@ class MainWindow(QMainWindow):
             try: ReportGenerator.generate_excel(run_details, file_path); QMessageBox.information(self, "Erfolg", "Excel-Bericht erfolgreich exportiert!")
             except Exception as e: QMessageBox.critical(self, "Export-Fehler", f"Excel konnte nicht erstellt werden:\n{e}")
 
+    def export_csv(self, run_id):
+        """NEU: Exportiert einen Testlauf als CSV-Datei."""
+        run_details = self.db.get_run_details(run_id)
+        if not run_details:
+            return
+
+        # Analyse durchführen (wie bei anderen Exports)
+        event_log = run_details.get('log', {}).get('events', [])
+        analysis = TrendAnalyzer.analyze_timing(event_log)
+
+        # Datei-Dialog
+        default_name = f"Bericht_{run_id}.csv"
+        file_path, _ = QFileDialog.getSaveFileName(self, "CSV exportieren", default_name, "CSV (*.csv)")
+
+        if file_path:
+            try:
+                # Verwende ExportManager für CSV-Export
+                success = ExportManager.export_csv(run_details, analysis, file_path)
+                if success:
+                    QMessageBox.information(self, "Erfolg", f"✅ CSV-Bericht erfolgreich exportiert!\n{file_path}")
+                    logger.info(f"CSV-Export erfolgreich: {file_path}")
+                else:
+                    QMessageBox.warning(self, "Warnung", "CSV-Export war nicht vollständig erfolgreich.")
+            except Exception as e:
+                logger.error(f"CSV-Export fehlgeschlagen: {e}")
+                QMessageBox.critical(self, "Export-Fehler", f"CSV konnte nicht erstellt werden:\n{e}")
 
     def show_report_viewer(self, run_id):
         run_details = self.db.get_run_details(run_id);
@@ -866,12 +1067,77 @@ class MainWindow(QMainWindow):
         self.port_combo.clear(); self.port_combo.addItems(ports)
         if hasattr(self.dashboard_tab, 'connection_widget'): self.dashboard_tab.connection_widget.update_ports(ports)
 
-    def closeEvent(self, event): # Unverändert
-        print("\n🛑 Anwendung wird beendet...")
-        self.auto_save_config(); self.seq_runner.stop_sequence(); self.worker.disconnect_serial(); self.sensor_poll_timer.stop()
-        if hasattr(self, 'oscilloscope_update_timer'): self.oscilloscope_update_timer.stop()
-        self.db_thread.quit(); self.db_thread.wait(2000)
-        print("✅ Anwendung sauber beendet."); event.accept()
+    def _process_command_queue(self):
+        """Verarbeitet Command Queue ohne UI zu blockieren."""
+        if not self.command_queue:
+            self.command_timer.stop()
+            return
+
+        cmd = self.command_queue.pop(0)
+        self.send_command(cmd)
+
+        # Wenn noch Befehle in Queue, Timer weiterlaufen lassen
+        if not self.command_queue:
+            self.command_timer.stop()
+
+    def _queue_commands(self, commands, interval_ms=10):
+        """Fügt Befehle zur Queue hinzu und startet Timer.
+
+        Args:
+            commands: Liste von Command-Dicts
+            interval_ms: Intervall zwischen Befehlen in Millisekunden
+        """
+        self.command_queue.extend(commands)
+        if not self.command_timer.isActive():
+            self.command_timer.start(interval_ms)
+
+    def closeEvent(self, event):
+        """Sauberer Shutdown mit Thread-Cleanup und Ressourcen-Freigabe."""
+        logger.info("Anwendung wird beendet...")
+
+        # 1. Konfiguration speichern
+        try:
+            self.auto_save_config()
+        except Exception as e:
+            logger.error(f"Fehler beim Speichern der Konfiguration: {e}")
+
+        # 2. Alle Timer stoppen
+        if hasattr(self, 'sensor_poll_timer'):
+            self.sensor_poll_timer.stop()
+        if hasattr(self, 'auto_save_timer'):
+            self.auto_save_timer.stop()
+        if hasattr(self, 'command_timer'):
+            self.command_timer.stop()
+        if hasattr(self, 'oscilloscope_update_timer'):
+            self.oscilloscope_update_timer.stop()
+
+        # 3. Sequenz-Runner stoppen
+        if hasattr(self, 'seq_runner'):
+            self.seq_runner.stop_sequence()
+            # Warte bis Thread beendet ist
+            if not self.seq_runner.wait(3000):
+                logger.warning("SequenceRunner konnte nicht sauber beendet werden")
+                self.seq_runner.terminate()
+
+        # 4. Serial-Verbindung trennen
+        if hasattr(self, 'worker'):
+            self.worker.disconnect_serial()
+            # Warte bis Serial-Worker beendet ist
+            if self.worker.isRunning():
+                if not self.worker.wait(2000):
+                    logger.warning("SerialWorker konnte nicht sauber beendet werden")
+                    self.worker.terminate()
+
+        # 5. Datenbank-Thread beenden
+        if hasattr(self, 'db_thread'):
+            self.db_thread.quit()
+            if not self.db_thread.wait(3000):
+                logger.error("DB-Thread konnte nicht beendet werden, erzwinge Terminierung")
+                self.db_thread.terminate()
+                self.db_thread.wait(1000)
+
+        logger.info("Anwendung sauber beendet")
+        event.accept()
 
 # --- Main execution ---
 if __name__ == "__main__":

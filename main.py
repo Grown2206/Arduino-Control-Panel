@@ -61,6 +61,16 @@ from ui.sequence_info_widget import SequenceInfoWidget
 # NEU: Board Config Tab importieren
 from ui.board_config_tab import BoardConfigTab
 
+# NEU: Pin Usage Tracker und Heatmap
+try:
+    from core.pin_usage_tracker import PinUsageTracker, get_pin_tracker
+    from ui.pin_heatmap_widget import PinHeatmapWidget
+    PIN_HEATMAP_AVAILABLE = True
+    print('✅ Pin Heatmap verfügbar')
+except ImportError as e:
+    PIN_HEATMAP_AVAILABLE = False
+    print(f'⚠️ Pin Heatmap nicht verfügbar: {e}')
+
 # NEU: Analytics Dashboard
 try:
     from ui.analytics_dashboard import AnalyticsDashboardTab
@@ -147,6 +157,13 @@ class MainWindow(QMainWindow):
         # === Live-Statistik-Widget ===
         self.live_stats_widget = LiveStatsWidget()
         print("✅ Live-Statistik-Widget initialisiert")
+
+        # === Pin Usage Tracker ===
+        if PIN_HEATMAP_AVAILABLE:
+            self.pin_tracker = get_pin_tracker()
+            print("✅ Pin Usage Tracker initialisiert")
+        else:
+            self.pin_tracker = None
 
         self.setup_ui()
         self.setup_connections()
@@ -291,6 +308,18 @@ class MainWindow(QMainWindow):
                 self.plugin_manager_tab = None
         else:
             self.plugin_manager_tab = None
+
+        # Pin Heatmap Tab
+        if PIN_HEATMAP_AVAILABLE:
+            try:
+                self.heatmap_tab = PinHeatmapWidget(self.pin_tracker)
+                self.tabs.addTab(self.heatmap_tab, "🔥 Pin-Heatmap")
+                print("✅ Pin-Heatmap Tab hinzugefügt")
+            except Exception as e:
+                print(f"⚠️ Pin-Heatmap Tab konnte nicht geladen werden: {e}")
+                self.heatmap_tab = None
+        else:
+            self.heatmap_tab = None
 
         self._add_optional_tabs() # Fügt weitere Tabs hinzu
         self._add_optional_tabs_to_dashboard() # Fügt Widgets zum Dashboard hinzu
@@ -819,6 +848,29 @@ class MainWindow(QMainWindow):
                             self.dashboard_tab.pin_overview_widget.update_pin_mode(pin, mode)
                     except AttributeError:
                         pass
+
+                    # NEU: Track Pin-Zugriff
+                    if self.pin_tracker:
+                        pin_name = f"D{pin}" if isinstance(pin, int) and pin < 14 else f"A{pin - 14}" if isinstance(pin, int) else str(pin)
+                        self.pin_tracker.track_pin_access(pin_name, "digital", mode)
+
+            # Track digital_write Commands
+            elif command.get('command') == 'digital_write':
+                pin = command.get('pin')
+                value = command.get('value')
+                if pin is not None and value is not None:
+                    if self.pin_tracker:
+                        pin_name = f"D{pin}" if isinstance(pin, int) and pin < 14 else f"A{pin - 14}" if isinstance(pin, int) else str(pin)
+                        state = "HIGH" if value == 1 or value == "HIGH" else "LOW"
+                        self.pin_tracker.track_pin_access(pin_name, "digital", state)
+
+            # Track analog_read Commands
+            elif command.get('command') == 'analog_read':
+                pin = command.get('pin')
+                if pin is not None:
+                    if self.pin_tracker:
+                        pin_name = f"A{pin - 14}" if isinstance(pin, int) and pin >= 14 else f"A{pin}" if isinstance(pin, int) else str(pin)
+                        self.pin_tracker.track_pin_access(pin_name, "analog", None)
 
             # Sende Command
             logger.info(f"Sende Command an Arduino: {command}")

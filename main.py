@@ -104,6 +104,16 @@ try:
 except ImportError:
     ADVANCED_FEATURES_AVAILABLE = False
 
+# === PLUGIN SYSTEM ===
+try:
+    from plugins import PluginManager, ApplicationContext
+    from ui.plugin_manager_tab import PluginManagerTab
+    PLUGIN_SYSTEM_AVAILABLE = True
+    print('✅ Plugin-System verfügbar')
+except ImportError as e:
+    PLUGIN_SYSTEM_AVAILABLE = False
+    print(f'⚠️ Plugin-System nicht verfügbar: {e}')
+
 class MainWindow(QMainWindow):
     pin_update_for_runner = pyqtSignal(str, int)
 
@@ -150,6 +160,27 @@ class MainWindow(QMainWindow):
             print("✅ Advanced Features erfolgreich integriert!")
         self.auto_save_timer = QTimer(self, timeout=self.auto_save_config, interval=30000); self.auto_save_timer.start()
         self.sensor_poll_timer = QTimer(self, timeout=self.poll_sensors)
+
+        # === Plugin-System initialisieren ===
+        if PLUGIN_SYSTEM_AVAILABLE:
+            print("\n🔌 Initialisiere Plugin-System...")
+            try:
+                # Erstelle Application Context
+                self.app_context = ApplicationContext(self, self.db, self.config_manager)
+
+                # Erstelle Plugin-Manager
+                self.plugin_manager = PluginManager(self.app_context)
+
+                # Lade alle Plugins
+                self.plugin_manager.load_all_plugins()
+
+                print(f"✅ Plugin-System initialisiert: {len(self.plugin_manager.enabled_plugins)} Plugins aktiv")
+            except Exception as e:
+                print(f"⚠️ Fehler beim Initialisieren des Plugin-Systems: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            self.plugin_manager = None
 
         # Keyboard Shortcuts einrichten
         self.setup_shortcuts()
@@ -248,6 +279,18 @@ class MainWindow(QMainWindow):
                 self.analytics_tab = None
         else:
             self.analytics_tab = None
+
+        # Plugin-Manager Tab
+        if PLUGIN_SYSTEM_AVAILABLE and hasattr(self, 'plugin_manager'):
+            try:
+                self.plugin_manager_tab = PluginManagerTab(self.plugin_manager)
+                self.tabs.addTab(self.plugin_manager_tab, "🔌 Plugins")
+                print("✅ Plugin-Manager Tab hinzugefügt")
+            except Exception as e:
+                print(f"⚠️ Plugin-Manager Tab konnte nicht geladen werden: {e}")
+                self.plugin_manager_tab = None
+        else:
+            self.plugin_manager_tab = None
 
         self._add_optional_tabs() # Fügt weitere Tabs hinzu
         self._add_optional_tabs_to_dashboard() # Fügt Widgets zum Dashboard hinzu
@@ -952,29 +995,59 @@ class MainWindow(QMainWindow):
             self.current_test_id = None; QTimer.singleShot(100, self.load_archive)
         elif status == "Abgeschlossen": QMessageBox.information(self, "Sequenz beendet", f"Sequenz nach {cycles} Zyklen abgeschlossen.")
 
-    def start_sequence(self, seq_id): # Unverändert
+    def start_sequence(self, seq_id):
+        """Startet eine Sequenz ohne Datenbank-Logging"""
+        if not self.worker.is_connected():
+            QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!")
+            return
 
-        # TODO: Live-Stats starten (falls Testlauf)
-        # if hasattr(self, "live_stats_widget"):
-        #     self.live_stats_widget.start_monitoring(total_cycles)
+        seq = self.sequences.get(seq_id, {})
+        seq_name = seq.get('name', 'Unbekannt')
+        cycles = seq.get('cycles', 0)
 
-        if not self.worker.is_connected(): QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!"); return
-        seq_name = self.sequences.get(seq_id, {}).get('name', 'Unbekannt')
-        if hasattr(self.dashboard_tab, 'activity_widget'): self.dashboard_tab.activity_widget.add_entry(f"Sequenz '{seq_name}' gestartet.")
-        self.sequence_tab.set_running_state(True); self.seq_runner.start_sequence(self.sequences[seq_id])
+        # Live-Stats starten mit echter Zyklus-Anzahl
+        if hasattr(self, "live_stats_widget") and cycles > 0:
+            self.live_stats_widget.start_monitoring(cycles)
+            logger.info(f"Live-Stats gestartet für Sequenz '{seq_name}' mit {cycles} Zyklen")
 
-    def start_test_run(self, seq_id): # Unverändert
+        if hasattr(self.dashboard_tab, 'activity_widget'):
+            self.dashboard_tab.activity_widget.add_entry(f"Sequenz '{seq_name}' gestartet.")
 
-        # TODO: Live-Stats starten (falls Testlauf)
-        # if hasattr(self, "live_stats_widget"):
-        #     self.live_stats_widget.start_monitoring(total_cycles)
+        self.sequence_tab.set_running_state(True)
+        self.seq_runner.start_sequence(self.sequences[seq_id])
 
-        if not self.worker.is_connected(): QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!"); return
-        seq = self.sequences[seq_id]; name, ok = QInputDialog.getText(self, "Testlauf starten", "Name für den Testlauf:", text=f"Test: {seq['name']}")
-        if not ok or not name: return
-        self.current_test_id = self.db.add_run(name, seq["name"]); self.test_start_time = time.time(); self.sensor_log.clear()
-        if hasattr(self.dashboard_tab, 'activity_widget'): self.dashboard_tab.activity_widget.add_entry(f"Testlauf '{name}' gestartet.")
-        self.sequence_tab.set_running_state(True); self.seq_runner.start_sequence(seq)
+    def start_test_run(self, seq_id):
+        """Startet einen Testlauf mit Datenbank-Logging"""
+        if not self.worker.is_connected():
+            QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!")
+            return
+
+        seq = self.sequences[seq_id]
+        seq_name = seq.get('name', 'Unbekannt')
+        cycles = seq.get('cycles', 0)
+
+        name, ok = QInputDialog.getText(
+            self, "Testlauf starten",
+            "Name für den Testlauf:",
+            text=f"Test: {seq_name}"
+        )
+        if not ok or not name:
+            return
+
+        # Live-Stats starten mit echter Zyklus-Anzahl
+        if hasattr(self, "live_stats_widget") and cycles > 0:
+            self.live_stats_widget.start_monitoring(cycles)
+            logger.info(f"Live-Stats gestartet für Testlauf '{name}' mit {cycles} Zyklen")
+
+        self.current_test_id = self.db.add_run(name, seq_name)
+        self.test_start_time = time.time()
+        self.sensor_log.clear()
+
+        if hasattr(self.dashboard_tab, 'activity_widget'):
+            self.dashboard_tab.activity_widget.add_entry(f"Testlauf '{name}' gestartet.")
+
+        self.sequence_tab.set_running_state(True)
+        self.seq_runner.start_sequence(seq)
 
     def on_sequence_updated_from_editor(self, seq_id, updated_data): # Unverändert
         if seq_id in self.sequences: self.sequences[seq_id].update(updated_data); self.sequence_tab.update_sequence_list(self.sequences); self.auto_save_config()
@@ -1215,7 +1288,16 @@ class MainWindow(QMainWindow):
                     logger.warning("SerialWorker konnte nicht sauber beendet werden")
                     self.worker.terminate()
 
-        # 5. Datenbank-Thread beenden
+        # 5. Plugin-System herunterfahren
+        if hasattr(self, 'plugin_manager') and self.plugin_manager:
+            try:
+                logger.info("Fahre Plugin-System herunter...")
+                self.plugin_manager.shutdown_all_plugins()
+                logger.info("Plugin-System beendet")
+            except Exception as e:
+                logger.error(f"Fehler beim Herunterfahren des Plugin-Systems: {e}")
+
+        # 6. Datenbank-Thread beenden
         if hasattr(self, 'db_thread'):
             self.db_thread.quit()
             if not self.db_thread.wait(3000):

@@ -5,13 +5,86 @@ Makro-System: Zeichne Aktionen auf und spiele sie ab
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
                              QPushButton, QLabel, QListWidget, QListWidgetItem,
                              QInputDialog, QMessageBox, QTextEdit, QComboBox,
-                             QSpinBox, QCheckBox, QSplitter)
+                             QSpinBox, QCheckBox, QSplitter, QDialog, QFormLayout,
+                             QDialogButtonBox, QLineEdit, QDoubleSpinBox)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QDateTime
 from PyQt6.QtGui import QColor
 import json
 import time
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any
+
+class EditActionDialog(QDialog):
+    """Dialog zum Bearbeiten einer Makro-Aktion"""
+
+    def __init__(self, action: 'MacroAction', parent=None):
+        super().__init__(parent)
+        self.action = action
+        self.setWindowTitle("Aktion bearbeiten")
+        self.setMinimumWidth(500)
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout(self)
+
+        # Form Layout
+        form = QFormLayout()
+
+        # Timestamp
+        self.timestamp_spin = QDoubleSpinBox()
+        self.timestamp_spin.setRange(0, 999999)
+        self.timestamp_spin.setDecimals(3)
+        self.timestamp_spin.setSuffix(" s")
+        self.timestamp_spin.setValue(self.action.timestamp)
+        form.addRow("Zeitstempel:", self.timestamp_spin)
+
+        # Action Type
+        self.type_combo = QComboBox()
+        action_types = ["pin_write", "delay", "sensor_read", "sequence_start", "custom"]
+        self.type_combo.addItems(action_types)
+        if self.action.action_type in action_types:
+            self.type_combo.setCurrentText(self.action.action_type)
+        else:
+            self.type_combo.addItem(self.action.action_type)
+            self.type_combo.setCurrentText(self.action.action_type)
+        form.addRow("Aktions-Typ:", self.type_combo)
+
+        # Description
+        self.description_edit = QLineEdit()
+        self.description_edit.setText(self.action.description)
+        form.addRow("Beschreibung:", self.description_edit)
+
+        # Parameters (JSON)
+        self.parameters_edit = QTextEdit()
+        self.parameters_edit.setMaximumHeight(150)
+        params_json = json.dumps(self.action.parameters, indent=2)
+        self.parameters_edit.setPlainText(params_json)
+        form.addRow("Parameter (JSON):", self.parameters_edit)
+
+        layout.addLayout(form)
+
+        # Buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def get_action(self) -> 'MacroAction':
+        """Gibt die bearbeitete Aktion zurück"""
+        try:
+            parameters = json.loads(self.parameters_edit.toPlainText())
+        except json.JSONDecodeError:
+            parameters = self.action.parameters
+
+        return MacroAction(
+            timestamp=self.timestamp_spin.value(),
+            action_type=self.type_combo.currentText(),
+            parameters=parameters,
+            description=self.description_edit.text()
+        )
+
 
 @dataclass
 class MacroAction:
@@ -20,7 +93,7 @@ class MacroAction:
     action_type: str  # "pin_write", "delay", "sensor_read", etc.
     parameters: Dict[str, Any]
     description: str = ""
-    
+
     def to_dict(self):
         return {
             'timestamp': self.timestamp,
@@ -28,7 +101,7 @@ class MacroAction:
             'parameters': self.parameters,
             'description': self.description
         }
-    
+
     @classmethod
     def from_dict(cls, data):
         return cls(
@@ -582,8 +655,26 @@ class MacroRecorder(QWidget):
     
     def edit_action(self):
         """Bearbeitet die ausgewählte Aktion"""
-        # TODO: Dialog zum Bearbeiten
-        pass
+        row = self.action_list.currentRow()
+        if row < 0 or not self.current_macro:
+            QMessageBox.warning(self, "Fehler", "Bitte wählen Sie eine Aktion zum Bearbeiten aus")
+            return
+
+        if row >= len(self.current_macro.actions):
+            return
+
+        # Hole die aktuelle Aktion
+        action = self.current_macro.actions[row]
+
+        # Zeige Bearbeiten-Dialog
+        dialog = EditActionDialog(action, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # Übernehme die bearbeitete Aktion
+            edited_action = dialog.get_action()
+            self.current_macro.actions[row] = edited_action
+            self.update_action_list()
+            self.update_info()
+            QMessageBox.information(self, "Erfolg", "Aktion wurde erfolgreich bearbeitet!")
     
     def delete_action(self):
         """Löscht die ausgewählte Aktion"""

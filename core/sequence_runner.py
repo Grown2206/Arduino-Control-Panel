@@ -88,12 +88,35 @@ class SequenceRunner(QThread):
                         break 
                     
                     self.current_step += 1
-                
+
                 if self.current_step >= len(steps):
+                    # Zyklus abgeschlossen
                     self.current_cycle += 1
                     self.current_step = 0
-                    self.cycle_start_times.append(time.time())
-                    
+                    current_time = time.time()
+                    self.cycle_start_times.append(current_time)
+
+                    # Berechne Zyklus-Zeit
+                    if len(self.cycle_start_times) >= 2:
+                        cycle_time_sec = self.cycle_start_times[-1] - self.cycle_start_times[-2]
+                        time_ms = cycle_time_sec * 1000
+
+                        # Anomalie-Erkennung (einfach: > 2x Durchschnitt wenn genug Daten)
+                        is_anomaly = False
+                        if len(self.cycle_start_times) > 5:
+                            # Berechne Durchschnitt der letzten 5 Zyklen
+                            recent_times = []
+                            for i in range(len(self.cycle_start_times) - 5, len(self.cycle_start_times) - 1):
+                                if i > 0:
+                                    recent_times.append((self.cycle_start_times[i] - self.cycle_start_times[i-1]) * 1000)
+
+                            if recent_times:
+                                avg_time = sum(recent_times) / len(recent_times)
+                                is_anomaly = time_ms > (avg_time * 2)  # Mehr als 2x Durchschnitt
+
+                        # Feuer cycle_completed Signal für Live-Stats
+                        self.cycle_completed.emit(time_ms, is_anomaly)
+
                 # Update UI periodically
                 info = self.calculate_progress_info(max_cycles, len(steps))
                 self.step_update.emit(info)

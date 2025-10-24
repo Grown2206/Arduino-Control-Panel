@@ -68,6 +68,18 @@ class SensorLibrary:
             icon="🌡️",
             description="Hochpräziser Temperatur- und Feuchtigkeitssensor"
         ),
+
+        "B24_TEMP_HUMIDITY": SensorDefinition(
+            id="B24_TEMP_HUMIDITY",
+            name="B24 Temp/Humidity Sensor",
+            sensor_type=SensorType.TEMPERATURE,
+            pins={"data": "D2"},
+            protocol="digital",
+            value_range=(-40, 80),
+            unit="°C / %",
+            icon="🌡️",
+            description="B24 Temperatur- und Luftfeuchtigkeitssensor (DHT11/DHT22 kompatibel)"
+        ),
         
         "DS18B20": SensorDefinition(
             id="DS18B20",

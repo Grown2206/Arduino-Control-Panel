@@ -79,9 +79,15 @@ class ArduinoPinWidget(QWidget):
 
 
 class BoardContainerWidget(QWidget):
-     # (Unverändert von der vorherigen Antwort)
     def __init__(self, image_path, parent=None):
         super().__init__(parent)
+        self.current_image_path = image_path
+        self.board_pixmap = None
+        self.load_image(image_path)
+
+    def load_image(self, image_path):
+        """Lädt ein neues Board-Bild"""
+        self.current_image_path = image_path
         self.board_pixmap = QPixmap(image_path)
         if self.board_pixmap.isNull():
             print(f"WARNUNG: Arduino Bild nicht gefunden oder konnte nicht geladen werden: {image_path}")
@@ -91,6 +97,7 @@ class BoardContainerWidget(QWidget):
             print(f"INFO: Arduino Bild geladen: {image_path} ({self.board_pixmap.width()}x{self.board_pixmap.height()})")
             self.setMinimumSize(self.board_pixmap.width(), self.board_pixmap.height())
             self.setMaximumSize(self.board_pixmap.width(), self.board_pixmap.height())
+        self.update()  # Trigger repaint
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -125,6 +132,26 @@ class BoardConfigTab(QWidget):
             "ESP8266",
             "Custom"
         ]
+
+        # Board-Typ zu Bild-Mapping
+        self.board_images = {
+            "Arduino Uno": "arduino_uno_pinout.png",
+            "Arduino Mega": "arduino_mega_pinout.png",
+            "Arduino Nano": "arduino_nano_pinout.png",
+            "Arduino Leonardo": "arduino_leonardo_pinout.png",
+            "Arduino Pro Mini": "arduino_pro_mini_pinout.png",
+            "Arduino Due": "arduino_due_pinout.png",
+            "Arduino MKR1000": "arduino_mkr1000_pinout.png",
+            "ESP32": "esp32_pinout.png",
+            "ESP8266": "esp8266_pinout.png",
+            "Custom": "arduino_uno_pinout.png"  # Fallback für Custom
+        }
+
+        # Pin-Positionen für verschiedene Boards
+        self.board_pin_positions = {
+            "Arduino Uno": self.get_uno_pin_positions(),
+            # Weitere Boards können später hinzugefügt werden
+        }
 
         self.digital_functions = ["UNUSED", "INPUT", "OUTPUT", "INPUT_PULLUP"]
         self.analog_functions = ["UNUSED", "ANALOG_INPUT"]
@@ -165,6 +192,7 @@ class BoardConfigTab(QWidget):
         self.board_type_combo.setCurrentText("Arduino Uno")
         self.board_type_combo.setMinimumWidth(150)
         self.board_type_combo.setStyleSheet("font-size: 11px;")
+        self.board_type_combo.currentTextChanged.connect(self.on_board_type_changed)
         top_toolbar.addWidget(self.board_type_combo)
 
         main_layout.addLayout(top_toolbar)
@@ -194,11 +222,9 @@ class BoardConfigTab(QWidget):
         self.board_container = BoardContainerWidget(self.arduino_image_path); scroll_area.setWidget(self.board_container)
         self.place_pin_widgets()
 
-    def place_pin_widgets(self):
-        """ Positioniert die Pin-Konfigurations-Widgets über dem Bild """
-        # Pin Positionen (Koordinaten relativ zum board_container)
-        # Diese Werte müssen ggf. an dein spezifisches Bild angepasst werden!
-        pin_positions = {
+    def get_uno_pin_positions(self):
+        """Gibt Pin-Positionen für Arduino Uno zurück"""
+        return {
             "D13": (1125, 376),
             "D12": (1125, 402),
             "D11": (1125, 428),
@@ -210,7 +236,7 @@ class BoardConfigTab(QWidget):
             "D5": (1125, 602),
             "D4": (1125, 628),
             "D3": (1125, 654),
-            "D2": (1125, 680), 
+            "D2": (1125, 680),
             "A0": (420, 602),
             "A1": (420, 628),
             "A2": (420, 654),
@@ -218,6 +244,32 @@ class BoardConfigTab(QWidget):
             "A4": (420, 706),
             "A5": (420, 732),
         }
+
+    def on_board_type_changed(self, board_type):
+        """Behandelt Änderungen des Board-Typs"""
+        print(f"Board-Typ geändert zu: {board_type}")
+
+        # Hole Bildpfad für den ausgewählten Board-Typ
+        image_filename = self.board_images.get(board_type, "arduino_uno_pinout.png")
+        image_path = os.path.join("assets", image_filename)
+
+        # Prüfe, ob Bild existiert - falls nicht, verwende Uno als Fallback
+        if not os.path.exists(image_path):
+            print(f"Warnung: Bild für {board_type} nicht gefunden ({image_path}), verwende Arduino Uno als Fallback")
+            image_path = os.path.join("assets", "arduino_uno_pinout.png")
+
+        # Aktualisiere Board-Bild
+        self.board_container.load_image(image_path)
+
+        # Optional: Pin-Widgets neu positionieren (wenn verschiedene Boards unterschiedliche Layouts haben)
+        # Für jetzt verwenden wir die Uno-Positionen für alle Boards
+        # In Zukunft können hier board-spezifische Positionen verwendet werden
+
+    def place_pin_widgets(self):
+        """ Positioniert die Pin-Konfigurations-Widgets über dem Bild """
+        # Hole Pin-Positionen für das aktuelle Board
+        current_board_type = self.board_type_combo.currentText() if hasattr(self, 'board_type_combo') else "Arduino Uno"
+        pin_positions = self.board_pin_positions.get(current_board_type, self.get_uno_pin_positions())
 
         for pin_name, pos in pin_positions.items():
             if pin_name.startswith("D"):

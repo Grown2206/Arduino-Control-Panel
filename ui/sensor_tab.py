@@ -198,11 +198,29 @@ class SensorTab(QWidget):
         # Speichere letzte Rohwerte für Kalibrierung
         self.last_raw_values = {}
 
+        # NEU: Daten-Freshness Tracking
+        self.last_data_time = {}
+        self.data_timeout_ms = 5000  # 5 Sekunden Timeout
+
+        # NEU: Status Timer für Daten-Freshness Check
+        self.status_timer = QTimer()
+        self.status_timer.timeout.connect(self.check_data_freshness)
+        self.status_timer.start(1000)  # Prüfe jede Sekunde
+
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
-        
+
+        # NEU: Status-Banner für Verbindung
+        self.connection_status = QLabel("⏳ Warte auf Sensor-Daten...")
+        self.connection_status.setStyleSheet(
+            "background-color: #f39c12; color: #ffffff; padding: 8px; "
+            "border-radius: 4px; font-weight: bold; font-size: 12px;"
+        )
+        self.connection_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.connection_status)
+
         settings_group = QGroupBox("Sensor-Einstellungen")
         settings_layout = QHBoxLayout(settings_group)
         settings_layout.addWidget(QLabel("Abfrageintervall:"))
@@ -213,10 +231,16 @@ class SensorTab(QWidget):
         self.poll_interval_spinbox.setSuffix(" ms")
         self.poll_interval_spinbox.valueChanged.connect(self.poll_interval_changed.emit)
         settings_layout.addWidget(self.poll_interval_spinbox)
+
+        # NEU: Refresh Button
+        self.refresh_btn = QPushButton("🔄 Sensoren aktualisieren")
+        self.refresh_btn.clicked.connect(self.refresh_sensors)
+        settings_layout.addWidget(self.refresh_btn)
+
         settings_layout.addStretch()
-        
+
         layout.addWidget(settings_group)
-        
+
         sensor_layout = QHBoxLayout()
         sensor_layout.addWidget(self.b24_sensor)
         sensor_layout.addWidget(self.b39_sensor)
@@ -234,6 +258,50 @@ class SensorTab(QWidget):
     def get_poll_interval(self):
         return self.poll_interval_spinbox.value()
 
+    def check_data_freshness(self):
+        """NEU: Prüft, ob Sensor-Daten noch aktuell sind"""
+        current_time = time.time() * 1000  # ms
+        all_fresh = True
+
+        for sensor_id, last_time in self.last_data_time.items():
+            time_since_update = current_time - last_time
+            if time_since_update > self.data_timeout_ms:
+                all_fresh = False
+                break
+
+        # Update Connection Status
+        if not self.last_data_time:
+            self.connection_status.setText("⏳ Warte auf Sensor-Daten...")
+            self.connection_status.setStyleSheet(
+                "background-color: #f39c12; color: #ffffff; padding: 8px; "
+                "border-radius: 4px; font-weight: bold; font-size: 12px;"
+            )
+        elif all_fresh:
+            active_count = len(self.last_data_time)
+            self.connection_status.setText(f"✅ {active_count} Sensor(en) aktiv - Daten aktuell")
+            self.connection_status.setStyleSheet(
+                "background-color: #27ae60; color: #ffffff; padding: 8px; "
+                "border-radius: 4px; font-weight: bold; font-size: 12px;"
+            )
+        else:
+            self.connection_status.setText("⚠️ Sensor-Daten veraltet - Keine neuen Daten empfangen")
+            self.connection_status.setStyleSheet(
+                "background-color: #e74c3c; color: #ffffff; padding: 8px; "
+                "border-radius: 4px; font-weight: bold; font-size: 12px;"
+            )
+
+    def refresh_sensors(self):
+        """NEU: Manuelles Aktualisieren der Sensoren"""
+        self.last_data_time.clear()
+        self.b24_sensor.temp_status.setText("⏳ Aktualisiere...")
+        self.b24_sensor.humid_status.setText("⏳ Aktualisiere...")
+        self.b39_sensor.status_label.setText("⏳ Aktualisiere...")
+        self.connection_status.setText("🔄 Aktualisiere Sensoren...")
+        self.connection_status.setStyleSheet(
+            "background-color: #3498db; color: #ffffff; padding: 8px; "
+            "border-radius: 4px; font-weight: bold; font-size: 12px;"
+        )
+
     def handle_sensor_data(self, data):
         """Verarbeitet eingehende Sensor-Daten und leitet sie an die Widgets und das Diagramm weiter."""
         sensor = data.get("sensor")
@@ -242,6 +310,9 @@ class SensorTab(QWidget):
 
         if raw_value is None:
             return
+
+        # NEU: Aktualisiere Daten-Zeitstempel für Freshness-Check
+        self.last_data_time[sensor] = time.time() * 1000
 
         # Speichere Rohwert
         self.last_raw_values[sensor] = raw_value
@@ -254,9 +325,13 @@ class SensorTab(QWidget):
 
         if sensor == "B24_TEMP":
             self.b24_sensor.update_temperature(calibrated_value)
+            self.b24_sensor.temp_status.setText("✅ Aktiv")
+            self.b24_sensor.temp_status.setStyleSheet("font-size: 10px; color: #27ae60; font-style: italic;")
             self.history_chart.add_data_point("Temperatur", calibrated_value, timestamp)
         elif sensor == "B24_HUMIDITY":
             self.b24_sensor.update_humidity(calibrated_value)
+            self.b24_sensor.humid_status.setText("✅ Aktiv")
+            self.b24_sensor.humid_status.setStyleSheet("font-size: 10px; color: #27ae60; font-style: italic;")
             self.history_chart.add_data_point("Luftfeuchtigkeit", calibrated_value, timestamp)
         elif sensor == "B39_VIBRATION":
             self.b39_sensor.update_value(data.get("intensity", 0), data.get("vibrating", False))

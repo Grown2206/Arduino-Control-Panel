@@ -6,6 +6,18 @@ import serial.tools.list_ports
 import time
 import numpy as np
 import base64
+import logging
+
+# Setup Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('arduino_panel.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger("ArduinoPanel")
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLabel, QComboBox, QPushButton, QCheckBox, QStatusBar, QTabWidget,
@@ -59,24 +71,6 @@ try:
 except ImportError:
     THEME_MANAGER_AVAILABLE = False
 
-# === NEUE FEATURES ===
-# Hardware-Simulation
-try:
-    from hardware_simulator import ArduinoSimulator, create_simulator
-    SIMULATOR_AVAILABLE = True
-    print('✅ Hardware-Simulator verfügbar')
-except ImportError:
-    SIMULATOR_AVAILABLE = False
-    print('⚠️ Hardware-Simulator nicht gefunden')
-
-# Theme-Manager
-try:
-    from ui.theme_manager import ThemeManager
-    THEME_MANAGER_AVAILABLE = True
-except ImportError:
-    THEME_MANAGER_AVAILABLE = False
-
-
 # --- ADVANCED FEATURES ---
 try:
     from advanced_features_fixed import integrate_advanced_features
@@ -108,6 +102,10 @@ class MainWindow(QMainWindow):
         self.chart_start_time = time.time()
         self.active_sensor_config_for_polling = {} # Speichert, welche Sensoren gepollt werden sollen
 
+        # Command Queue für sequentielle Befehle ohne UI-Blocking
+        self.command_queue = []
+        self.command_timer = QTimer(self)
+        self.command_timer.timeout.connect(self._process_command_queue)
 
         # === Live-Statistik-Widget ===
         self.live_stats_widget = LiveStatsWidget()
@@ -475,7 +473,8 @@ class MainWindow(QMainWindow):
                         self.relay_tab.update_pin_state(pin_int, value)
                         try:
                             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.update_pin_state(pin_int, value)
-                        except AttributeError: pass
+                        except AttributeError as e:
+                            logger.debug(f"Relay quick widget nicht verfügbar: {e}")
             self.worker.data_received.connect(forward_to_relay_widgets)
         try: # Relay Quick Widget
             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.command_signal.connect(self.send_command)
@@ -520,14 +519,15 @@ class MainWindow(QMainWindow):
                 try: self.worker.status_changed.disconnect(send_config_after_connect)
                 except TypeError: pass # Falls schon getrennt
 
+                # Sammle alle Befehle in einer Liste (ohne UI-Blocking)
+                commands = []
+
                 # Sende Pin Modi zuerst (OUTPUT für Trigger etc.)
                 pin_functions = config_data.get('pin_functions', {})
                 for pin_name, function in pin_functions.items():
                     if function == "OUTPUT":
                         cmd = {"id": f"cfg_pm_{pin_name}", "command": "pin_mode", "pin": pin_name, "mode": "OUTPUT"}
-                        self.send_command(cmd)
-                        time.sleep(0.01) # Kleine Pause
-                    # INPUT/INPUT_PULLUP werden standardmäßig gesetzt oder können hier auch gesetzt werden
+                        commands.append(cmd)
 
                 # Sende Sensor-Konfigurationen
                 active_sensors = config_data.get('active_sensors', {})
@@ -538,8 +538,11 @@ class MainWindow(QMainWindow):
                         "sensor_type": sensor_config['sensor_type'],
                         "pin_config": sensor_config['pin_config']
                     }
-                    self.send_command(cmd)
-                    time.sleep(0.02) # Etwas längere Pause nach Konfig-Befehlen
+                    commands.append(cmd)
+
+                # Sende alle Befehle über Queue (non-blocking)
+                if commands:
+                    self._queue_commands(commands, interval_ms=20)
 
                 print("Sensor-Konfiguration gesendet.")
                 # Starte Polling Timer NACHDEM Konfig gesendet wurde
@@ -594,7 +597,8 @@ class MainWindow(QMainWindow):
                     pin_str = parts[1] if parts[1].startswith('D') else f"D{parts[1]}"
                     json_cmd = {"id": str(uuid.uuid4()), "command": "pin_mode", "pin": pin_str, "mode": "OUTPUT"}
                     self.send_command(json_cmd)
-            except Exception as e: print(f"⚠️ Fehler bei Konvertierung von Befehl '{command}': {e}")
+            except (ValueError, IndexError, KeyError) as e:
+                logger.error(f"Fehler bei Konvertierung von Befehl '{command}': {e}", exc_info=True)
 
 
     def handle_data(self, data): # Unverändert von letzter Version
@@ -621,10 +625,12 @@ class MainWindow(QMainWindow):
              try:
                  if data.get("sensor") == "B24_TEMP": self.dashboard_tab.sensor_display_widget.update_temperature(data.get("value", 0))
                  elif data.get("sensor") == "B24_HUMIDITY": self.dashboard_tab.sensor_display_widget.update_humidity(data.get("value", 0))
-             except AttributeError: pass
+             except AttributeError as e:
+                 logger.warning(f"Dashboard sensor widget nicht verfügbar: {e}")
          for handler in self.data_handlers:
              try: handler(data)
-             except Exception as e: print(f"❌ Handler-Fehler: {e}")
+             except Exception as e:
+                 logger.error(f"Handler {handler.__name__ if hasattr(handler, '__name__') else handler} failed: {e}", exc_info=True)
 
 
     def update_status(self, message): # Unverändert von letzter Version
@@ -635,7 +641,8 @@ class MainWindow(QMainWindow):
          try:
              self.dashboard_tab.connection_widget.update_status(is_connected, port_name)
              self.dashboard_tab.activity_widget.add_entry(message)
-         except AttributeError: pass
+         except AttributeError as e:
+             logger.debug(f"Dashboard connection/activity widget nicht verfügbar: {e}")
 
     # HIER IST DIE FEHLENDE METHODE
     def update_poll_interval(self, interval_ms):
@@ -687,7 +694,8 @@ class MainWindow(QMainWindow):
             self.relay_tab.load_settings()
             try:
                 if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.load_pin_map()
-            except AttributeError: pass
+            except AttributeError as e:
+                logger.debug(f"Relay quick widget nicht beim Laden verfügbar: {e}")
         self.status_bar.showMessage("Konfiguration geladen.", 2000)
 
 
@@ -865,6 +873,30 @@ class MainWindow(QMainWindow):
         ports = [port.device for port in serial.tools.list_ports.comports()]
         self.port_combo.clear(); self.port_combo.addItems(ports)
         if hasattr(self.dashboard_tab, 'connection_widget'): self.dashboard_tab.connection_widget.update_ports(ports)
+
+    def _process_command_queue(self):
+        """Verarbeitet Command Queue ohne UI zu blockieren."""
+        if not self.command_queue:
+            self.command_timer.stop()
+            return
+
+        cmd = self.command_queue.pop(0)
+        self.send_command(cmd)
+
+        # Wenn noch Befehle in Queue, Timer weiterlaufen lassen
+        if not self.command_queue:
+            self.command_timer.stop()
+
+    def _queue_commands(self, commands, interval_ms=10):
+        """Fügt Befehle zur Queue hinzu und startet Timer.
+
+        Args:
+            commands: Liste von Command-Dicts
+            interval_ms: Intervall zwischen Befehlen in Millisekunden
+        """
+        self.command_queue.extend(commands)
+        if not self.command_timer.isActive():
+            self.command_timer.start(interval_ms)
 
     def closeEvent(self, event): # Unverändert
         print("\n🛑 Anwendung wird beendet...")

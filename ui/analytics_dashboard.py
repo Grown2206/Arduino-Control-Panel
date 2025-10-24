@@ -336,7 +336,8 @@ class AnalyticsDashboardTab(QWidget):
 
     def load_initial_data(self):
         """Lädt initiale Daten"""
-        self.refresh_all_data()
+        # Verzögere initiales Laden um UI nicht zu blockieren
+        QTimer.singleShot(500, self.refresh_all_data)
 
     def get_period_days(self) -> int:
         """Gibt die gewählte Periodenanzahl zurück"""
@@ -371,11 +372,47 @@ class AnalyticsDashboardTab(QWidget):
                 for seq in sequences:
                     self.correlation_sequence_combo.addItem(seq, seq)
 
+            elif trends['status'] == 'no_data':
+                # Zeige Info-Nachricht nur beim ersten Mal
+                if not hasattr(self, '_no_data_shown'):
+                    self._no_data_shown = True
+                    QMessageBox.information(
+                        self,
+                        "Keine Daten",
+                        f"{trends.get('message', 'Keine Daten verfügbar')}\n\n"
+                        "Führen Sie erst einige Tests durch, um Analytics zu sehen."
+                    )
+                # Setze KPIs auf 0
+                self.reset_kpis()
             else:
-                QMessageBox.information(self, "Keine Daten", trends.get('message', 'Keine Daten verfügbar'))
+                # Anderer Fehler
+                QMessageBox.warning(
+                    self,
+                    "Problem",
+                    trends.get('message', 'Unbekannter Fehler beim Laden der Daten')
+                )
 
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Fehler beim Laden der Daten:\n{str(e)}")
+            import traceback
+            error_details = traceback.format_exc()
+            QMessageBox.critical(
+                self,
+                "Fehler",
+                f"Fehler beim Laden der Analytics-Daten:\n\n{str(e)}\n\n"
+                "Details siehe Log-Datei."
+            )
+            print(f"Analytics Dashboard Error:\n{error_details}")
+
+    def reset_kpis(self):
+        """Setzt alle KPIs auf Standardwerte zurück"""
+        self.kpi_total_runs.update_value("0")
+        self.kpi_success_rate.update_value("N/A")
+        self.kpi_avg_cycle_time.update_value("N/A")
+        self.kpi_stability.update_value("N/A")
+        self.kpi_degradation.update_value("N/A")
+        self.kpi_anomaly_rate.update_value("N/A")
+        self.kpi_best_performance.update_value("N/A")
+        self.kpi_risk_score.update_value("0/100")
 
     def update_kpis(self, trends: dict):
         """Aktualisiert KPI-Widgets"""
@@ -432,26 +469,66 @@ class AnalyticsDashboardTab(QWidget):
     def update_timeline_chart(self, trends: dict):
         """Aktualisiert Timeline-Chart"""
         timeline = trends.get('timeline', [])
-        if not timeline:
-            return
 
         fig = self.timeline_canvas.figure
         fig.clear()
         ax = fig.add_subplot(111)
 
-        # Extrahiere Daten
-        timestamps = [datetime.fromisoformat(t['timestamp']) for t in timeline]
-        cycle_times = [t['avg_cycle_time'] for t in timeline]
+        if not timeline:
+            # Zeige leeren Chart mit Hinweis
+            ax.text(0.5, 0.5, 'Keine Daten verfügbar\n\nFühren Sie Tests durch um Daten zu sammeln',
+                    ha='center', va='center', fontsize=12, color='gray',
+                    transform=ax.transAxes)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis('off')
+            fig.tight_layout()
+            self.timeline_canvas.draw()
+            return
 
-        # Plot
-        ax.plot(timestamps, cycle_times, marker='o', linestyle='-', linewidth=2, markersize=4, color='#27ae60')
-        ax.set_xlabel('Zeitpunkt')
-        ax.set_ylabel('Durchschnittliche Zykluszeit (ms)')
-        ax.set_title('Performance Timeline')
-        ax.grid(True, alpha=0.3)
+        try:
+            # Extrahiere Daten
+            timestamps = []
+            cycle_times = []
 
-        fig.tight_layout()
-        self.timeline_canvas.draw()
+            for t in timeline:
+                try:
+                    ts = datetime.fromisoformat(t['timestamp'])
+                    timestamps.append(ts)
+                    cycle_times.append(t['avg_cycle_time'])
+                except (ValueError, KeyError) as e:
+                    # Überspringe ungültige Einträge
+                    continue
+
+            if not timestamps:
+                # Keine gültigen Daten
+                ax.text(0.5, 0.5, 'Keine gültigen Zeitstempel gefunden',
+                        ha='center', va='center', fontsize=12, color='orange',
+                        transform=ax.transAxes)
+                ax.axis('off')
+                fig.tight_layout()
+                self.timeline_canvas.draw()
+                return
+
+            # Plot
+            ax.plot(timestamps, cycle_times, marker='o', linestyle='-', linewidth=2, markersize=4, color='#27ae60')
+            ax.set_xlabel('Zeitpunkt')
+            ax.set_ylabel('Durchschnittliche Zykluszeit (ms)')
+            ax.set_title('Performance Timeline')
+            ax.grid(True, alpha=0.3)
+
+            fig.tight_layout()
+            self.timeline_canvas.draw()
+
+        except Exception as e:
+            # Fehler beim Plotten
+            ax.text(0.5, 0.5, f'Fehler beim Erstellen des Charts:\n{str(e)}',
+                    ha='center', va='center', fontsize=10, color='red',
+                    transform=ax.transAxes)
+            ax.axis('off')
+            fig.tight_layout()
+            self.timeline_canvas.draw()
+            print(f"Timeline Chart Error: {e}")
 
     def update_alerts_table(self, trends: dict):
         """Aktualisiert Alerts-Tabelle"""

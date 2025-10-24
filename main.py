@@ -8,13 +8,18 @@ import numpy as np
 import base64
 import logging
 
-# Setup Logging
+# Setup Logging with UTF-8 encoding to support Unicode characters (emojis, etc.)
+import io
+
+# Create a UTF-8 encoded stdout wrapper for logging to prevent UnicodeEncodeError on Windows
+utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('arduino_panel.log'),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler('arduino_panel.log', encoding='utf-8'),
+        logging.StreamHandler(utf8_stdout)
     ]
 )
 logger = logging.getLogger("ArduinoPanel")

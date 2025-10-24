@@ -17,6 +17,17 @@ openpyxl>=3.1.0
 
 # Optional but recommended
 Pillow>=10.0.0  # Für Bildverarbeitung in Berichten
+python-docx>=0.8.11  # Für DOCX Export
+
+# Analytics & Visualization (NEU in v3.0)
+seaborn>=0.12.0  # Für Heatmaps und erweiterte Visualisierungen
+
+# REST API & WebSocket Support (NEU in v3.0)
+flask>=2.3.0
+flask-restx>=1.1.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
+python-socketio>=5.9.0
 
 # Development (optional)
 # pytest>=7.4.0  # Für Unit-Tests

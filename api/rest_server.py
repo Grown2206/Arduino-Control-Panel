@@ -13,8 +13,20 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import json
 
-# Setup Logging
-logging.basicConfig(level=logging.INFO)
+# Setup Logging with UTF-8 encoding to support Unicode characters
+import sys
+import io
+
+# Create a UTF-8 encoded stdout wrapper for logging
+utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(utf8_stdout)
+    ]
+)
 logger = logging.getLogger("REST_API")
 
 

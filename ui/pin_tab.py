@@ -1,6 +1,9 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QScrollArea)
 from PyQt6.QtCore import pyqtSignal, Qt
 from .pin_widget import PinWidget
+import logging
+
+logger = logging.getLogger("ArduinoPanel.PinTab")
 
 class PinTab(QWidget):
     """Ein Tab zur Steuerung aller Arduino-Pins in einem sauberen Gitter-Layout."""
@@ -55,7 +58,39 @@ class PinTab(QWidget):
         return {name: widget.get_mode() for name, widget in self.pin_widgets.items()}
 
     def set_pin_configs(self, pin_configs):
-        """Setzt die Modus-Einstellungen aus einer geladenen Konfiguration."""
+        """Setzt die Modus-Einstellungen aus einer geladenen Konfiguration.
+
+        Args:
+            pin_configs: Dict mit Pin-Namen und Modi {pin_name: mode}
+        """
+        # Validiere Input
+        if not isinstance(pin_configs, dict):
+            logger.error(f"pin_configs muss ein Dict sein, bekam: {type(pin_configs)}")
+            return
+
+        VALID_MODES = ["INPUT", "OUTPUT", "INPUT_PULLUP"]
+
         for pin_name, mode in pin_configs.items():
-            if pin_name in self.pin_widgets:
+            # Validiere Pin-Name
+            if not isinstance(pin_name, str):
+                logger.warning(f"Ungültiger Pin-Name Typ: {type(pin_name)}, überspringe")
+                continue
+
+            if pin_name not in self.pin_widgets:
+                logger.debug(f"Pin {pin_name} nicht gefunden, überspringe")
+                continue
+
+            # Validiere Mode
+            if not isinstance(mode, str):
+                logger.warning(f"Ungültiger Mode-Typ für Pin {pin_name}: {type(mode)}, überspringe")
+                continue
+
+            if mode not in VALID_MODES:
+                logger.warning(f"Ungültiger Mode '{mode}' für Pin {pin_name}, verwende INPUT")
+                mode = "INPUT"
+
+            # Setze Mode
+            try:
                 self.pin_widgets[pin_name].mode_combo.setCurrentText(mode)
+            except Exception as e:
+                logger.error(f"Fehler beim Setzen von Mode für Pin {pin_name}: {e}")

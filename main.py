@@ -32,6 +32,7 @@ from core.database_worker import DatabaseWorker
 from core.config_manager import ConfigManager
 from core.serial_worker import SerialWorker
 from core.sequence_runner import SequenceRunner
+from core.validators import PinValidator, SensorValidator, ConfigValidator
 
 # --- ANALYSIS ---
 from analysis.trend_analyzer import TrendAnalyzer  # ✅ Erweiterte Version mit Quality-Metrics  # ✅ Erweiterte Version mit Quality-Metrics
@@ -429,15 +430,6 @@ class MainWindow(QMainWindow):
 
         # --- Optionale Tabs (Rest) ---
 
-        # === Live-Stats Signals ===
-        if hasattr(self, "seq_runner") and hasattr(self.seq_runner, "cycle_completed"):
-            self.seq_runner.cycle_completed.connect(
-                self.live_stats_widget.add_cycle
-            )
-            print("✅ Live-Stats Signals verbunden")
-        else:
-            print("⚠️ SequenceRunner hat kein cycle_completed Signal")
-
         if hasattr(self, 'data_logger_tab') and self.data_logger_tab:
             def forward_to_data_logger(data):
                 if data.get('type') == 'pin_update':
@@ -519,18 +511,21 @@ class MainWindow(QMainWindow):
                 try: self.worker.status_changed.disconnect(send_config_after_connect)
                 except TypeError: pass # Falls schon getrennt
 
+                # Validiere Konfiguration mit zentralem Validator
+                validated_config = ConfigValidator.validate_config_data(config_data)
+
                 # Sammle alle Befehle in einer Liste (ohne UI-Blocking)
                 commands = []
 
-                # Sende Pin Modi zuerst (OUTPUT für Trigger etc.)
-                pin_functions = config_data.get('pin_functions', {})
+                # Sende Pin Modi (bereits validiert)
+                pin_functions = validated_config.get('pin_functions', {})
                 for pin_name, function in pin_functions.items():
                     if function == "OUTPUT":
                         cmd = {"id": f"cfg_pm_{pin_name}", "command": "pin_mode", "pin": pin_name, "mode": "OUTPUT"}
                         commands.append(cmd)
 
-                # Sende Sensor-Konfigurationen
-                active_sensors = config_data.get('active_sensors', {})
+                # Sende Sensor-Konfigurationen (bereits validiert)
+                active_sensors = validated_config.get('active_sensors', {})
                 for sensor_id, sensor_config in active_sensors.items():
                     cmd = {
                         "id": f"cfg_sens_{sensor_id}",
@@ -898,12 +893,53 @@ class MainWindow(QMainWindow):
         if not self.command_timer.isActive():
             self.command_timer.start(interval_ms)
 
-    def closeEvent(self, event): # Unverändert
-        print("\n🛑 Anwendung wird beendet...")
-        self.auto_save_config(); self.seq_runner.stop_sequence(); self.worker.disconnect_serial(); self.sensor_poll_timer.stop()
-        if hasattr(self, 'oscilloscope_update_timer'): self.oscilloscope_update_timer.stop()
-        self.db_thread.quit(); self.db_thread.wait(2000)
-        print("✅ Anwendung sauber beendet."); event.accept()
+    def closeEvent(self, event):
+        """Sauberer Shutdown mit Thread-Cleanup und Ressourcen-Freigabe."""
+        logger.info("Anwendung wird beendet...")
+
+        # 1. Konfiguration speichern
+        try:
+            self.auto_save_config()
+        except Exception as e:
+            logger.error(f"Fehler beim Speichern der Konfiguration: {e}")
+
+        # 2. Alle Timer stoppen
+        if hasattr(self, 'sensor_poll_timer'):
+            self.sensor_poll_timer.stop()
+        if hasattr(self, 'auto_save_timer'):
+            self.auto_save_timer.stop()
+        if hasattr(self, 'command_timer'):
+            self.command_timer.stop()
+        if hasattr(self, 'oscilloscope_update_timer'):
+            self.oscilloscope_update_timer.stop()
+
+        # 3. Sequenz-Runner stoppen
+        if hasattr(self, 'seq_runner'):
+            self.seq_runner.stop_sequence()
+            # Warte bis Thread beendet ist
+            if not self.seq_runner.wait(3000):
+                logger.warning("SequenceRunner konnte nicht sauber beendet werden")
+                self.seq_runner.terminate()
+
+        # 4. Serial-Verbindung trennen
+        if hasattr(self, 'worker'):
+            self.worker.disconnect_serial()
+            # Warte bis Serial-Worker beendet ist
+            if self.worker.isRunning():
+                if not self.worker.wait(2000):
+                    logger.warning("SerialWorker konnte nicht sauber beendet werden")
+                    self.worker.terminate()
+
+        # 5. Datenbank-Thread beenden
+        if hasattr(self, 'db_thread'):
+            self.db_thread.quit()
+            if not self.db_thread.wait(3000):
+                logger.error("DB-Thread konnte nicht beendet werden, erzwinge Terminierung")
+                self.db_thread.terminate()
+                self.db_thread.wait(1000)
+
+        logger.info("Anwendung sauber beendet")
+        event.accept()
 
 # --- Main execution ---
 if __name__ == "__main__":

@@ -103,6 +103,7 @@ class MainWindow(QMainWindow):
         self.current_test_id = None; self.sensor_log = []; self.test_start_time = 0
         self.chart_start_time = time.time()
         self.active_sensor_config_for_polling = {} # Speichert, welche Sensoren gepollt werden sollen
+        self.current_theme = "dark"  # NEU: Theme-Tracking
 
         # Command Queue für sequentielle Befehle ohne UI-Blocking
         self.command_queue = []
@@ -286,13 +287,21 @@ class MainWindow(QMainWindow):
                 print("✅ Relais Schnellzugriff geladen und verbunden.")
             except ImportError as e: print(f"⚠️ Relais Schnellzugriff nicht verfügbar: {e}")
 
-    def _create_menu_bar(self): # Unverändert
+    def _create_menu_bar(self):
         menubar = self.menuBar()
+
+        # Datei-Menü
         file_menu = menubar.addMenu("Datei")
         save_action = file_menu.addAction("💾 Speichern"); save_action.triggered.connect(self.auto_save_config); save_action.setShortcut("Ctrl+S")
         load_action = file_menu.addAction("📂 Laden"); load_action.triggered.connect(self.load_saved_config); load_action.setShortcut("Ctrl+O")
         file_menu.addSeparator()
         exit_action = file_menu.addAction("❌ Beenden"); exit_action.triggered.connect(self.close)
+
+        # NEU: Ansicht-Menü mit Theme Toggle
+        view_menu = menubar.addMenu("Ansicht")
+        self.theme_action = view_menu.addAction("🌓 Dark/Light Theme")
+        self.theme_action.triggered.connect(self.toggle_theme)
+        self.theme_action.setShortcut("Ctrl+T")
 
 
     def _create_connection_bar(self): # Unverändert
@@ -399,6 +408,7 @@ class MainWindow(QMainWindow):
         self.sequence_tab.new_sequence_signal.connect(self.new_sequence)
         self.sequence_tab.edit_sequence_signal.connect(self.edit_sequence)
         self.sequence_tab.delete_sequence_signal.connect(self.delete_sequence)
+        self.sequence_tab.toggle_favorite_signal.connect(self.toggle_favorite)  # NEU: Favoriten
         self.sequence_tab.sequence_updated_signal.connect(self.on_sequence_updated_from_editor)
 
         # --- Archive ---
@@ -560,6 +570,29 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"Fehler beim Aktualisieren: {e}")
             self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def toggle_theme(self):
+        """NEU: Wechselt zwischen Dark und Light Theme (Ctrl+T)"""
+        try:
+            # Toggle theme
+            self.current_theme = "light" if self.current_theme == "dark" else "dark"
+
+            # Apply new stylesheet
+            from ui.branding import get_full_stylesheet
+            self.setStyleSheet(get_full_stylesheet(self.current_theme))
+
+            # Update status
+            theme_name = "Light" if self.current_theme == "light" else "Dark"
+            self.status_bar.showMessage(f"🌓 {theme_name} Theme aktiviert", 2000)
+            logger.info(f"Theme gewechselt zu: {theme_name}")
+
+            # Save preference to config
+            self.config_manager.set("theme", self.current_theme)
+            self.config_manager.save_config_to_file()
+
+        except Exception as e:
+            logger.error(f"Fehler beim Theme-Wechsel: {e}")
+            self.status_bar.showMessage(f"❌ Theme-Fehler: {e}", 3000)
 
     # --- Connection Handling ---
     def initiate_connection(self):
@@ -807,6 +840,15 @@ class MainWindow(QMainWindow):
                 if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.load_pin_map()
             except AttributeError as e:
                 logger.debug(f"Relay quick widget nicht beim Laden verfügbar: {e}")
+
+        # NEU: Theme laden
+        saved_theme = config.get("theme", "dark")
+        if saved_theme != self.current_theme:
+            self.current_theme = saved_theme
+            from ui.branding import get_full_stylesheet
+            self.setStyleSheet(get_full_stylesheet(self.current_theme))
+            logger.info(f"Theme geladen: {self.current_theme}")
+
         self.status_bar.showMessage("Konfiguration geladen.", 2000)
 
 
@@ -904,6 +946,20 @@ class MainWindow(QMainWindow):
             del self.sequences[seq_id]; self.sequence_tab.update_sequence_list(self.sequences)
             if hasattr(self.dashboard_tab, 'quick_sequence_widget'): self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
             self.auto_save_config()
+
+    def toggle_favorite(self, seq_id):
+        """NEU: Togglet den Favoriten-Status einer Sequenz"""
+        if seq_id in self.sequences:
+            current = self.sequences[seq_id].get("favorite", False)
+            self.sequences[seq_id]["favorite"] = not current
+            self.sequence_tab.update_sequence_list(self.sequences)
+            if hasattr(self.dashboard_tab, 'quick_sequence_widget'):
+                self.dashboard_tab.quick_sequence_widget.update_sequences(self.sequences)
+            self.auto_save_config()
+
+            status = "als Favorit markiert" if not current else "aus Favoriten entfernt"
+            self.status_bar.showMessage(f"⭐ Sequenz '{self.sequences[seq_id]['name']}' {status}", 2000)
+            logger.info(f"Sequenz {seq_id} {status}")
 
     def save_dashboard_layout(self, name, layout_config): # Unverändert
         self.dashboard_layouts[name] = layout_config

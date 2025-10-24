@@ -8,45 +8,68 @@ class PinIndicator(QWidget):
         self.pin_name = pin_name
         self.is_analog = is_analog
         self.current_value = 0
+        self.current_mode = "INPUT" if is_analog else "INPUT"  # NEU: Pin-Modus tracken
         self.setup_ui()
         
     def setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 5, 0, 5)
         layout.setSpacing(2)
-        
+
         name_label = QLabel(self.pin_name)
         name_label.setStyleSheet("font-weight: bold; font-size: 11px;")
         name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(name_label)
-        
-        self.led = QLabel("●")
-        self.led.setStyleSheet("font-size: 24px; color: #34495e;") # Dunkelgrau für "aus"
+
+        # NEU: Modus-Anzeige
+        self.mode_label = QLabel("IN")
+        self.mode_label.setStyleSheet("font-size: 8px; color: #95a5a6; background-color: #2c3e50; padding: 2px; border-radius: 3px;")
+        self.mode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.mode_label)
+
+        # NEU: Emoji-basierte Status-Icons 🟢🔴🟡⚫
+        self.led = QLabel("⚫")
+        self.led.setStyleSheet("font-size: 28px;")  # Größer für bessere Sichtbarkeit
         self.led.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.led)
-        
+
         self.value_label = QLabel("0")
         self.value_label.setStyleSheet("font-size: 10px; color: #7f8c8d;")
         self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.value_label)
-        
-        self.setMinimumWidth(80)
-        self.setMaximumWidth(80)
+
+        self.setMinimumWidth(90)  # Etwas breiter für Modus-Label
+        self.setMaximumWidth(90)
         
     def set_value(self, value):
+        """NEU: Aktualisiert Wert mit Emoji-Icons 🟢🔴🟡⚫"""
         self.current_value = value
-        
+
         if self.is_analog:
             self.value_label.setText(str(value))
-            # Farbverlauf für Analogwerte
-            if value > 768: color = "#e74c3c"  # Rot (hoch)
-            elif value > 256: color = "#f39c12" # Orange (mittel)
-            else: color = "#3498db" # Blau (niedrig)
-        else: # Digital
+            # Emoji-Icons für Analogwerte
+            if value > 768:
+                icon = "🔴"  # Rot (hoch)
+            elif value > 256:
+                icon = "🟡"  # Gelb (mittel)
+            else:
+                icon = "🟢"  # Grün (niedrig)
+        else:  # Digital
             self.value_label.setText("HIGH" if value else "LOW")
-            color = "#27ae60" if value else "#34495e" # Grün (an) / Grau (aus)
-            
-        self.led.setStyleSheet(f"font-size: 24px; color: {color};")
+            icon = "🟢" if value else "⚫"  # Grün (an) / Schwarz (aus)
+
+        self.led.setText(icon)
+
+    def set_mode(self, mode):
+        """NEU: Setzt den Pin-Modus und aktualisiert die Anzeige"""
+        self.current_mode = mode
+        mode_display = {
+            "INPUT": "IN",
+            "OUTPUT": "OUT",
+            "INPUT_PULLUP": "PULL",
+            "ANALOG_INPUT": "AIN"
+        }.get(mode, "IN")
+        self.mode_label.setText(mode_display)
 
 
 class PinOverviewWidget(QWidget):
@@ -87,4 +110,9 @@ class PinOverviewWidget(QWidget):
         """Aktualisiert den Zustand eines einzelnen Pin-Indikators."""
         if pin_name in self.pin_indicators:
             self.pin_indicators[pin_name].set_value(value)
+
+    def update_pin_mode(self, pin_name, mode):
+        """NEU: Aktualisiert den Modus eines einzelnen Pin-Indikators."""
+        if pin_name in self.pin_indicators:
+            self.pin_indicators[pin_name].set_mode(mode)
 

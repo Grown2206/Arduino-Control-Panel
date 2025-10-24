@@ -6,6 +6,7 @@ class ArchiveTab(QWidget):
     """Der 'Archiv'-Tab, der vergangene Testläufe anzeigt und Exporte ermöglicht."""
     export_pdf_signal = pyqtSignal(int)
     export_excel_signal = pyqtSignal(int)
+    export_csv_signal = pyqtSignal(int)  # NEU: CSV Export
     show_analysis_signal = pyqtSignal(int)
     show_report_signal = pyqtSignal(int)
     compare_runs_signal = pyqtSignal(list) # NEU
@@ -31,21 +32,23 @@ class ArchiveTab(QWidget):
         btn_layout = QHBoxLayout()
         refresh_btn = QPushButton("🔄 Neu laden"); refresh_btn.clicked.connect(self.refresh_signal.emit)
         report_btn = QPushButton("📄 Einzelbericht"); report_btn.clicked.connect(self.on_show_report)
-        
+
         # NEU: Button für den Vergleichsbericht
         self.compare_btn = QPushButton("📊 Vergleichen"); self.compare_btn.clicked.connect(self.on_compare_runs)
         self.compare_btn.setEnabled(False) # Standardmäßig deaktiviert
 
         pdf_btn = QPushButton("📄 PDF-Export"); pdf_btn.clicked.connect(self.on_export_pdf)
         excel_btn = QPushButton("📊 Excel-Export"); excel_btn.clicked.connect(self.on_export_excel)
+        csv_btn = QPushButton("📊 CSV-Export"); csv_btn.clicked.connect(self.on_export_csv)  # NEU
         analyze_btn = QPushButton("🔍 Trend-Analyse"); analyze_btn.clicked.connect(self.on_show_analysis)
-        
+
         btn_layout.addWidget(refresh_btn)
         btn_layout.addWidget(report_btn)
         btn_layout.addWidget(self.compare_btn)
         btn_layout.addStretch()
         btn_layout.addWidget(pdf_btn)
         btn_layout.addWidget(excel_btn)
+        btn_layout.addWidget(csv_btn)  # NEU
         btn_layout.addWidget(analyze_btn)
         layout.addLayout(btn_layout)
 
@@ -69,6 +72,11 @@ class ArchiveTab(QWidget):
     def on_export_excel(self):
         run_id = self.get_selected_run_id()
         if run_id is not None: self.export_excel_signal.emit(run_id)
+
+    def on_export_csv(self):
+        """NEU: CSV Export Handler"""
+        run_id = self.get_selected_run_id()
+        if run_id is not None: self.export_csv_signal.emit(run_id)
 
     def on_show_analysis(self):
         run_id = self.get_selected_run_id()

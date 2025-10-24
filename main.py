@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                              QInputDialog, QMessageBox, QDialog, QTextEdit, QListWidget, QFileDialog,
                              QScrollArea)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap, QKeySequence, QShortcut, QAction
 
 # --- CORE ---
 from core.database import Database
@@ -39,6 +39,7 @@ from analysis.trend_analyzer import TrendAnalyzer  # ✅ Erweiterte Version mit 
 from analysis.report_generator import ReportGenerator
 from analysis.report_viewer import ReportViewerDialog
 from analysis.comparison_viewer import ComparisonViewerDialog
+from analysis.export_manager import ExportManager  # NEU: CSV Export
 
 # --- UI ---
 from ui.pin_tab import PinTab
@@ -124,6 +125,10 @@ class MainWindow(QMainWindow):
             print("✅ Advanced Features erfolgreich integriert!")
         self.auto_save_timer = QTimer(self, timeout=self.auto_save_config, interval=30000); self.auto_save_timer.start()
         self.sensor_poll_timer = QTimer(self, timeout=self.poll_sensors)
+
+        # Keyboard Shortcuts einrichten
+        self.setup_shortcuts()
+
         print("\nAnwendung bereit.")
 
 
@@ -400,6 +405,7 @@ class MainWindow(QMainWindow):
         self.archive_tab.refresh_signal.connect(self.load_archive)
         self.archive_tab.export_pdf_signal.connect(self.export_pdf)
         self.archive_tab.export_excel_signal.connect(self.export_excel)
+        self.archive_tab.export_csv_signal.connect(self.export_csv)  # NEU: CSV Export
         self.archive_tab.show_analysis_signal.connect(self.show_trend_analysis)
         self.archive_tab.show_report_signal.connect(self.show_report_viewer)
         self.archive_tab.compare_runs_signal.connect(self.show_comparison_report)
@@ -471,6 +477,89 @@ class MainWindow(QMainWindow):
         try: # Relay Quick Widget
             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.command_signal.connect(self.send_command)
         except AttributeError: pass
+
+    def setup_shortcuts(self):
+        """Richtet Keyboard Shortcuts ein."""
+        logger.info("Richte Keyboard Shortcuts ein...")
+
+        # Ctrl+S: Konfiguration speichern
+        save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        save_shortcut.activated.connect(self.save_config_shortcut)
+
+        # Ctrl+R: Aktuell ausgewählte Sequenz starten
+        run_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
+        run_shortcut.activated.connect(self.start_sequence_shortcut)
+
+        # Ctrl+Q: Anwendung beenden
+        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
+        quit_shortcut.activated.connect(self.close)
+
+        # F5: Aktuellen Tab aktualisieren
+        refresh_shortcut = QShortcut(QKeySequence("F5"), self)
+        refresh_shortcut.activated.connect(self.refresh_current_tab)
+
+        logger.info("✅ Keyboard Shortcuts eingerichtet (Ctrl+S, Ctrl+R, Ctrl+Q, F5)")
+
+    def save_config_shortcut(self):
+        """Speichert die aktuelle Konfiguration (Ctrl+S)."""
+        try:
+            self.auto_save_config()
+            self.status_bar.showMessage("✅ Konfiguration gespeichert", 2000)
+            logger.info("Konfiguration manuell gespeichert (Ctrl+S)")
+        except Exception as e:
+            logger.error(f"Fehler beim Speichern der Konfiguration: {e}")
+            self.status_bar.showMessage(f"❌ Fehler beim Speichern: {e}", 3000)
+
+    def start_sequence_shortcut(self):
+        """Startet die aktuell ausgewählte Sequenz (Ctrl+R)."""
+        try:
+            # Versuche, die aktuell ausgewählte Sequenz zu ermitteln
+            if hasattr(self.sequence_tab, 'seq_list') and self.sequence_tab.seq_list.currentItem():
+                seq_id = self.sequence_tab.seq_list.currentItem().data(Qt.ItemDataRole.UserRole)
+                if seq_id:
+                    logger.info(f"Starte Sequenz via Ctrl+R: {seq_id}")
+                    self.start_test_run(seq_id)
+                    self.status_bar.showMessage(f"▶️ Sequenz gestartet", 2000)
+                else:
+                    self.status_bar.showMessage("⚠️ Keine Sequenz ausgewählt", 2000)
+            else:
+                self.status_bar.showMessage("⚠️ Keine Sequenz ausgewählt", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Starten der Sequenz: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def refresh_current_tab(self):
+        """Aktualisiert den aktuellen Tab (F5)."""
+        try:
+            current_widget = self.tabs.currentWidget()
+
+            if current_widget == self.archive_tab:
+                self.load_archive()
+                self.status_bar.showMessage("🔄 Archiv aktualisiert", 2000)
+                logger.info("Archiv aktualisiert (F5)")
+            elif current_widget == self.dashboard_tab:
+                # Dashboard-Daten aktualisieren
+                self.refresh_ports()
+                if hasattr(self.dashboard_tab, 'refresh'):
+                    self.dashboard_tab.refresh()
+                self.status_bar.showMessage("🔄 Dashboard aktualisiert", 2000)
+                logger.info("Dashboard aktualisiert (F5)")
+            elif current_widget == self.sequence_tab:
+                # Sequenzliste aktualisieren
+                self.sequence_tab.update_sequence_list(self.sequences)
+                self.status_bar.showMessage("🔄 Sequenzen aktualisiert", 2000)
+                logger.info("Sequenzen aktualisiert (F5)")
+            elif current_widget == self.pin_overview_tab:
+                # Pin-Übersicht aktualisieren
+                if hasattr(self.pin_overview_tab, 'refresh'):
+                    self.pin_overview_tab.refresh()
+                self.status_bar.showMessage("🔄 Pin-Übersicht aktualisiert", 2000)
+                logger.info("Pin-Übersicht aktualisiert (F5)")
+            else:
+                self.status_bar.showMessage("🔄 Tab aktualisiert", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Aktualisieren: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
 
     # --- Connection Handling ---
     def initiate_connection(self):
@@ -591,6 +680,18 @@ class MainWindow(QMainWindow):
             if not self.worker.is_connected():
                 logger.warning(f"Command kann nicht gesendet werden - nicht verbunden: {command}")
                 return
+
+            # NEU: Aktualisiere Pin-Modus in Overview wenn pin_mode Command
+            if command.get('command') == 'pin_mode':
+                pin = command.get('pin')
+                mode = command.get('mode')
+                if pin and mode:
+                    self.pin_overview_tab.update_pin_mode(pin, mode)
+                    try:
+                        if hasattr(self.dashboard_tab, 'pin_overview_widget'):
+                            self.dashboard_tab.pin_overview_widget.update_pin_mode(pin, mode)
+                    except AttributeError:
+                        pass
 
             # Sende Command
             logger.info(f"Sende Command an Arduino: {command}")
@@ -840,6 +941,32 @@ class MainWindow(QMainWindow):
             try: ReportGenerator.generate_excel(run_details, file_path); QMessageBox.information(self, "Erfolg", "Excel-Bericht erfolgreich exportiert!")
             except Exception as e: QMessageBox.critical(self, "Export-Fehler", f"Excel konnte nicht erstellt werden:\n{e}")
 
+    def export_csv(self, run_id):
+        """NEU: Exportiert einen Testlauf als CSV-Datei."""
+        run_details = self.db.get_run_details(run_id)
+        if not run_details:
+            return
+
+        # Analyse durchführen (wie bei anderen Exports)
+        event_log = run_details.get('log', {}).get('events', [])
+        analysis = TrendAnalyzer.analyze_timing(event_log)
+
+        # Datei-Dialog
+        default_name = f"Bericht_{run_id}.csv"
+        file_path, _ = QFileDialog.getSaveFileName(self, "CSV exportieren", default_name, "CSV (*.csv)")
+
+        if file_path:
+            try:
+                # Verwende ExportManager für CSV-Export
+                success = ExportManager.export_csv(run_details, analysis, file_path)
+                if success:
+                    QMessageBox.information(self, "Erfolg", f"✅ CSV-Bericht erfolgreich exportiert!\n{file_path}")
+                    logger.info(f"CSV-Export erfolgreich: {file_path}")
+                else:
+                    QMessageBox.warning(self, "Warnung", "CSV-Export war nicht vollständig erfolgreich.")
+            except Exception as e:
+                logger.error(f"CSV-Export fehlgeschlagen: {e}")
+                QMessageBox.critical(self, "Export-Fehler", f"CSV konnte nicht erstellt werden:\n{e}")
 
     def show_report_viewer(self, run_id):
         run_details = self.db.get_run_details(run_id);

@@ -68,7 +68,13 @@ class PinTab(QWidget):
             logger.error(f"pin_configs muss ein Dict sein, bekam: {type(pin_configs)}")
             return
 
-        VALID_MODES = ["INPUT", "OUTPUT", "INPUT_PULLUP"]
+        VALID_MODES = ["INPUT", "OUTPUT", "INPUT_PULLUP", "ANALOG_INPUT"]
+        MODE_MAPPING = {
+            "ANALOG_INPUT": "INPUT",  # Analoge Pins -> INPUT
+            "INPUT": "INPUT",
+            "OUTPUT": "OUTPUT",
+            "INPUT_PULLUP": "INPUT_PULLUP"
+        }
 
         for pin_name, mode in pin_configs.items():
             # Validiere Pin-Name
@@ -88,6 +94,9 @@ class PinTab(QWidget):
             if mode not in VALID_MODES:
                 logger.warning(f"Ungültiger Mode '{mode}' für Pin {pin_name}, verwende INPUT")
                 mode = "INPUT"
+            else:
+                # Mappe zu Arduino-kompatiblem Modus
+                mode = MODE_MAPPING.get(mode, "INPUT")
 
             # Setze Mode
             try:

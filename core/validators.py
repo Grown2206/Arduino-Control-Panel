@@ -18,7 +18,15 @@ class PinValidator:
     ALL_PINS = DIGITAL_PINS + ANALOG_PINS
 
     # Gültige Pin-Modi
-    VALID_MODES = ["INPUT", "OUTPUT", "INPUT_PULLUP"]
+    VALID_MODES = ["INPUT", "OUTPUT", "INPUT_PULLUP", "ANALOG_INPUT"]
+
+    # Mode-Mapping (manche Modi werden zu Arduino-kompatiblen Modi konvertiert)
+    MODE_MAPPING = {
+        "ANALOG_INPUT": "INPUT",  # Analoge Pins nutzen INPUT-Modus
+        "INPUT": "INPUT",
+        "OUTPUT": "OUTPUT",
+        "INPUT_PULLUP": "INPUT_PULLUP"
+    }
 
     @classmethod
     def validate_pin_name(cls, pin_name: Any) -> Optional[str]:
@@ -44,14 +52,14 @@ class PinValidator:
     @classmethod
     def validate_pin_mode(cls, mode: Any, default: str = "INPUT") -> str:
         """
-        Validiert einen Pin-Modus.
+        Validiert einen Pin-Modus und mappt ihn zu Arduino-kompatiblem Modus.
 
         Args:
             mode: Zu validierender Modus
             default: Fallback-Modus bei ungültigem Input
 
         Returns:
-            Validierter Modus (oder default)
+            Arduino-kompatibler Modus (INPUT, OUTPUT, INPUT_PULLUP)
         """
         if not isinstance(mode, str):
             logger.warning(f"Pin-Modus ist kein String: {type(mode)}, verwende {default}")
@@ -61,7 +69,8 @@ class PinValidator:
             logger.warning(f"Ungültiger Pin-Modus: {mode}, verwende {default}")
             return default
 
-        return mode
+        # Mappe zu Arduino-kompatiblem Modus
+        return cls.MODE_MAPPING.get(mode, default)
 
     @classmethod
     def validate_pin_configs(cls, pin_configs: Any) -> Dict[str, str]:

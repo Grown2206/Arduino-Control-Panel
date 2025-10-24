@@ -20,6 +20,16 @@ except ImportError:
     PROFILE_MANAGER_AVAILABLE = False
     print("⚠️ Hardware Profile Manager nicht verfügbar")
 
+try:
+    from analysis.advanced_stats import parse_timestamp
+except ImportError:
+    # Fallback-Funktion falls advanced_stats nicht verfügbar
+    def parse_timestamp(timestamp_str: str) -> datetime:
+        try:
+            return datetime.fromisoformat(timestamp_str)
+        except ValueError:
+            return datetime.strptime(timestamp_str, '%d.%m.%Y %H:%M:%S')
+
 
 class ProfileDialog(QDialog):
     """Dialog zum Erstellen/Bearbeiten von Profilen"""
@@ -316,8 +326,8 @@ class HardwareProfileTab(QWidget):
 
         # Formatiere Zeitstempel
         try:
-            created = datetime.fromisoformat(profile.created_at).strftime("%d.%m.%Y %H:%M")
-            modified = datetime.fromisoformat(profile.modified_at).strftime("%d.%m.%Y %H:%M")
+            created = parse_timestamp(profile.created_at).strftime("%d.%m.%Y %H:%M")
+            modified = parse_timestamp(profile.modified_at).strftime("%d.%m.%Y %H:%M")
         except:
             created = profile.created_at
             modified = profile.modified_at

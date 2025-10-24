@@ -21,7 +21,7 @@ from datetime import datetime
 
 # Import der Analysis-Module
 try:
-    from analysis.advanced_stats import AdvancedStats
+    from analysis.advanced_stats import AdvancedStats, parse_timestamp
     from analysis.prediction_model import PredictionModel
     ANALYTICS_AVAILABLE = True
 except ImportError:
@@ -493,7 +493,7 @@ class AnalyticsDashboardTab(QWidget):
 
             for t in timeline:
                 try:
-                    ts = datetime.fromisoformat(t['timestamp'])
+                    ts = parse_timestamp(t['timestamp'])
                     timestamps.append(ts)
                     cycle_times.append(t['avg_cycle_time'])
                 except (ValueError, KeyError) as e:
@@ -578,8 +578,15 @@ class AnalyticsDashboardTab(QWidget):
             fig.clear()
             ax = fig.add_subplot(111)
 
-            timestamps = [datetime.fromisoformat(t['timestamp']) for t in timeline]
-            cycle_times = [t['avg_cycle_time'] for t in timeline]
+            timestamps = []
+            cycle_times = []
+            for t in timeline:
+                try:
+                    timestamps.append(parse_timestamp(t['timestamp']))
+                    cycle_times.append(t['avg_cycle_time'])
+                except (ValueError, KeyError):
+                    # Überspringe ungültige Einträge
+                    continue
 
             # Plot Daten
             ax.scatter(range(len(cycle_times)), cycle_times, alpha=0.6, label='Messwerte')
@@ -633,10 +640,19 @@ class AnalyticsDashboardTab(QWidget):
         ax = fig.add_subplot(111)
 
         # Extrahiere Daten
-        dates = [datetime.fromisoformat(p['date']) for p in predictions]
-        predicted = [p['predicted_cycle_time'] for p in predictions]
-        lower = [p['lower_bound'] for p in predictions]
-        upper = [p['upper_bound'] for p in predictions]
+        dates = []
+        predicted = []
+        lower = []
+        upper = []
+        for p in predictions:
+            try:
+                dates.append(parse_timestamp(p['date']))
+                predicted.append(p['predicted_cycle_time'])
+                lower.append(p['lower_bound'])
+                upper.append(p['upper_bound'])
+            except (ValueError, KeyError):
+                # Überspringe ungültige Einträge
+                continue
 
         # Plot
         ax.plot(dates, predicted, 'b-', linewidth=2, label='Vorhersage')

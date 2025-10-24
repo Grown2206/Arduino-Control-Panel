@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import sqlite3
 import json
 from collections import defaultdict
+from analysis.advanced_stats import parse_timestamp
 
 
 class PredictionModel:
@@ -62,7 +63,11 @@ class PredictionModel:
 
         for run in runs:
             run_dict = dict(run)
-            timestamp = datetime.fromisoformat(run_dict['start_time']).timestamp()
+            try:
+                timestamp = parse_timestamp(run_dict['start_time']).timestamp()
+            except (ValueError, KeyError):
+                # Überspringe ungültige Zeitstempel
+                continue
 
             # Parse log für Zyklus-Zeit
             log_data = {}
@@ -428,8 +433,12 @@ class PredictionModel:
         # Gruppiere nach Tagen
         daily_counts = defaultdict(int)
         for run in runs:
-            date = datetime.fromisoformat(dict(run)['start_time']).date()
-            daily_counts[date] += 1
+            try:
+                date = parse_timestamp(dict(run)['start_time']).date()
+                daily_counts[date] += 1
+            except (ValueError, KeyError):
+                # Überspringe ungültige Zeitstempel
+                continue
 
         # Berechne durchschnittliche tägliche Läufe
         if daily_counts:

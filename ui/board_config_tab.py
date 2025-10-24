@@ -112,6 +112,20 @@ class BoardConfigTab(QWidget):
         self.pin_widgets = {}
         self.arduino_image_path = os.path.join("assets", "arduino_uno_pinout.png")
 
+        # Verfügbare Board-Typen
+        self.board_types = [
+            "Arduino Uno",
+            "Arduino Mega",
+            "Arduino Nano",
+            "Arduino Leonardo",
+            "Arduino Pro Mini",
+            "Arduino Due",
+            "Arduino MKR1000",
+            "ESP32",
+            "ESP8266",
+            "Custom"
+        ]
+
         self.digital_functions = ["UNUSED", "INPUT", "OUTPUT", "INPUT_PULLUP"]
         self.analog_functions = ["UNUSED", "ANALOG_INPUT"]
 
@@ -136,16 +150,45 @@ class BoardConfigTab(QWidget):
         self.load_config()
 
     def setup_ui(self):
-        # (Unverändert von der vorherigen Antwort)
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Top Toolbar mit Board-Typ-Selector
+        top_toolbar = QHBoxLayout()
+        top_toolbar.addWidget(QLabel("<b>Arduino Pin Konfiguration</b>"))
+        top_toolbar.addStretch()
+
+        # Board-Typ Selector
+        top_toolbar.addWidget(QLabel("Board-Typ:"))
+        self.board_type_combo = QComboBox()
+        self.board_type_combo.addItems(self.board_types)
+        self.board_type_combo.setCurrentText("Arduino Uno")
+        self.board_type_combo.setMinimumWidth(150)
+        self.board_type_combo.setStyleSheet("font-size: 11px;")
+        top_toolbar.addWidget(self.board_type_combo)
+
+        main_layout.addLayout(top_toolbar)
+
+        # Button Toolbar
         toolbar_layout = QHBoxLayout()
-        toolbar_layout.addWidget(QLabel("<b>Arduino Pin Konfiguration</b>")); toolbar_layout.addStretch()
-        self.apply_button = QPushButton("✅ Konfiguration an Arduino senden & Verbinden"); self.apply_button.clicked.connect(self.send_config_and_connect); self.apply_button.setStyleSheet("background-color: #27ae60;"); toolbar_layout.addWidget(self.apply_button)
-        save_btn = QPushButton("💾 Speichern"); save_btn.clicked.connect(self.save_config); toolbar_layout.addWidget(save_btn)
-        load_btn = QPushButton("📂 Laden"); load_btn.clicked.connect(self.load_config); toolbar_layout.addWidget(load_btn)
-        # NEU: Als Profil speichern
-        save_profile_btn = QPushButton("💾 Als Profil speichern"); save_profile_btn.clicked.connect(self.save_as_profile); toolbar_layout.addWidget(save_profile_btn)
+        self.apply_button = QPushButton("✅ Konfiguration an Arduino senden & Verbinden")
+        self.apply_button.clicked.connect(self.send_config_and_connect)
+        self.apply_button.setStyleSheet("background-color: #27ae60;")
+        toolbar_layout.addWidget(self.apply_button)
+
+        save_btn = QPushButton("💾 Speichern")
+        save_btn.clicked.connect(self.save_config)
+        toolbar_layout.addWidget(save_btn)
+
+        load_btn = QPushButton("📂 Laden")
+        load_btn.clicked.connect(self.load_config)
+        toolbar_layout.addWidget(load_btn)
+
+        save_profile_btn = QPushButton("💾 Als Profil speichern")
+        save_profile_btn.clicked.connect(self.save_as_profile)
+        toolbar_layout.addWidget(save_profile_btn)
+
+        toolbar_layout.addStretch()
         main_layout.addLayout(toolbar_layout)
         scroll_area = QScrollArea(); scroll_area.setWidgetResizable(True); scroll_area.setStyleSheet("QScrollArea { border: 1px solid #555; }"); main_layout.addWidget(scroll_area)
         self.board_container = BoardContainerWidget(self.arduino_image_path); scroll_area.setWidget(self.board_container)
@@ -304,11 +347,14 @@ class BoardConfigTab(QWidget):
 
             profile_id = f"profile_{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
+            # Hole ausgewählten Board-Typ aus dem ComboBox
+            board_type = self.board_type_combo.currentText() if hasattr(self, 'board_type_combo') else "Arduino Uno"
+
             new_profile = HardwareProfile(
                 profile_id=profile_id,
                 name=name,
-                board_type="Arduino Uno",  # TODO: Board-Typ dynamisch setzen
-                description=f"Gespeichert am {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+                board_type=board_type,
+                description=f"Gespeichert am {datetime.now().strftime('%d.%m.%Y %H:%M')} - {board_type}",
                 pin_config=pin_function_map,
                 sensor_config=active_sensors_config
             )

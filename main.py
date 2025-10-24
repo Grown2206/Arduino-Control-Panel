@@ -952,29 +952,59 @@ class MainWindow(QMainWindow):
             self.current_test_id = None; QTimer.singleShot(100, self.load_archive)
         elif status == "Abgeschlossen": QMessageBox.information(self, "Sequenz beendet", f"Sequenz nach {cycles} Zyklen abgeschlossen.")
 
-    def start_sequence(self, seq_id): # Unverändert
+    def start_sequence(self, seq_id):
+        """Startet eine Sequenz ohne Datenbank-Logging"""
+        if not self.worker.is_connected():
+            QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!")
+            return
 
-        # TODO: Live-Stats starten (falls Testlauf)
-        # if hasattr(self, "live_stats_widget"):
-        #     self.live_stats_widget.start_monitoring(total_cycles)
+        seq = self.sequences.get(seq_id, {})
+        seq_name = seq.get('name', 'Unbekannt')
+        cycles = seq.get('cycles', 0)
 
-        if not self.worker.is_connected(): QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!"); return
-        seq_name = self.sequences.get(seq_id, {}).get('name', 'Unbekannt')
-        if hasattr(self.dashboard_tab, 'activity_widget'): self.dashboard_tab.activity_widget.add_entry(f"Sequenz '{seq_name}' gestartet.")
-        self.sequence_tab.set_running_state(True); self.seq_runner.start_sequence(self.sequences[seq_id])
+        # Live-Stats starten mit echter Zyklus-Anzahl
+        if hasattr(self, "live_stats_widget") and cycles > 0:
+            self.live_stats_widget.start_monitoring(cycles)
+            logger.info(f"Live-Stats gestartet für Sequenz '{seq_name}' mit {cycles} Zyklen")
 
-    def start_test_run(self, seq_id): # Unverändert
+        if hasattr(self.dashboard_tab, 'activity_widget'):
+            self.dashboard_tab.activity_widget.add_entry(f"Sequenz '{seq_name}' gestartet.")
 
-        # TODO: Live-Stats starten (falls Testlauf)
-        # if hasattr(self, "live_stats_widget"):
-        #     self.live_stats_widget.start_monitoring(total_cycles)
+        self.sequence_tab.set_running_state(True)
+        self.seq_runner.start_sequence(self.sequences[seq_id])
 
-        if not self.worker.is_connected(): QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!"); return
-        seq = self.sequences[seq_id]; name, ok = QInputDialog.getText(self, "Testlauf starten", "Name für den Testlauf:", text=f"Test: {seq['name']}")
-        if not ok or not name: return
-        self.current_test_id = self.db.add_run(name, seq["name"]); self.test_start_time = time.time(); self.sensor_log.clear()
-        if hasattr(self.dashboard_tab, 'activity_widget'): self.dashboard_tab.activity_widget.add_entry(f"Testlauf '{name}' gestartet.")
-        self.sequence_tab.set_running_state(True); self.seq_runner.start_sequence(seq)
+    def start_test_run(self, seq_id):
+        """Startet einen Testlauf mit Datenbank-Logging"""
+        if not self.worker.is_connected():
+            QMessageBox.warning(self, "Fehler", "Bitte zuerst mit dem Arduino verbinden!")
+            return
+
+        seq = self.sequences[seq_id]
+        seq_name = seq.get('name', 'Unbekannt')
+        cycles = seq.get('cycles', 0)
+
+        name, ok = QInputDialog.getText(
+            self, "Testlauf starten",
+            "Name für den Testlauf:",
+            text=f"Test: {seq_name}"
+        )
+        if not ok or not name:
+            return
+
+        # Live-Stats starten mit echter Zyklus-Anzahl
+        if hasattr(self, "live_stats_widget") and cycles > 0:
+            self.live_stats_widget.start_monitoring(cycles)
+            logger.info(f"Live-Stats gestartet für Testlauf '{name}' mit {cycles} Zyklen")
+
+        self.current_test_id = self.db.add_run(name, seq_name)
+        self.test_start_time = time.time()
+        self.sensor_log.clear()
+
+        if hasattr(self.dashboard_tab, 'activity_widget'):
+            self.dashboard_tab.activity_widget.add_entry(f"Testlauf '{name}' gestartet.")
+
+        self.sequence_tab.set_running_state(True)
+        self.seq_runner.start_sequence(seq)
 
     def on_sequence_updated_from_editor(self, seq_id, updated_data): # Unverändert
         if seq_id in self.sequences: self.sequences[seq_id].update(updated_data); self.sequence_tab.update_sequence_list(self.sequences); self.auto_save_config()

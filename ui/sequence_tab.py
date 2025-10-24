@@ -251,16 +251,10 @@ class SequenceTab(QWidget):
         if seq_id: self.start_sequence_signal.emit(seq_id)
         
     def _on_start_test_run(self):
-
-        # Live-Stats: Starte Monitoring
-        if hasattr(self, "main_window") and hasattr(self.main_window, "live_stats_widget"):
-            cycles = 100  # TODO: Hole echte Zyklus-Anzahl
-            if hasattr(self, "cycles_spinbox"):
-                cycles = self.cycles_spinbox.value()
-            self.main_window.live_stats_widget.start_monitoring(cycles)
-
+        """Startet einen Testlauf - Live-Stats werden in main.py automatisch gestartet"""
         seq_id = self._get_selected_seq_id()
-        if seq_id: self.start_test_run_signal.emit(seq_id)
+        if seq_id:
+            self.start_test_run_signal.emit(seq_id)
 
     def _on_edit_sequence(self):
         seq_id = self._get_selected_seq_id()

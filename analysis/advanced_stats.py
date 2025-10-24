@@ -9,6 +9,9 @@ from collections import defaultdict
 from typing import List, Dict, Any, Tuple
 import sqlite3
 import json
+import logging
+
+logger = logging.getLogger("AdvancedStats")
 
 
 class AdvancedStats:
@@ -62,7 +65,18 @@ class AdvancedStats:
 
         for run in runs:
             run_dict = dict(run)
-            run_date = datetime.fromisoformat(run_dict['start_time']).date()
+
+            # Sichere Datums-Konvertierung
+            try:
+                if run_dict.get('start_time'):
+                    run_date = datetime.fromisoformat(run_dict['start_time']).date()
+                else:
+                    # Überspringe Einträge ohne Datum
+                    continue
+            except (ValueError, TypeError) as e:
+                # Ungültiges Datumsformat - überspringe
+                logger.warning(f"Ungültiges start_time Format in Run {run_dict.get('id')}: {e}")
+                continue
 
             # Parse log
             log_data = {}

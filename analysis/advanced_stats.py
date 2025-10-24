@@ -14,6 +14,53 @@ import logging
 logger = logging.getLogger("AdvancedStats")
 
 
+def parse_timestamp(timestamp_str: str) -> datetime:
+    """
+    Robustes Parsing von Zeitstempeln in verschiedenen Formaten.
+
+    Unterstützt:
+    - ISO-Format: '2025-10-24T14:41:46' oder '2025-10-24 14:41:46'
+    - Deutsches Format: '24.10.2025 14:41:46'
+
+    Args:
+        timestamp_str: Zeitstempel als String
+
+    Returns:
+        datetime Objekt
+
+    Raises:
+        ValueError: Wenn das Format nicht erkannt wird
+    """
+    if not timestamp_str:
+        raise ValueError("Leerer Zeitstempel")
+
+    # Versuche zuerst ISO-Format
+    try:
+        return datetime.fromisoformat(timestamp_str)
+    except ValueError:
+        pass
+
+    # Versuche deutsches Format: DD.MM.YYYY HH:MM:SS
+    try:
+        return datetime.strptime(timestamp_str, '%d.%m.%Y %H:%M:%S')
+    except ValueError:
+        pass
+
+    # Versuche deutsches Format ohne Sekunden: DD.MM.YYYY HH:MM
+    try:
+        return datetime.strptime(timestamp_str, '%d.%m.%Y %H:%M')
+    except ValueError:
+        pass
+
+    # Versuche ISO-Format mit Mikrosekunden
+    try:
+        return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+    except ValueError:
+        pass
+
+    raise ValueError(f"Konnte Zeitstempel nicht parsen: {timestamp_str}")
+
+
 class AdvancedStats:
     """
     Erweiterte Statistik-Analysen für Arduino Control Panel
@@ -69,7 +116,7 @@ class AdvancedStats:
             # Sichere Datums-Konvertierung
             try:
                 if run_dict.get('start_time'):
-                    run_date = datetime.fromisoformat(run_dict['start_time']).date()
+                    run_date = parse_timestamp(run_dict['start_time']).date()
                 else:
                     # Überspringe Einträge ohne Datum
                     continue
@@ -161,7 +208,14 @@ class AdvancedStats:
             return {'status': 'insufficient_data'}
 
         # Extrahiere Zykluszeiten über Zeit
-        timestamps = [datetime.fromisoformat(d['timestamp']).timestamp() for d in timeline_data]
+        timestamps = []
+        for d in timeline_data:
+            try:
+                timestamps.append(parse_timestamp(d['timestamp']).timestamp())
+            except (ValueError, KeyError) as e:
+                logger.warning(f"Konnte Zeitstempel nicht parsen: {d.get('timestamp')}: {e}")
+                continue
+
         cycle_times = [d['avg_cycle_time'] for d in timeline_data if d['avg_cycle_time'] > 0]
 
         if len(cycle_times) < 2:

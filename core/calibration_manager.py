@@ -10,6 +10,17 @@ from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 
 
+def _parse_timestamp(timestamp_str: str) -> datetime:
+    """Robustes Parsing von Zeitstempeln (ISO und deutsches Format)"""
+    try:
+        return datetime.fromisoformat(timestamp_str)
+    except ValueError:
+        try:
+            return datetime.strptime(timestamp_str, '%d.%m.%Y %H:%M:%S')
+        except ValueError:
+            return datetime.strptime(timestamp_str, '%d.%m.%Y %H:%M')
+
+
 class CalibrationData:
     """Repräsentiert Kalibrierungsdaten für einen Sensor"""
 
@@ -419,8 +430,8 @@ class CalibrationManager:
 
         # Formatiere Erstellungsdatum
         try:
-            created = datetime.fromisoformat(cal.created_at).strftime("%d.%m.%Y %H:%M")
-            modified = datetime.fromisoformat(cal.modified_at).strftime("%d.%m.%Y %H:%M")
+            created = _parse_timestamp(cal.created_at).strftime("%d.%m.%Y %H:%M")
+            modified = _parse_timestamp(cal.modified_at).strftime("%d.%m.%Y %H:%M")
         except:
             created = cal.created_at
             modified = cal.modified_at

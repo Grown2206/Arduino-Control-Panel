@@ -56,6 +56,25 @@ from ui.sequence_info_widget import SequenceInfoWidget
 # NEU: Board Config Tab importieren
 from ui.board_config_tab import BoardConfigTab
 
+# NEU: Analytics Dashboard
+try:
+    from ui.analytics_dashboard import AnalyticsDashboardTab
+    ANALYTICS_DASHBOARD_AVAILABLE = True
+    print('✅ Analytics Dashboard verfügbar')
+except ImportError as e:
+    ANALYTICS_DASHBOARD_AVAILABLE = False
+    print(f'⚠️ Analytics Dashboard nicht verfügbar: {e}')
+
+# NEU: Hardware Profile Management
+try:
+    from ui.hardware_profile_tab import HardwareProfileTab
+    from core.hardware_profile_manager import HardwareProfileManager
+    HARDWARE_PROFILE_AVAILABLE = True
+    print('✅ Hardware Profile Management verfügbar')
+except ImportError as e:
+    HARDWARE_PROFILE_AVAILABLE = False
+    print(f'⚠️ Hardware Profile Management nicht verfügbar: {e}')
+
 # === NEUE FEATURES ===
 # Hardware-Simulation
 try:
@@ -191,12 +210,39 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.dashboard_tab, "🏠 Dashboard")
         # NEU: Board Config Tab hinzufügen (z.B. nach Dashboard)
         self.tabs.addTab(self.board_config_tab, "🛠️ Board Konfiguration")
+
+        # NEU: Hardware Profile Tab
+        if HARDWARE_PROFILE_AVAILABLE:
+            try:
+                self.hardware_profile_tab = HardwareProfileTab()
+                # Verbinde Signal zum Laden von Profilen
+                self.hardware_profile_tab.load_profile_signal.connect(self.load_hardware_profile)
+                self.tabs.addTab(self.hardware_profile_tab, "💾 Profile")
+                print("✅ Hardware Profile Tab hinzugefügt")
+            except Exception as e:
+                print(f"⚠️ Hardware Profile Tab konnte nicht geladen werden: {e}")
+                self.hardware_profile_tab = None
+        else:
+            self.hardware_profile_tab = None
+
         self.tabs.addTab(self.pin_control_tab, "🔌 Pin Steuerung")
         self.tabs.addTab(self.pin_overview_tab, "📊 Pin Übersicht")
         self.tabs.addTab(self.sensor_tab, "🌡️ Sensoren")
         self.tabs.addTab(self.sequence_tab, "⚙️ Sequenzen")
         self.tabs.addTab(self.chart_tab, "📈 Live-Aufzeichnung")
         self.tabs.addTab(self.archive_tab, "🗄️ Archiv")
+
+        # NEU: Analytics Dashboard Tab
+        if ANALYTICS_DASHBOARD_AVAILABLE:
+            try:
+                self.analytics_tab = AnalyticsDashboardTab(db_file="arduino_tests.db")
+                self.tabs.addTab(self.analytics_tab, "📊 Analytics")
+                print("✅ Analytics Dashboard Tab hinzugefügt")
+            except Exception as e:
+                print(f"⚠️ Analytics Dashboard konnte nicht geladen werden: {e}")
+                self.analytics_tab = None
+        else:
+            self.analytics_tab = None
 
         self._add_optional_tabs() # Fügt weitere Tabs hinzu
         self._add_optional_tabs_to_dashboard() # Fügt Widgets zum Dashboard hinzu
@@ -960,6 +1006,42 @@ class MainWindow(QMainWindow):
             status = "als Favorit markiert" if not current else "aus Favoriten entfernt"
             self.status_bar.showMessage(f"⭐ Sequenz '{self.sequences[seq_id]['name']}' {status}", 2000)
             logger.info(f"Sequenz {seq_id} {status}")
+
+    def load_hardware_profile(self, profile_id: str):
+        """Lädt Hardware-Profil in Board Config Tab"""
+        if not HARDWARE_PROFILE_AVAILABLE:
+            QMessageBox.warning(self, "Fehler", "Hardware Profile Manager nicht verfügbar")
+            return
+
+        try:
+            # Hole Profil-Manager aus Hardware Profile Tab
+            profile_manager = self.hardware_profile_tab.profile_manager
+            profile = profile_manager.get_profile(profile_id)
+
+            if not profile:
+                QMessageBox.warning(self, "Fehler", f"Profil mit ID '{profile_id}' nicht gefunden")
+                return
+
+            # Lade Pin-Konfiguration in Board Config Tab
+            if hasattr(self.board_config_tab, 'pin_widgets'):
+                for pin_name, function in profile.pin_config.items():
+                    if pin_name in self.board_config_tab.pin_widgets:
+                        widget = self.board_config_tab.pin_widgets[pin_name]
+                        # Prüfe ob Funktion verfügbar ist
+                        for i in range(widget.combo.count()):
+                            if widget.combo.itemText(i) == function:
+                                widget.set_config(function)
+                                break
+
+            # Wechsle zu Board Config Tab
+            self.tabs.setCurrentWidget(self.board_config_tab)
+
+            self.status_bar.showMessage(f"✅ Profil '{profile.name}' geladen", 3000)
+            logger.info(f"Hardware-Profil '{profile.name}' geladen")
+
+        except Exception as e:
+            logger.error(f"Fehler beim Laden des Hardware-Profils: {e}")
+            QMessageBox.critical(self, "Fehler", f"Fehler beim Laden des Profils:\n{str(e)}")
 
     def save_dashboard_layout(self, name, layout_config): # Unverändert
         self.dashboard_layouts[name] = layout_config

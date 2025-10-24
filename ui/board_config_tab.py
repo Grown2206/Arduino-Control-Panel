@@ -144,6 +144,8 @@ class BoardConfigTab(QWidget):
         self.apply_button = QPushButton("✅ Konfiguration an Arduino senden & Verbinden"); self.apply_button.clicked.connect(self.send_config_and_connect); self.apply_button.setStyleSheet("background-color: #27ae60;"); toolbar_layout.addWidget(self.apply_button)
         save_btn = QPushButton("💾 Speichern"); save_btn.clicked.connect(self.save_config); toolbar_layout.addWidget(save_btn)
         load_btn = QPushButton("📂 Laden"); load_btn.clicked.connect(self.load_config); toolbar_layout.addWidget(load_btn)
+        # NEU: Als Profil speichern
+        save_profile_btn = QPushButton("💾 Als Profil speichern"); save_profile_btn.clicked.connect(self.save_as_profile); toolbar_layout.addWidget(save_profile_btn)
         main_layout.addLayout(toolbar_layout)
         scroll_area = QScrollArea(); scroll_area.setWidgetResizable(True); scroll_area.setStyleSheet("QScrollArea { border: 1px solid #555; }"); main_layout.addWidget(scroll_area)
         self.board_container = BoardContainerWidget(self.arduino_image_path); scroll_area.setWidget(self.board_container)
@@ -279,6 +281,48 @@ class BoardConfigTab(QWidget):
                 if not found: print(f"Warnung: Ungültige Funktion '{function}' für Pin {pin_name}. Setze Default."); widget.set_config(widget.default_function)
             else: print(f"Warnung: Pin {pin_name} aus Konfig nicht im UI gefunden.")
         print("Board-Konfiguration geladen.")
+
+    def save_as_profile(self):
+        """Speichert aktuelle Konfiguration als Hardware-Profil"""
+        try:
+            # Importiere Hardware Profile Manager
+            from core.hardware_profile_manager import HardwareProfileManager, HardwareProfile
+            from datetime import datetime
+
+            # Hole aktuelle Konfiguration
+            pin_function_map, active_sensors_config = self.get_current_board_config()
+
+            # Frage nach Profil-Name
+            from PyQt6.QtWidgets import QInputDialog
+            name, ok = QInputDialog.getText(self, "Profil speichern", "Name für das Profil:")
+
+            if not ok or not name:
+                return
+
+            # Erstelle Profil
+            profile_manager = HardwareProfileManager()
+
+            profile_id = f"profile_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+            new_profile = HardwareProfile(
+                profile_id=profile_id,
+                name=name,
+                board_type="Arduino Uno",  # TODO: Board-Typ dynamisch setzen
+                description=f"Gespeichert am {datetime.now().strftime('%d.%m.%Y %H:%M')}",
+                pin_config=pin_function_map,
+                sensor_config=active_sensors_config
+            )
+
+            if profile_manager.add_profile(new_profile):
+                QMessageBox.information(self, "Erfolg", f"Profil '{name}' gespeichert!")
+                print(f"✅ Board-Konfiguration als Profil '{name}' gespeichert")
+            else:
+                QMessageBox.warning(self, "Fehler", "Profil konnte nicht gespeichert werden")
+
+        except ImportError:
+            QMessageBox.warning(self, "Fehler", "Hardware Profile Manager nicht verfügbar")
+        except Exception as e:
+            QMessageBox.critical(self, "Fehler", f"Fehler beim Speichern:\n{str(e)}")
 
 # Hilfsfunktion (unverändert)
 def pinToNumber(pinStr):

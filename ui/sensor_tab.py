@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QSpinBox, QFrame)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QSpinBox, QFrame, QPushButton, QMessageBox)
 from PyQt6.QtCore import pyqtSignal, Qt, QTimer
 from datetime import datetime
 import time
@@ -7,15 +7,31 @@ from collections import deque
 
 from .live_chart_widget import LiveChartWidget
 
+# NEU: Kalibrierungs-Integration
+try:
+    from core.calibration_manager import CalibrationManager
+    from ui.calibration_wizard import CalibrationWizard
+    CALIBRATION_AVAILABLE = True
+except ImportError:
+    CALIBRATION_AVAILABLE = False
+    print("⚠️ Kalibrierungs-Module nicht verfügbar")
+
 class B24Sensor(QGroupBox):
     """B24: Temperatur & Luftfeuchtigkeit (3-Pin)"""
-    
+
+    calibrate_requested = pyqtSignal(str)  # NEU: Signal für Kalibrierung
+
     def __init__(self):
         super().__init__("B24: Temperatur & Luftfeuchtigkeit")
         self.temp_history = deque(maxlen=100)
         self.humid_history = deque(maxlen=100)
         self.temp_min, self.temp_max = None, None
         self.humid_min, self.humid_max = None, None
+
+        # NEU: Kalibrierungs-Status
+        self.temp_calibration_active = False
+        self.humid_calibration_active = False
+
         self.setup_ui()
         
     def setup_ui(self):
@@ -26,11 +42,25 @@ class B24Sensor(QGroupBox):
         self.temp_status = temp_widget.findChild(QLabel, "statusLabel")
         self.temp_last_update = temp_widget.findChild(QLabel, "lastUpdateLabel")
 
+        # NEU: Kalibrierungs-Elemente
+        if CALIBRATION_AVAILABLE:
+            self.temp_calib_status = temp_widget.findChild(QLabel, "calibStatusLabel")
+            temp_calib_btn = temp_widget.findChild(QPushButton, "calibButton")
+            if temp_calib_btn:
+                temp_calib_btn.clicked.connect(lambda: self.calibrate_requested.emit("B24_TEMP"))
+
         humid_widget = self._create_display_card("💧 Luftfeuchtigkeit", "%")
         self.humid_value = humid_widget.findChild(QLabel, "valueLabel")
         self.humid_minmax = humid_widget.findChild(QLabel, "minmaxLabel")
         self.humid_status = humid_widget.findChild(QLabel, "statusLabel")
         self.humid_last_update = humid_widget.findChild(QLabel, "lastUpdateLabel")
+
+        # NEU: Kalibrierungs-Elemente
+        if CALIBRATION_AVAILABLE:
+            self.humid_calib_status = humid_widget.findChild(QLabel, "calibStatusLabel")
+            humid_calib_btn = humid_widget.findChild(QPushButton, "calibButton")
+            if humid_calib_btn:
+                humid_calib_btn.clicked.connect(lambda: self.calibrate_requested.emit("B24_HUMIDITY"))
 
         layout.addWidget(temp_widget)
         layout.addWidget(humid_widget)
@@ -38,21 +68,29 @@ class B24Sensor(QGroupBox):
     def _create_display_card(self, title, unit):
         widget = QFrame(); widget.setObjectName("SensorCard"); widget.setStyleSheet("#SensorCard { background-color: #31363B; border-radius: 8px; }")
         layout = QVBoxLayout(widget)
-        
+
         header = QLabel(title); header.setStyleSheet("font-size: 14px; font-weight: bold; color: #E0E0E0;"); header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(header)
-        
+
         value_label = QLabel("--"); value_label.setObjectName("valueLabel"); value_label.setStyleSheet("font-size: 42px; font-weight: bold; color: #f39c12; padding: 10px;"); value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(value_label)
-        
+
         minmax_label = QLabel("Min: -- | Max: --"); minmax_label.setObjectName("minmaxLabel"); minmax_label.setStyleSheet("font-size: 10px; color: #7f8c8d;"); minmax_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(minmax_label)
-        
+
         status_label = QLabel("⏳ Warte auf Daten..."); status_label.setObjectName("statusLabel"); status_label.setStyleSheet("font-size: 10px; color: #f39c12; font-style: italic;"); status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(status_label)
 
         last_update_label = QLabel(); last_update_label.setObjectName("lastUpdateLabel"); last_update_label.setStyleSheet("font-size: 9px; color: #7f8c8d;"); last_update_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(last_update_label)
+
+        # NEU: Kalibrierungs-Status und Button
+        if CALIBRATION_AVAILABLE:
+            calib_status_label = QLabel("○ Nicht kalibriert"); calib_status_label.setObjectName("calibStatusLabel"); calib_status_label.setStyleSheet("font-size: 9px; color: #95a5a6;"); calib_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(calib_status_label)
+
+            calib_btn = QPushButton("📐 Kalibrieren"); calib_btn.setObjectName("calibButton"); calib_btn.setStyleSheet("font-size: 10px; padding: 5px;")
+            layout.addWidget(calib_btn)
 
         return widget
 
@@ -69,6 +107,31 @@ class B24Sensor(QGroupBox):
         if self.humid_max is None or value > self.humid_max: self.humid_max = value
         self.humid_minmax.setText(f"Min: {self.humid_min:.1f}% | Max: {self.humid_max:.1f}%")
         self.humid_last_update.setText(f"Update: {datetime.now().strftime('%H:%M:%S')}")
+
+    def update_calibration_status(self, sensor_id, is_active):
+        """NEU: Aktualisiert Kalibrierungs-Status-Anzeige"""
+        if not CALIBRATION_AVAILABLE:
+            return
+
+        if sensor_id == "B24_TEMP":
+            self.temp_calibration_active = is_active
+            if hasattr(self, 'temp_calib_status'):
+                if is_active:
+                    self.temp_calib_status.setText("● Kalibriert")
+                    self.temp_calib_status.setStyleSheet("font-size: 9px; color: #27ae60;")
+                else:
+                    self.temp_calib_status.setText("○ Nicht kalibriert")
+                    self.temp_calib_status.setStyleSheet("font-size: 9px; color: #95a5a6;")
+
+        elif sensor_id == "B24_HUMIDITY":
+            self.humid_calibration_active = is_active
+            if hasattr(self, 'humid_calib_status'):
+                if is_active:
+                    self.humid_calib_status.setText("● Kalibriert")
+                    self.humid_calib_status.setStyleSheet("font-size: 9px; color: #27ae60;")
+                else:
+                    self.humid_calib_status.setText("○ Nicht kalibriert")
+                    self.humid_calib_status.setStyleSheet("font-size: 9px; color: #95a5a6;")
 
 class B39VibrationSensor(QGroupBox):
     """B39 Vibrationssensor"""
@@ -121,6 +184,20 @@ class SensorTab(QWidget):
         self.b39_sensor = B39VibrationSensor()
         self.history_chart = LiveChartWidget(title="Sensorverlauf (Temp/Humid)")
         self.chart_start_time = time.time()
+
+        # NEU: Kalibrierungs-Manager
+        if CALIBRATION_AVAILABLE:
+            self.calibration_manager = CalibrationManager()
+            # Verbinde Kalibrierungs-Signale
+            self.b24_sensor.calibrate_requested.connect(self.open_calibration_wizard)
+            # Lade Kalibrierungs-Status
+            self.load_calibration_status()
+        else:
+            self.calibration_manager = None
+
+        # Speichere letzte Rohwerte für Kalibrierung
+        self.last_raw_values = {}
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -160,14 +237,75 @@ class SensorTab(QWidget):
     def handle_sensor_data(self, data):
         """Verarbeitet eingehende Sensor-Daten und leitet sie an die Widgets und das Diagramm weiter."""
         sensor = data.get("sensor")
-        value = data.get("value")
+        raw_value = data.get("value")
         timestamp = time.time() - self.chart_start_time
 
-        if sensor == "B24_TEMP" and value is not None:
-            self.b24_sensor.update_temperature(value)
-            self.history_chart.add_data_point("Temperatur", value, timestamp)
-        elif sensor == "B24_HUMIDITY" and value is not None:
-            self.b24_sensor.update_humidity(value)
-            self.history_chart.add_data_point("Luftfeuchtigkeit", value, timestamp)
+        if raw_value is None:
+            return
+
+        # Speichere Rohwert
+        self.last_raw_values[sensor] = raw_value
+
+        # NEU: Wende Kalibrierung an
+        if CALIBRATION_AVAILABLE and self.calibration_manager:
+            calibrated_value = self.calibration_manager.apply_calibration(sensor, raw_value)
+        else:
+            calibrated_value = raw_value
+
+        if sensor == "B24_TEMP":
+            self.b24_sensor.update_temperature(calibrated_value)
+            self.history_chart.add_data_point("Temperatur", calibrated_value, timestamp)
+        elif sensor == "B24_HUMIDITY":
+            self.b24_sensor.update_humidity(calibrated_value)
+            self.history_chart.add_data_point("Luftfeuchtigkeit", calibrated_value, timestamp)
         elif sensor == "B39_VIBRATION":
             self.b39_sensor.update_value(data.get("intensity", 0), data.get("vibrating", False))
+
+    def load_calibration_status(self):
+        """NEU: Lädt Kalibrierungs-Status für alle Sensoren"""
+        if not CALIBRATION_AVAILABLE or not self.calibration_manager:
+            return
+
+        for sensor_id in ["B24_TEMP", "B24_HUMIDITY"]:
+            cal = self.calibration_manager.get_calibration(sensor_id)
+            is_active = cal is not None and cal.is_active
+            self.b24_sensor.update_calibration_status(sensor_id, is_active)
+
+    def open_calibration_wizard(self, sensor_id: str):
+        """NEU: Öffnet Kalibrierungs-Wizard für Sensor"""
+        if not CALIBRATION_AVAILABLE:
+            QMessageBox.warning(self, "Nicht verfügbar", "Kalibrierungs-Module nicht geladen")
+            return
+
+        # Sensor-Name
+        sensor_names = {
+            "B24_TEMP": "Temperatur (B24)",
+            "B24_HUMIDITY": "Luftfeuchtigkeit (B24)"
+        }
+        sensor_name = sensor_names.get(sensor_id, sensor_id)
+
+        # Callback für aktuellen Wert
+        def get_current_value(sid):
+            return self.last_raw_values.get(sid, 0.0)
+
+        # Öffne Wizard
+        wizard = CalibrationWizard(
+            sensor_id=sensor_id,
+            sensor_name=sensor_name,
+            current_value_callback=get_current_value,
+            parent=self
+        )
+
+        wizard.calibration_completed.connect(self.on_calibration_completed)
+        wizard.exec()
+
+    def on_calibration_completed(self, sensor_id: str, calibration_data):
+        """NEU: Wird aufgerufen wenn Kalibrierung abgeschlossen"""
+        self.b24_sensor.update_calibration_status(sensor_id, calibration_data.is_active)
+
+        QMessageBox.information(
+            self,
+            "Kalibrierung erfolgreich",
+            f"Sensor '{sensor_id}' wurde erfolgreich kalibriert!\n\n"
+            f"Qualität: {calibration_data.quality_score:.3f}"
+        )

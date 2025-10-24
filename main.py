@@ -576,13 +576,28 @@ class MainWindow(QMainWindow):
 
     # --- Restliche Methoden (handle_data, update_status, poll_sensors etc.) ---
 
-    def send_command(self, command): # Unverändert von letzter Version
-         if isinstance(command, dict):
-            if command.get('command') == 'analog_write': return
-            if command.get('command', '').startswith('servo_'): return
-            if self.worker.is_connected(): self.worker.send_command(command)
-         elif isinstance(command, str):
-            parts = command.split();
+    def send_command(self, command):
+        """Sendet Befehle an den Arduino (mit Debug-Logging)."""
+        if isinstance(command, dict):
+            # Filter veraltete Commands
+            if command.get('command') == 'analog_write':
+                logger.debug("analog_write Command ignoriert (nicht unterstützt)")
+                return
+            if command.get('command', '').startswith('servo_'):
+                logger.debug("servo Command ignoriert (nicht unterstützt)")
+                return
+
+            # Prüfe Verbindung
+            if not self.worker.is_connected():
+                logger.warning(f"Command kann nicht gesendet werden - nicht verbunden: {command}")
+                return
+
+            # Sende Command
+            logger.info(f"Sende Command an Arduino: {command}")
+            self.worker.send_command(command)
+
+        elif isinstance(command, str):
+            parts = command.split()
             try:
                 if len(parts) >= 3 and parts[0] == 'digital_write':
                     pin_str = parts[1] if parts[1].startswith('D') else f"D{parts[1]}"

@@ -54,27 +54,32 @@ class SerialWorker(QThread):
 
     def send_command(self, command_dict):
         """Sends a JSON command to the Arduino."""
-        if self.is_connected():
-            try:
-                # Füge immer eine ID hinzu, falls nicht vorhanden
-                if "id" not in command_dict:
-                    command_dict["id"] = str(uuid.uuid4())
-                
-                command_str = json.dumps(command_dict) + '\n'
-                
-                if self.ser == "SIMULATION":
-                    print(f"SIM -> Arduino: {command_str.strip()}")
-                else:
-                    self.ser.write(command_str.encode('utf-8'))
-                
-                # Sende eine "ok" Antwort in der Simulation
-                if self.ser == "SIMULATION":
-                    response = {"type": "response", "id": command_dict["id"], "status": "ok"}
-                    self.data_received.emit(response)
+        if not self.is_connected():
+            print(f"❌ SerialWorker: Nicht verbunden, kann Command nicht senden: {command_dict}")
+            return
 
-            except (serial.SerialException, TypeError, AttributeError) as e:
-                self.status_changed.emit(f"Sendefehler: {e}")
-                print(f"Fehler beim Senden: {e}")
+        try:
+            # Füge immer eine ID hinzu, falls nicht vorhanden
+            if "id" not in command_dict:
+                command_dict["id"] = str(uuid.uuid4())
+
+            command_str = json.dumps(command_dict) + '\n'
+
+            if self.ser == "SIMULATION":
+                print(f"SIM -> Arduino: {command_str.strip()}")
+            else:
+                print(f"📤 -> Arduino: {command_str.strip()}")
+                self.ser.write(command_str.encode('utf-8'))
+                self.ser.flush()  # Stelle sicher, dass Daten gesendet werden
+
+            # Sende eine "ok" Antwort in der Simulation
+            if self.ser == "SIMULATION":
+                response = {"type": "response", "id": command_dict["id"], "status": "ok"}
+                self.data_received.emit(response)
+
+        except (serial.SerialException, TypeError, AttributeError) as e:
+            self.status_changed.emit(f"Sendefehler: {e}")
+            print(f"❌ Fehler beim Senden: {e}")
 
     def is_connected(self):
         """Checks if the connection is active."""

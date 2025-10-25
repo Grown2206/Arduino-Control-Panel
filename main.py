@@ -80,6 +80,15 @@ except ImportError as e:
     DASHBOARD_BUILDER_AVAILABLE = False
     print(f'⚠️ Dashboard Builder nicht verfügbar: {e}')
 
+# NEU: 3D Board Visualizer
+try:
+    from ui.board_3d_visualizer import Board3DVisualizerTab
+    BOARD_3D_AVAILABLE = True
+    print('✅ 3D Board Visualizer verfügbar')
+except ImportError as e:
+    BOARD_3D_AVAILABLE = False
+    print(f'⚠️ 3D Board Visualizer nicht verfügbar: {e}')
+
 # NEU: Analytics Dashboard
 try:
     from ui.analytics_dashboard import AnalyticsDashboardTab
@@ -341,6 +350,18 @@ class MainWindow(QMainWindow):
                 self.dashboard_builder_tab = None
         else:
             self.dashboard_builder_tab = None
+
+        # 3D Board Visualizer Tab
+        if BOARD_3D_AVAILABLE:
+            try:
+                self.board_3d_tab = Board3DVisualizerTab()
+                self.tabs.addTab(self.board_3d_tab, "🎮 3D Board")
+                print("✅ 3D Board Visualizer Tab hinzugefügt")
+            except Exception as e:
+                print(f"⚠️ 3D Board Visualizer Tab konnte nicht geladen werden: {e}")
+                self.board_3d_tab = None
+        else:
+            self.board_3d_tab = None
 
         self._add_optional_tabs() # Fügt weitere Tabs hinzu
         self._add_optional_tabs_to_dashboard() # Fügt Widgets zum Dashboard hinzu

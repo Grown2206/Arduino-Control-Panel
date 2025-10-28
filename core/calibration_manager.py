@@ -432,7 +432,7 @@ class CalibrationManager:
         try:
             created = _parse_timestamp(cal.created_at).strftime("%d.%m.%Y %H:%M")
             modified = _parse_timestamp(cal.modified_at).strftime("%d.%m.%Y %H:%M")
-        except:
+        except (ValueError, AttributeError) as e:
             created = cal.created_at
             modified = cal.modified_at
 

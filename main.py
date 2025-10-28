@@ -47,19 +47,19 @@ from analysis.comparison_viewer import ComparisonViewerDialog
 from analysis.export_manager import ExportManager  # NEU: CSV Export
 
 # --- UI ---
-from ui.pin_tab import PinTab
-from ui.pin_overview_widget import PinOverviewWidget
 from ui.sequence_tab import SequenceTab
 from ui.archive_tab import ArchiveTab
 from ui.live_chart_widget import LiveChartWidget
 from ui.sequence_dialog import SequenceDialog
 from ui.sensor_tab import SensorTab
 from ui.enhanced_dashboard_tab import EnhancedDashboardTab
-from live_stats_widget import LiveStatsWidget
+from ui.live_stats_widget import LiveStatsWidget
 from ui.branding import get_full_stylesheet, LOGO_PATH
 from ui.sequence_info_widget import SequenceInfoWidget
-# NEU: Board Config Tab importieren
-from ui.board_config_tab import BoardConfigTab
+
+# NEU: Konsolidierte Tabs
+from ui.pin_management_tab import PinManagementTab
+from ui.board_setup_tab import BoardSetupTab
 
 # NEU: Pin Usage Tracker und Heatmap
 try:
@@ -264,40 +264,29 @@ class MainWindow(QMainWindow):
                 print("✅ Live-Stats als Dock-Widget hinzugefügt")
 
 
-        # Live-Statistik Widget
-        self.pin_control_tab = PinTab()
-        self.pin_overview_tab = PinOverviewWidget()
-        self.sensor_tab = SensorTab() # Wird evtl. weniger relevant, behalten wir vorerst
+        # NEU: Konsolidierte Tabs
+        self.pin_management_tab = PinManagementTab(self.pin_tracker)
+        self.board_setup_tab = BoardSetupTab(self.config_manager)
+
+        # Andere Tabs
+        self.sensor_tab = SensorTab()
         self.sequence_tab = SequenceTab()
         self.chart_tab = LiveChartWidget(title="Live Pin-Aufzeichnung")
         self.archive_tab = ArchiveTab()
-        # NEU: Board Config Tab Instanz erstellen
-        self.board_config_tab = BoardConfigTab(self.config_manager)
 
+        # Backward compatibility - Zugriff auf Subtabs
+        self.pin_control_tab = self.pin_management_tab.pin_control
+        self.pin_overview_tab = self.pin_management_tab.pin_overview
+        self.board_config_tab = self.board_setup_tab.board_config
 
         self._create_menu_bar()
         main_layout.addLayout(self._create_connection_bar())
 
         self.tabs.addTab(self.dashboard_tab, "🏠 Dashboard")
-        # NEU: Board Config Tab hinzufügen (z.B. nach Dashboard)
-        self.tabs.addTab(self.board_config_tab, "🛠️ Board Konfiguration")
 
-        # NEU: Hardware Profile Tab
-        if HARDWARE_PROFILE_AVAILABLE:
-            try:
-                self.hardware_profile_tab = HardwareProfileTab()
-                # Verbinde Signal zum Laden von Profilen
-                self.hardware_profile_tab.load_profile_signal.connect(self.load_hardware_profile)
-                self.tabs.addTab(self.hardware_profile_tab, "💾 Profile")
-                print("✅ Hardware Profile Tab hinzugefügt")
-            except Exception as e:
-                print(f"⚠️ Hardware Profile Tab konnte nicht geladen werden: {e}")
-                self.hardware_profile_tab = None
-        else:
-            self.hardware_profile_tab = None
-
-        self.tabs.addTab(self.pin_control_tab, "🔌 Pin Steuerung")
-        self.tabs.addTab(self.pin_overview_tab, "📊 Pin Übersicht")
+        # NEU: Konsolidierte Tabs
+        self.tabs.addTab(self.board_setup_tab, "🛠️ Board Setup")
+        self.tabs.addTab(self.pin_management_tab, "🔌 Pin Management")
         self.tabs.addTab(self.sensor_tab, "🌡️ Sensoren")
         self.tabs.addTab(self.sequence_tab, "⚙️ Sequenzen")
         self.tabs.addTab(self.chart_tab, "📈 Live-Aufzeichnung")
@@ -315,30 +304,6 @@ class MainWindow(QMainWindow):
         else:
             self.analytics_tab = None
 
-        # Plugin-Manager Tab
-        if PLUGIN_SYSTEM_AVAILABLE and hasattr(self, 'plugin_manager'):
-            try:
-                self.plugin_manager_tab = PluginManagerTab(self.plugin_manager)
-                self.tabs.addTab(self.plugin_manager_tab, "🔌 Plugins")
-                print("✅ Plugin-Manager Tab hinzugefügt")
-            except Exception as e:
-                print(f"⚠️ Plugin-Manager Tab konnte nicht geladen werden: {e}")
-                self.plugin_manager_tab = None
-        else:
-            self.plugin_manager_tab = None
-
-        # Pin Heatmap Tab
-        if PIN_HEATMAP_AVAILABLE:
-            try:
-                self.heatmap_tab = PinHeatmapWidget(self.pin_tracker)
-                self.tabs.addTab(self.heatmap_tab, "🔥 Pin-Heatmap")
-                print("✅ Pin-Heatmap Tab hinzugefügt")
-            except Exception as e:
-                print(f"⚠️ Pin-Heatmap Tab konnte nicht geladen werden: {e}")
-                self.heatmap_tab = None
-        else:
-            self.heatmap_tab = None
-
         # Dashboard Builder Tab
         if DASHBOARD_BUILDER_AVAILABLE:
             try:
@@ -351,17 +316,21 @@ class MainWindow(QMainWindow):
         else:
             self.dashboard_builder_tab = None
 
-        # 3D Board Visualizer Tab
-        if BOARD_3D_AVAILABLE:
+        # Plugin-Manager Tab
+        if PLUGIN_SYSTEM_AVAILABLE and hasattr(self, 'plugin_manager'):
             try:
-                self.board_3d_tab = Board3DVisualizerTab()
-                self.tabs.addTab(self.board_3d_tab, "🎮 3D Board")
-                print("✅ 3D Board Visualizer Tab hinzugefügt")
+                self.plugin_manager_tab = PluginManagerTab(self.plugin_manager)
+                self.tabs.addTab(self.plugin_manager_tab, "🧩 Plugins")
+                print("✅ Plugin-Manager Tab hinzugefügt")
             except Exception as e:
-                print(f"⚠️ 3D Board Visualizer Tab konnte nicht geladen werden: {e}")
-                self.board_3d_tab = None
+                print(f"⚠️ Plugin-Manager Tab konnte nicht geladen werden: {e}")
+                self.plugin_manager_tab = None
         else:
-            self.board_3d_tab = None
+            self.plugin_manager_tab = None
+
+        # Backward compatibility für Heatmap und 3D Board (jetzt in konsolidierten Tabs)
+        self.heatmap_tab = self.pin_management_tab.pin_heatmap if hasattr(self.pin_management_tab, 'pin_heatmap') else None
+        self.board_3d_tab = self.board_setup_tab.board_3d if hasattr(self.board_setup_tab, 'board_3d') else None
 
         self._add_optional_tabs() # Fügt weitere Tabs hinzu
         self._add_optional_tabs_to_dashboard() # Fügt Widgets zum Dashboard hinzu

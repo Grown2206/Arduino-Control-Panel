@@ -346,7 +346,7 @@ class OscilloscopeWidget(QWidget):
             avg_period = np.mean(periods)
             
             return 1.0 / avg_period if avg_period > 0 else 0
-        except:
+        except (ValueError, IndexError, ZeroDivisionError) as e:
             return 0
     
     def update_plot(self):

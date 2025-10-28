@@ -328,7 +328,7 @@ class HardwareProfileTab(QWidget):
         try:
             created = parse_timestamp(profile.created_at).strftime("%d.%m.%Y %H:%M")
             modified = parse_timestamp(profile.modified_at).strftime("%d.%m.%Y %H:%M")
-        except:
+        except (ValueError, AttributeError) as e:
             created = profile.created_at
             modified = profile.modified_at
 

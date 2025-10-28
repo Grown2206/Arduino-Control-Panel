@@ -320,7 +320,7 @@ class MainWindow(QMainWindow):
         if PLUGIN_SYSTEM_AVAILABLE and hasattr(self, 'plugin_manager'):
             try:
                 self.plugin_manager_tab = PluginManagerTab(self.plugin_manager)
-                self.tabs.addTab(self.plugin_manager_tab, "🔌 Plugins")
+                self.tabs.addTab(self.plugin_manager_tab, "🧩 Plugins")
                 print("✅ Plugin-Manager Tab hinzugefügt")
             except Exception as e:
                 print(f"⚠️ Plugin-Manager Tab konnte nicht geladen werden: {e}")

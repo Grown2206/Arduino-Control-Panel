@@ -6,7 +6,7 @@ UI für Plugin-Verwaltung
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
     QPushButton, QLabel, QTextEdit, QGroupBox, QSplitter, QMessageBox,
-    QTableWidget, QTableWidgetItem, QHeaderView, QFrame
+    QTableWidget, QTableWidgetItem, QHeaderView, QFrame, QDialog, QDialogButtonBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont
@@ -332,12 +332,23 @@ class PluginManagerTab(QWidget):
         settings_widget = plugin.get_settings_widget()
 
         if settings_widget:
-            # TODO: Zeige Settings-Widget in Dialog
-            QMessageBox.information(
-                self,
-                "Einstellungen",
-                "Plugin-Einstellungen werden in einem späteren Update verfügbar sein."
+            # Zeige Settings-Widget in Dialog
+            dialog = QDialog(self)
+            dialog.setWindowTitle(f"Einstellungen - {plugin.name}")
+            dialog.setMinimumSize(500, 400)
+
+            layout = QVBoxLayout(dialog)
+            layout.addWidget(settings_widget)
+
+            # OK/Cancel Buttons
+            button_box = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
             )
+            button_box.accepted.connect(dialog.accept)
+            button_box.rejected.connect(dialog.reject)
+            layout.addWidget(button_box)
+
+            dialog.exec()
         else:
             QMessageBox.information(
                 self,

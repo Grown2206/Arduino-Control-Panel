@@ -429,10 +429,21 @@ class MainWindow(QMainWindow):
         save_action = file_menu.addAction("💾 Speichern"); save_action.triggered.connect(self.auto_save_config); save_action.setShortcut("Ctrl+S")
         load_action = file_menu.addAction("📂 Laden"); load_action.triggered.connect(self.load_saved_config); load_action.setShortcut("Ctrl+O")
         file_menu.addSeparator()
-        exit_action = file_menu.addAction("❌ Beenden"); exit_action.triggered.connect(self.close)
+        exit_action = file_menu.addAction("❌ Beenden"); exit_action.triggered.connect(self.close); exit_action.setShortcut("Ctrl+Q")
+
+        # Test-Menü
+        test_menu = menubar.addMenu("Test")
+        start_test_action = test_menu.addAction("▶️ Test starten")
+        start_test_action.triggered.connect(lambda: self.tabs.setCurrentWidget(self.sequence_tab))
+        start_test_action.setShortcut("Ctrl+R")
+        start_test_action.setToolTip("Wechselt zum Sequenzen-Tab")
 
         # NEU: Ansicht-Menü mit Theme Toggle
         view_menu = menubar.addMenu("Ansicht")
+        refresh_dashboard_action = view_menu.addAction("🔄 Dashboard aktualisieren")
+        refresh_dashboard_action.triggered.connect(lambda: self.tabs.setCurrentWidget(self.dashboard_tab))
+        refresh_dashboard_action.setShortcut("F5")
+        view_menu.addSeparator()
         self.theme_action = view_menu.addAction("🌓 Dark/Light Theme")
         self.theme_action.triggered.connect(self.toggle_theme)
         self.theme_action.setShortcut("Ctrl+T")

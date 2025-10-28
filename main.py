@@ -55,7 +55,7 @@ from ui.live_chart_widget import LiveChartWidget
 from ui.sequence_dialog import SequenceDialog
 from ui.sensor_tab import SensorTab
 from ui.enhanced_dashboard_tab import EnhancedDashboardTab
-from live_stats_widget import LiveStatsWidget
+from ui.live_stats_widget import LiveStatsWidget
 from ui.branding import get_full_stylesheet, LOGO_PATH
 from ui.sequence_info_widget import SequenceInfoWidget
 # NEU: Board Config Tab importieren

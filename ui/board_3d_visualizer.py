@@ -509,3 +509,11 @@ class Board3DVisualizerTab(QWidget):
     def update_pin_from_data(self, pin_name: str, state: str = None, value: int = None):
         """Aktualisiert Pin aus externen Daten"""
         self.board_3d.update_pin_state(pin_name, state, value)
+
+    def closeEvent(self, event):
+        """Stoppt Timer beim Schließen"""
+        if hasattr(self, 'demo_timer'):
+            self.demo_timer.stop()
+        if hasattr(self, 'board_3d') and hasattr(self.board_3d, 'animation_timer'):
+            self.board_3d.animation_timer.stop()
+        super().closeEvent(event)

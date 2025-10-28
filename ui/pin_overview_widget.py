@@ -1,5 +1,10 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QLabel, QGroupBox, QHBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QGroupBox,
+                             QHBoxLayout, QPushButton, QFileDialog, QMessageBox)
+from PyQt6.QtCore import Qt, QDateTime
+import csv
+import logging
+
+logger = logging.getLogger("ArduinoPanel.PinOverview")
 
 class PinIndicator(QWidget):
     """Eine kompakte visuelle Anzeige für den Zustand eines einzelnen Pins."""
@@ -81,7 +86,17 @@ class PinOverviewWidget(QWidget):
         
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
-        
+
+        # Export-Button am oberen Rand
+        export_layout = QHBoxLayout()
+        export_btn = QPushButton("📄 CSV-Export: Pin-Übersicht")
+        export_btn.setToolTip("Exportiert die Pin-Übersicht als CSV-Datei")
+        export_btn.clicked.connect(self.export_overview_csv)
+        export_btn.setMaximumWidth(250)
+        export_layout.addWidget(export_btn)
+        export_layout.addStretch()
+        main_layout.addLayout(export_layout)
+
         digital_group = QGroupBox("🔌 Digitale Pins (D0-D13)")
         digital_layout = QGridLayout(digital_group)
         
@@ -115,4 +130,75 @@ class PinOverviewWidget(QWidget):
         """NEU: Aktualisiert den Modus eines einzelnen Pin-Indikators."""
         if pin_name in self.pin_indicators:
             self.pin_indicators[pin_name].set_mode(mode)
+
+    def export_overview_csv(self):
+        """Exportiert die Pin-Übersicht als CSV-Datei."""
+        timestamp = QDateTime.currentDateTime().toString('yyyyMMdd_HHmmss')
+        default_filename = f"pin_overview_{timestamp}.csv"
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Pin-Übersicht als CSV exportieren",
+            default_filename,
+            "CSV-Dateien (*.csv);;Alle Dateien (*)"
+        )
+
+        if not file_path:
+            return  # User hat abgebrochen
+
+        try:
+            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile, delimiter=';')
+
+                # Header
+                writer.writerow(['=== ARDUINO PIN ÜBERSICHT EXPORT ==='])
+                writer.writerow(['Exportiert am', QDateTime.currentDateTime().toString('yyyy-MM-dd HH:mm:ss')])
+                writer.writerow([])
+                writer.writerow(['Pin', 'Typ', 'Modus', 'Wert', 'Status-Icon'])
+
+                # Digitale Pins
+                for i in range(14):
+                    pin_name = f"D{i}"
+                    if pin_name in self.pin_indicators:
+                        indicator = self.pin_indicators[pin_name]
+                        value = indicator.current_value
+                        mode = indicator.current_mode
+
+                        value_str = "HIGH" if value else "LOW"
+                        icon = "🟢" if value else "⚫"
+
+                        writer.writerow([pin_name, "Digital", mode, value_str, icon])
+
+                # Analoge Pins
+                for i in range(6):
+                    pin_name = f"A{i}"
+                    if pin_name in self.pin_indicators:
+                        indicator = self.pin_indicators[pin_name]
+                        value = indicator.current_value
+                        mode = indicator.current_mode
+
+                        # Icon basierend auf Analogwert
+                        if value > 768:
+                            icon = "🔴"
+                        elif value > 256:
+                            icon = "🟡"
+                        else:
+                            icon = "🟢"
+
+                        writer.writerow([pin_name, "Analog", mode, str(value), icon])
+
+            QMessageBox.information(
+                self,
+                "Export erfolgreich",
+                f"Pin-Übersicht wurde erfolgreich exportiert:\n{file_path}"
+            )
+            logger.info(f"Pin-Übersicht exportiert nach: {file_path}")
+
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export fehlgeschlagen",
+                f"Fehler beim Exportieren:\n{str(e)}"
+            )
+            logger.error(f"CSV-Export fehlgeschlagen: {e}")
 

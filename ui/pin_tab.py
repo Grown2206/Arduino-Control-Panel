@@ -1,7 +1,9 @@
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QScrollArea)
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QScrollArea,
+                             QPushButton, QHBoxLayout, QFileDialog, QMessageBox)
+from PyQt6.QtCore import pyqtSignal, Qt, QDateTime
 from .pin_widget import PinWidget
 import logging
+import csv
 
 logger = logging.getLogger("ArduinoPanel.PinTab")
 
@@ -16,7 +18,18 @@ class PinTab(QWidget):
 
     def setup_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
+
+        # Export-Button am oberen Rand
+        export_layout = QHBoxLayout()
+        export_btn = QPushButton("📄 CSV-Export: Pin-Status")
+        export_btn.setToolTip("Exportiert den aktuellen Status aller Pins als CSV-Datei")
+        export_btn.clicked.connect(self.export_pin_status_csv)
+        export_btn.setMaximumWidth(250)
+        export_layout.addWidget(export_btn)
+        export_layout.addStretch()
+        main_layout.addLayout(export_layout)
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -103,3 +116,68 @@ class PinTab(QWidget):
                 self.pin_widgets[pin_name].mode_combo.setCurrentText(mode)
             except Exception as e:
                 logger.error(f"Fehler beim Setzen von Mode für Pin {pin_name}: {e}")
+
+    def export_pin_status_csv(self):
+        """Exportiert den aktuellen Status aller Pins als CSV-Datei."""
+        timestamp = QDateTime.currentDateTime().toString('yyyyMMdd_HHmmss')
+        default_filename = f"pin_status_{timestamp}.csv"
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Pin-Status als CSV exportieren",
+            default_filename,
+            "CSV-Dateien (*.csv);;Alle Dateien (*)"
+        )
+
+        if not file_path:
+            return  # User hat abgebrochen
+
+        try:
+            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile, delimiter=';')
+
+                # Header
+                writer.writerow(['=== ARDUINO PIN STATUS EXPORT ==='])
+                writer.writerow(['Exportiert am', QDateTime.currentDateTime().toString('yyyy-MM-dd HH:mm:ss')])
+                writer.writerow([])
+                writer.writerow(['Pin', 'Typ', 'Modus', 'Wert', 'Status-Icon'])
+
+                # Daten für jeden Pin
+                for pin_name, widget in self.pin_widgets.items():
+                    pin_type = widget.pin_type
+                    mode = widget.get_mode()
+                    value = widget.last_value if widget.last_value is not None else '-'
+
+                    # Bestimme den Status-Text und Icon
+                    if pin_type == 'D':
+                        value_str = "HIGH" if value else "LOW" if value != '-' else '-'
+                        icon = "🟢" if value else "🔴" if value != '-' else "⚫"
+                    else:  # Analog
+                        value_str = str(value)
+                        if value == '-':
+                            icon = "⚫"
+                        elif value > 768:
+                            icon = "🔴"
+                        elif value > 256:
+                            icon = "🟡"
+                        else:
+                            icon = "🟢"
+
+                    type_str = "Digital" if pin_type == 'D' else "Analog"
+
+                    writer.writerow([pin_name, type_str, mode, value_str, icon])
+
+            QMessageBox.information(
+                self,
+                "Export erfolgreich",
+                f"Pin-Status wurde erfolgreich exportiert:\n{file_path}"
+            )
+            logger.info(f"Pin-Status exportiert nach: {file_path}")
+
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export fehlgeschlagen",
+                f"Fehler beim Exportieren:\n{str(e)}"
+            )
+            logger.error(f"CSV-Export fehlgeschlagen: {e}")

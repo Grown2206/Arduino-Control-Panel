@@ -4,6 +4,7 @@ Pin Usage Tracker - Verfolgt die Nutzung aller Arduino Pins
 """
 
 import time
+import threading
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Tuple
@@ -235,12 +236,18 @@ class PinUsageTracker:
             self.pin_errors[pin_name] = pin_data.get('error_count', 0)
 
 
-# Singleton-Instanz
+# Singleton-Instanz mit Thread-Safety
 _tracker_instance = None
+_tracker_lock = threading.Lock()
 
 def get_pin_tracker() -> PinUsageTracker:
-    """Gibt die globale Pin-Tracker-Instanz zurück"""
+    """Gibt die globale Pin-Tracker-Instanz zurück (thread-safe)"""
     global _tracker_instance
+
+    # Double-checked locking pattern für Performance
     if _tracker_instance is None:
-        _tracker_instance = PinUsageTracker()
+        with _tracker_lock:
+            if _tracker_instance is None:
+                _tracker_instance = PinUsageTracker()
+
     return _tracker_instance

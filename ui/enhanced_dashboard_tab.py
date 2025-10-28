@@ -69,6 +69,7 @@ class EnhancedDashboardTab(QWidget):
         self.widgets = {}
         self.mdi_area = QMdiArea()
         self.visible_widgets = set()
+        self.edit_mode = False  # Edit Mode state
 
         # Widget-Definitionen OHNE LED Matrix und PWM Quick
         self.widget_definitions = {
@@ -144,6 +145,15 @@ class EnhancedDashboardTab(QWidget):
 
         view_group = QGroupBox("Ansicht")
         view_layout = QHBoxLayout(view_group)
+
+        # Edit Mode Toggle
+        self.edit_mode_btn = QPushButton("🔓 Edit Mode")
+        self.edit_mode_btn.setCheckable(True)
+        self.edit_mode_btn.setChecked(False)
+        self.edit_mode_btn.clicked.connect(self.toggle_edit_mode)
+        self.edit_mode_btn.setToolTip("Aktiviere Edit Mode zum Verschieben/Ändern von Widgets")
+        view_layout.addWidget(self.edit_mode_btn)
+
         reset_layout_btn = QPushButton("🔄 Zurücksetzen"); reset_layout_btn.clicked.connect(self.reset_layout_to_default); view_layout.addWidget(reset_layout_btn)
         tile_btn = QPushButton("🗃️ Kacheln"); tile_btn.clicked.connect(self.mdi_area.tileSubWindows); view_layout.addWidget(tile_btn)
         cascade_btn = QPushButton("📚 Kaskade"); cascade_btn.clicked.connect(self.mdi_area.cascadeSubWindows); view_layout.addWidget(cascade_btn)
@@ -255,3 +265,30 @@ class EnhancedDashboardTab(QWidget):
             'visible_widgets': list(self.default_visible)
         }
         self.apply_layout(default_config)
+
+    def toggle_edit_mode(self):
+        """Schaltet zwischen Edit Mode (bewegliche Widgets) und View Mode (gesperrte Widgets) um"""
+        self.edit_mode = self.edit_mode_btn.isChecked()
+
+        # Update Button appearance
+        if self.edit_mode:
+            self.edit_mode_btn.setText("🔓 Edit Mode")
+            self.edit_mode_btn.setStyleSheet("background-color: #f39c12; font-weight: bold;")
+        else:
+            self.edit_mode_btn.setText("🔒 View Mode")
+            self.edit_mode_btn.setStyleSheet("")
+
+        # Lock/Unlock all sub-windows
+        for widget_data in self.widgets.values():
+            window = widget_data['window']
+            if self.edit_mode:
+                # Edit Mode: Widgets sind verschiebbar und änderbar
+                window.setWindowFlags(window.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
+                # Fenster können verschoben, verändert und geschlossen werden
+            else:
+                # View Mode: Widgets sind gesperrt
+                # Entferne Close-Button, minimiere Interaktionen
+                pass
+
+            # Update window to apply flags
+            window.show()

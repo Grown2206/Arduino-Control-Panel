@@ -26,12 +26,12 @@ class PinWidget(QFrame):
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(8)
 
-        # --- Header mit Pin-Name und LED ---
+        # --- Header mit Pin-Name und LED (Emoji-Icons 🟢🔴🟡) ---
         header_layout = QHBoxLayout()
         pin_label = QLabel(self.pin_name)
         pin_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #E0E0E0;")
-        self.led = QLabel("●")
-        self.led.setStyleSheet("font-size: 24px; color: #555;") # Startfarbe grau
+        self.led = QLabel("⚫")  # Startfarbe: dunkel/aus
+        self.led.setStyleSheet("font-size: 28px;")  # Größer für bessere Sichtbarkeit
         header_layout.addWidget(pin_label)
         header_layout.addStretch()
         header_layout.addWidget(self.led)
@@ -104,22 +104,28 @@ class PinWidget(QFrame):
         val_color = "#95a5a6"
 
         if self.pin_type == 'D':
+            # Digitale Pins: 🟢 (HIGH) / 🔴 (LOW)
             state_text = "HIGH" if value else "LOW"
-            led_color = "#27ae60" if value else "#555"
-            val_color = "#2ecc71" if value else "#95a5a6"
+            led_icon = "🟢" if value else "🔴"
+            val_color = "#2ecc71" if value else "#e74c3c"
             self.value_label.setText(state_text)
         else: # Analog
+            # Analoge Pins: 🟢 (niedrig) / 🟡 (mittel) / 🔴 (hoch)
             self.value_label.setText(str(value))
             if value == '-':
-                led_color = "#555"
-            elif value > 768: 
-                led_color, val_color = "#e74c3c", "#e67e22"
-            elif value > 256: 
-                led_color, val_color = "#f39c12", "#f1c40f"
-            else: 
-                led_color, val_color = "#3498db", "#5dade2"
-        
-        self.led.setStyleSheet(f"font-size: 24px; color: {led_color};")
+                led_icon = "⚫"  # Unbekannt/aus
+            elif value > 768:
+                led_icon = "🔴"  # Rot (hoch)
+                val_color = "#e67e22"
+            elif value > 256:
+                led_icon = "🟡"  # Gelb (mittel)
+                val_color = "#f1c40f"
+            else:
+                led_icon = "🟢"  # Grün (niedrig)
+                val_color = "#5dade2"
+
+        self.led.setText(led_icon)
+        self.led.setStyleSheet(f"font-size: 28px;")
         self.value_label.setStyleSheet(f"""
             #ValueLabel {{
                 font-size: 28px; font-weight: bold; color: {val_color};

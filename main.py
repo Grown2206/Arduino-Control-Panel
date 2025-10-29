@@ -265,6 +265,7 @@ class MainWindow(QMainWindow):
         self.board_config_tab = self.board_setup_tab.board_config
 
         self._create_menu_bar()
+        self._create_quick_actions_toolbar()
         main_layout.addLayout(self._create_connection_bar())
 
         self.tabs.addTab(self.dashboard_tab, "🏠 Dashboard")
@@ -432,6 +433,110 @@ class MainWindow(QMainWindow):
         self.theme_action = view_menu.addAction("🌓 Dark/Light Theme")
         self.theme_action.triggered.connect(self.toggle_theme)
         self.theme_action.setShortcut("Ctrl+T")
+
+        # Hilfe-Menü
+        help_menu = menubar.addMenu("Hilfe")
+        shortcuts_action = help_menu.addAction("⌨️ Keyboard Shortcuts")
+        shortcuts_action.triggered.connect(self.show_shortcuts_help)
+        shortcuts_action.setShortcut("F1")
+        help_menu.addSeparator()
+        about_action = help_menu.addAction("ℹ️ Über")
+        about_action.triggered.connect(self.show_about_dialog)
+
+    def _create_quick_actions_toolbar(self):
+        """Erstellt die Quick Actions Toolbar mit häufig genutzten Aktionen."""
+        from PyQt6.QtWidgets import QToolBar
+        from PyQt6.QtCore import QSize
+
+        toolbar = QToolBar("Quick Actions")
+        toolbar.setMovable(False)
+        toolbar.setIconSize(QSize(32, 32))
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+
+        # === VERBINDUNG ===
+        # Connect/Disconnect Button (dynamisch)
+        self.quick_connect_action = QAction("🔌 Verbinden", self)
+        self.quick_connect_action.setToolTip("Verbinden/Trennen (Ctrl+W)")
+        self.quick_connect_action.triggered.connect(self.toggle_connection_shortcut)
+        toolbar.addAction(self.quick_connect_action)
+
+        # Ports aktualisieren
+        refresh_ports_action = QAction("🔄 Ports", self)
+        refresh_ports_action.setToolTip("Ports aktualisieren (Ctrl+P)")
+        refresh_ports_action.triggered.connect(self.refresh_ports_shortcut)
+        toolbar.addAction(refresh_ports_action)
+
+        toolbar.addSeparator()
+
+        # === SEQUENZEN ===
+        # Neue Sequenz
+        new_seq_action = QAction("➕ Neu", self)
+        new_seq_action.setToolTip("Neue Sequenz (Ctrl+N)")
+        new_seq_action.triggered.connect(self.new_sequence)
+        toolbar.addAction(new_seq_action)
+
+        # Sequenz starten
+        start_seq_action = QAction("▶️ Start", self)
+        start_seq_action.setToolTip("Sequenz starten (Ctrl+R)")
+        start_seq_action.triggered.connect(self.start_sequence_shortcut)
+        toolbar.addAction(start_seq_action)
+
+        # Sequenz stoppen
+        stop_seq_action = QAction("⏹️ Stop", self)
+        stop_seq_action.setToolTip("Sequenz stoppen (ESC)")
+        stop_seq_action.triggered.connect(self.stop_sequence_shortcut)
+        toolbar.addAction(stop_seq_action)
+
+        toolbar.addSeparator()
+
+        # === ANSICHT ===
+        # Theme Toggle
+        theme_action = QAction("🌓 Theme", self)
+        theme_action.setToolTip("Dark/Light Theme (Ctrl+T)")
+        theme_action.triggered.connect(self.toggle_theme)
+        toolbar.addAction(theme_action)
+
+        # Fullscreen
+        fullscreen_action = QAction("🖥️ Full", self)
+        fullscreen_action.setToolTip("Fullscreen (F11)")
+        fullscreen_action.triggered.connect(self.toggle_fullscreen_shortcut)
+        toolbar.addAction(fullscreen_action)
+
+        toolbar.addSeparator()
+
+        # === NAVIGATION ===
+        # Dashboard
+        dashboard_action = QAction("🏠 Home", self)
+        dashboard_action.setToolTip("Dashboard (Ctrl+1)")
+        dashboard_action.triggered.connect(lambda: self.switch_to_tab(0))
+        toolbar.addAction(dashboard_action)
+
+        # Sequenzen
+        sequences_action = QAction("⚙️ Sequenzen", self)
+        sequences_action.setToolTip("Sequenzen (Ctrl+5)")
+        sequences_action.triggered.connect(lambda: self.tabs.setCurrentWidget(self.sequence_tab))
+        toolbar.addAction(sequences_action)
+
+        # Archiv
+        archive_action = QAction("🗄️ Archiv", self)
+        archive_action.setToolTip("Archiv (Ctrl+7)")
+        archive_action.triggered.connect(lambda: self.tabs.setCurrentWidget(self.archive_tab))
+        toolbar.addAction(archive_action)
+
+        toolbar.addSeparator()
+
+        # === SYSTEM ===
+        # Speichern
+        save_action = QAction("💾 Speichern", self)
+        save_action.setToolTip("Konfiguration speichern (Ctrl+S)")
+        save_action.triggered.connect(self.save_config_shortcut)
+        toolbar.addAction(save_action)
+
+        self.addToolBar(toolbar)
+        logger.info("✅ Quick Actions Toolbar erstellt (14 Aktionen)")
+
+        # Verbindungs-Status verfolgen und Button-Text aktualisieren
+        self.worker.status_changed.connect(self._update_quick_connect_button)
 
 
     def _create_connection_bar(self): # Unverändert
@@ -622,23 +727,76 @@ class MainWindow(QMainWindow):
         """Richtet Keyboard Shortcuts ein."""
         logger.info("Richte Keyboard Shortcuts ein...")
 
+        # === DATEI OPERATIONEN ===
         # Ctrl+S: Konfiguration speichern
         save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
         save_shortcut.activated.connect(self.save_config_shortcut)
 
+        # === SEQUENZ OPERATIONEN ===
         # Ctrl+R: Aktuell ausgewählte Sequenz starten
         run_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
         run_shortcut.activated.connect(self.start_sequence_shortcut)
 
-        # Ctrl+Q: Anwendung beenden
-        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
-        quit_shortcut.activated.connect(self.close)
+        # Ctrl+N: Neue Sequenz erstellen
+        new_seq_shortcut = QShortcut(QKeySequence("Ctrl+N"), self)
+        new_seq_shortcut.activated.connect(self.new_sequence)
 
+        # Ctrl+E: Sequenz bearbeiten
+        edit_seq_shortcut = QShortcut(QKeySequence("Ctrl+E"), self)
+        edit_seq_shortcut.activated.connect(self.edit_sequence_shortcut)
+
+        # ESC: Sequenz stoppen
+        stop_shortcut = QShortcut(QKeySequence("Esc"), self)
+        stop_shortcut.activated.connect(self.stop_sequence_shortcut)
+
+        # === VERBINDUNG ===
+        # Ctrl+W: Verbindung trennen/verbinden
+        connect_shortcut = QShortcut(QKeySequence("Ctrl+W"), self)
+        connect_shortcut.activated.connect(self.toggle_connection_shortcut)
+
+        # Ctrl+P: Ports aktualisieren
+        ports_shortcut = QShortcut(QKeySequence("Ctrl+P"), self)
+        ports_shortcut.activated.connect(self.refresh_ports_shortcut)
+
+        # === ANSICHT ===
         # F5: Aktuellen Tab aktualisieren
         refresh_shortcut = QShortcut(QKeySequence("F5"), self)
         refresh_shortcut.activated.connect(self.refresh_current_tab)
 
-        logger.info("✅ Keyboard Shortcuts eingerichtet (Ctrl+S, Ctrl+R, Ctrl+Q, F5)")
+        # F11: Fullscreen
+        fullscreen_shortcut = QShortcut(QKeySequence("F11"), self)
+        fullscreen_shortcut.activated.connect(self.toggle_fullscreen_shortcut)
+
+        # Ctrl+T: Theme wechseln
+        theme_shortcut = QShortcut(QKeySequence("Ctrl+T"), self)
+        theme_shortcut.activated.connect(self.toggle_theme)
+
+        # === TAB NAVIGATION ===
+        # Ctrl+Tab: Nächster Tab
+        next_tab_shortcut = QShortcut(QKeySequence("Ctrl+Tab"), self)
+        next_tab_shortcut.activated.connect(self.next_tab_shortcut)
+
+        # Ctrl+Shift+Tab: Vorheriger Tab
+        prev_tab_shortcut = QShortcut(QKeySequence("Ctrl+Shift+Tab"), self)
+        prev_tab_shortcut.activated.connect(self.prev_tab_shortcut)
+
+        # Ctrl+1 bis Ctrl+9: Direkt zu Tab wechseln
+        for i in range(1, 10):
+            tab_shortcut = QShortcut(QKeySequence(f"Ctrl+{i}"), self)
+            tab_shortcut.activated.connect(lambda idx=i-1: self.switch_to_tab(idx))
+
+        # === ANWENDUNG ===
+        # Ctrl+Q: Anwendung beenden
+        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
+        quit_shortcut.activated.connect(self.close)
+
+        logger.info("✅ Keyboard Shortcuts eingerichtet (17 Shortcuts aktiv)")
+        logger.info("   📁 Datei: Ctrl+S (Speichern)")
+        logger.info("   ⚙️  Sequenz: Ctrl+R (Start), Ctrl+N (Neu), Ctrl+E (Bearbeiten), ESC (Stop)")
+        logger.info("   🔌 Verbindung: Ctrl+W (Toggle), Ctrl+P (Ports)")
+        logger.info("   👁️  Ansicht: F5 (Refresh), F11 (Fullscreen), Ctrl+T (Theme)")
+        logger.info("   📑 Tabs: Ctrl+Tab/Shift+Tab, Ctrl+1-9")
+        logger.info("   ❌ App: Ctrl+Q (Beenden)")
 
     def save_config_shortcut(self):
         """Speichert die aktuelle Konfiguration (Ctrl+S)."""
@@ -700,6 +858,109 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"Fehler beim Aktualisieren: {e}")
             self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def edit_sequence_shortcut(self):
+        """Bearbeitet die aktuell ausgewählte Sequenz (Ctrl+E)."""
+        try:
+            if hasattr(self.sequence_tab, 'seq_list') and self.sequence_tab.seq_list.currentItem():
+                seq_id = self.sequence_tab.seq_list.currentItem().data(Qt.ItemDataRole.UserRole)
+                if seq_id:
+                    logger.info(f"Bearbeite Sequenz via Ctrl+E: {seq_id}")
+                    self.edit_sequence(seq_id)
+                else:
+                    self.status_bar.showMessage("⚠️ Keine Sequenz ausgewählt", 2000)
+            else:
+                self.status_bar.showMessage("⚠️ Keine Sequenz ausgewählt", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Bearbeiten der Sequenz: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def stop_sequence_shortcut(self):
+        """Stoppt die laufende Sequenz (ESC)."""
+        try:
+            if hasattr(self, 'seq_runner') and self.seq_runner.isRunning():
+                logger.info("Stoppe Sequenz via ESC")
+                self.seq_runner.stop_sequence()
+                self.status_bar.showMessage("⏹️ Sequenz gestoppt", 2000)
+            else:
+                self.status_bar.showMessage("⚠️ Keine Sequenz läuft", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Stoppen der Sequenz: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def toggle_connection_shortcut(self):
+        """Verbindung trennen/verbinden (Ctrl+W)."""
+        try:
+            if self.worker.is_connected():
+                logger.info("Trenne Verbindung via Ctrl+W")
+                self.disconnect_connection()
+                self.status_bar.showMessage("🔌 Verbindung getrennt", 2000)
+            else:
+                logger.info("Stelle Verbindung her via Ctrl+W")
+                self.initiate_connection()
+                self.status_bar.showMessage("🔌 Verbinde...", 2000)
+        except Exception as e:
+            logger.error(f"Fehler beim Verbindungs-Toggle: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def refresh_ports_shortcut(self):
+        """Aktualisiert die Port-Liste (Ctrl+P)."""
+        try:
+            self.refresh_ports()
+            self.status_bar.showMessage("🔄 Ports aktualisiert", 2000)
+            logger.info("Ports aktualisiert via Ctrl+P")
+        except Exception as e:
+            logger.error(f"Fehler beim Aktualisieren der Ports: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def toggle_fullscreen_shortcut(self):
+        """Wechselt zwischen Fullscreen und Normal (F11)."""
+        try:
+            if self.isFullScreen():
+                self.showNormal()
+                self.menuBar().show()
+                self.status_bar.showMessage("🖼️ Normalmodus", 2000)
+                logger.info("Fullscreen deaktiviert via F11")
+            else:
+                self.showFullScreen()
+                self.menuBar().hide()
+                self.status_bar.showMessage("🖥️ Fullscreen (F11 zum Beenden)", 2000)
+                logger.info("Fullscreen aktiviert via F11")
+        except Exception as e:
+            logger.error(f"Fehler beim Fullscreen-Toggle: {e}")
+            self.status_bar.showMessage(f"❌ Fehler: {e}", 3000)
+
+    def next_tab_shortcut(self):
+        """Wechselt zum nächsten Tab (Ctrl+Tab)."""
+        try:
+            current_index = self.tabs.currentIndex()
+            next_index = (current_index + 1) % self.tabs.count()
+            self.tabs.setCurrentIndex(next_index)
+            logger.debug(f"Wechsel zu Tab {next_index} via Ctrl+Tab")
+        except Exception as e:
+            logger.error(f"Fehler beim Tab-Wechsel: {e}")
+
+    def prev_tab_shortcut(self):
+        """Wechselt zum vorherigen Tab (Ctrl+Shift+Tab)."""
+        try:
+            current_index = self.tabs.currentIndex()
+            prev_index = (current_index - 1) % self.tabs.count()
+            self.tabs.setCurrentIndex(prev_index)
+            logger.debug(f"Wechsel zu Tab {prev_index} via Ctrl+Shift+Tab")
+        except Exception as e:
+            logger.error(f"Fehler beim Tab-Wechsel: {e}")
+
+    def switch_to_tab(self, index):
+        """Wechselt direkt zu einem Tab per Index (Ctrl+1-9)."""
+        try:
+            if 0 <= index < self.tabs.count():
+                self.tabs.setCurrentIndex(index)
+                tab_name = self.tabs.tabText(index)
+                logger.debug(f"Wechsel zu Tab '{tab_name}' via Ctrl+{index+1}")
+            else:
+                logger.debug(f"Tab-Index {index} existiert nicht")
+        except Exception as e:
+            logger.error(f"Fehler beim Tab-Wechsel: {e}")
 
     def toggle_theme(self):
         """NEU: Wechselt zwischen Dark und Light Theme (Ctrl+T)"""
@@ -940,6 +1201,19 @@ class MainWindow(QMainWindow):
              self.dashboard_tab.activity_widget.add_entry(message)
          except AttributeError as e:
              logger.debug(f"Dashboard connection/activity widget nicht verfügbar: {e}")
+
+    def _update_quick_connect_button(self, status_message):
+        """Aktualisiert den Quick Connect Button basierend auf dem Verbindungsstatus."""
+        try:
+            if hasattr(self, 'quick_connect_action'):
+                if "Verbunden" in status_message or "Simulation" in status_message:
+                    self.quick_connect_action.setText("🔌 Trennen")
+                    self.quick_connect_action.setToolTip("Verbindung trennen (Ctrl+W)")
+                else:
+                    self.quick_connect_action.setText("🔌 Verbinden")
+                    self.quick_connect_action.setToolTip("Verbinden (Ctrl+W)")
+        except Exception as e:
+            logger.debug(f"Fehler beim Aktualisieren des Connect-Buttons: {e}")
 
     # HIER IST DIE FEHLENDE METHODE
     def update_poll_interval(self, interval_ms):
@@ -1309,6 +1583,148 @@ class MainWindow(QMainWindow):
         self.command_queue.extend(commands)
         if not self.command_timer.isActive():
             self.command_timer.start(interval_ms)
+
+    def show_shortcuts_help(self):
+        """Zeigt einen Dialog mit allen Keyboard Shortcuts (F1)."""
+        shortcuts_html = """
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 10px; }
+                h2 { color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+                h3 { color: #2c3e50; margin-top: 15px; }
+                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+                th { background-color: #3498db; color: white; }
+                tr:nth-child(even) { background-color: #f2f2f2; }
+                .shortcut { font-family: 'Courier New', monospace; font-weight: bold; color: #e74c3c; }
+            </style>
+        </head>
+        <body>
+            <h2>⌨️ Keyboard Shortcuts - Arduino Control Panel</h2>
+
+            <h3>📁 Datei Operationen</h3>
+            <table>
+                <tr><td class="shortcut">Ctrl+S</td><td>Konfiguration speichern</td></tr>
+                <tr><td class="shortcut">Ctrl+O</td><td>Konfiguration laden</td></tr>
+                <tr><td class="shortcut">Ctrl+Q</td><td>Anwendung beenden</td></tr>
+            </table>
+
+            <h3>⚙️ Sequenz Operationen</h3>
+            <table>
+                <tr><td class="shortcut">Ctrl+R</td><td>Ausgewählte Sequenz starten</td></tr>
+                <tr><td class="shortcut">Ctrl+N</td><td>Neue Sequenz erstellen</td></tr>
+                <tr><td class="shortcut">Ctrl+E</td><td>Ausgewählte Sequenz bearbeiten</td></tr>
+                <tr><td class="shortcut">ESC</td><td>Laufende Sequenz stoppen</td></tr>
+            </table>
+
+            <h3>🔌 Verbindung</h3>
+            <table>
+                <tr><td class="shortcut">Ctrl+W</td><td>Verbindung trennen/verbinden (Toggle)</td></tr>
+                <tr><td class="shortcut">Ctrl+P</td><td>Verfügbare Ports aktualisieren</td></tr>
+            </table>
+
+            <h3>👁️ Ansicht</h3>
+            <table>
+                <tr><td class="shortcut">F5</td><td>Aktuellen Tab aktualisieren</td></tr>
+                <tr><td class="shortcut">F11</td><td>Fullscreen-Modus umschalten</td></tr>
+                <tr><td class="shortcut">Ctrl+T</td><td>Dark/Light Theme wechseln</td></tr>
+            </table>
+
+            <h3>📑 Tab Navigation</h3>
+            <table>
+                <tr><td class="shortcut">Ctrl+Tab</td><td>Zum nächsten Tab wechseln</td></tr>
+                <tr><td class="shortcut">Ctrl+Shift+Tab</td><td>Zum vorherigen Tab wechseln</td></tr>
+                <tr><td class="shortcut">Ctrl+1 bis Ctrl+9</td><td>Direkt zu Tab 1-9 wechseln</td></tr>
+            </table>
+
+            <h3>❓ Hilfe</h3>
+            <table>
+                <tr><td class="shortcut">F1</td><td>Diese Hilfe anzeigen</td></tr>
+            </table>
+        </body>
+        </html>
+        """
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("⌨️ Keyboard Shortcuts")
+        dialog.setMinimumSize(700, 600)
+
+        layout = QVBoxLayout(dialog)
+        text_browser = QTextEdit()
+        text_browser.setReadOnly(True)
+        text_browser.setHtml(shortcuts_html)
+        layout.addWidget(text_browser)
+
+        close_button = QPushButton("Schließen")
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+
+        dialog.exec()
+        logger.info("Keyboard Shortcuts Hilfe angezeigt")
+
+    def show_about_dialog(self):
+        """Zeigt den Über-Dialog mit Versionsinformationen."""
+        about_html = """
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+                h1 { color: #3498db; margin-bottom: 10px; }
+                .version { font-size: 18px; color: #7f8c8d; margin: 10px 0; }
+                .description { margin: 20px 0; line-height: 1.6; }
+                .features { text-align: left; margin: 20px auto; max-width: 500px; }
+                .features li { margin: 8px 0; }
+                .footer { margin-top: 30px; font-size: 12px; color: #95a5a6; }
+            </style>
+        </head>
+        <body>
+            <h1>🤖 Arduino Control Panel</h1>
+            <p class="version"><b>Version 3.0+</b> - Drexler Dynamics Edition</p>
+
+            <div class="description">
+                <p>Professionelles Desktop-Tool zur Steuerung und Überwachung von Arduino-Boards
+                mit erweiterten Analyse- und Reporting-Funktionen.</p>
+            </div>
+
+            <div class="features">
+                <h3>✨ Hauptfunktionen:</h3>
+                <ul>
+                    <li>✅ Multi-Board Support (Uno, Nano, Mega, ESP32, etc.)</li>
+                    <li>✅ Hardware-Simulator für Tests ohne Hardware</li>
+                    <li>✅ Erweiterte Datenanalyse mit Statistiken</li>
+                    <li>✅ Multi-Format Export (PDF, Excel, CSV, HTML)</li>
+                    <li>✅ Live-Dashboard mit Widgets</li>
+                    <li>✅ Plugin-System für Erweiterungen</li>
+                    <li>✅ REST API & WebSocket Support</li>
+                    <li>✅ Dark/Light Theme</li>
+                </ul>
+            </div>
+
+            <div class="footer">
+                <p>© 2025 Drexler Dynamics | Built with PyQt6 & Python</p>
+                <p>Entwickelt von: Grown2206 | Enhanced by Claude</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("ℹ️ Über Arduino Control Panel")
+        dialog.setMinimumSize(600, 500)
+
+        layout = QVBoxLayout(dialog)
+        text_browser = QTextEdit()
+        text_browser.setReadOnly(True)
+        text_browser.setHtml(about_html)
+        layout.addWidget(text_browser)
+
+        close_button = QPushButton("Schließen")
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+
+        dialog.exec()
+        logger.info("Über-Dialog angezeigt")
 
     def closeEvent(self, event):
         """Sauberer Shutdown mit Thread-Cleanup und Ressourcen-Freigabe."""

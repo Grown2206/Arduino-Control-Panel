@@ -141,9 +141,44 @@ def get_full_stylesheet(theme="dark"):
     if theme == "light":
         return get_light_stylesheet()
 
+    # Dark theme mit Toolbar-Styling
+    toolbar_style = """
+        QToolBar {
+            background-color: #2c3e50;
+            border: 1px solid #34495e;
+            spacing: 8px;
+            padding: 5px;
+        }
+        QToolBar::separator {
+            background-color: #7f8c8d;
+            width: 2px;
+            margin: 5px;
+        }
+        QToolButton {
+            background-color: #34495e;
+            color: #ecf0f1;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 2px;
+        }
+        QToolButton:hover {
+            background-color: #5dade2;
+            border: 1px solid #3498db;
+        }
+        QToolButton:pressed {
+            background-color: #2980b9;
+        }
+        QToolButton:disabled {
+            background-color: #555;
+            color: #999;
+        }
+    """
+
     full_style = ""
     for key, style in THEME_STYLES.items():
         full_style += style
+    full_style += toolbar_style
     return full_style
 
 
@@ -236,5 +271,37 @@ def get_light_stylesheet():
         QStatusBar {
             background-color: #e0e0e0;
             color: #2c3e50;
+        }
+
+        /* Toolbar Styling für Light Theme */
+        QToolBar {
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            spacing: 8px;
+            padding: 5px;
+        }
+        QToolBar::separator {
+            background-color: #95a5a6;
+            width: 2px;
+            margin: 5px;
+        }
+        QToolButton {
+            background-color: #3498db;
+            color: white;
+            border: 1px solid #2980b9;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 2px;
+        }
+        QToolButton:hover {
+            background-color: #5dade2;
+            border: 1px solid #3498db;
+        }
+        QToolButton:pressed {
+            background-color: #2980b9;
+        }
+        QToolButton:disabled {
+            background-color: #ccc;
+            color: #999;
         }
     """

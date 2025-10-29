@@ -54,15 +54,31 @@ class ArduinoLogger:
 
         # Console Handler mit UTF-8 Encoding (für Windows-Kompatibilität)
         if console_output:
-            utf8_stdout = io.TextIOWrapper(
-                sys.stdout.buffer,
-                encoding='utf-8',
-                line_buffering=True
-            )
-            console_handler = logging.StreamHandler(utf8_stdout)
-            console_handler.setLevel(level)
-            console_handler.setFormatter(log_format)
-            root_logger.addHandler(console_handler)
+            try:
+                # Versuche, UTF-8 Encoding für Windows-Konsole zu setzen
+                if sys.platform == 'win32':
+                    # Setze Windows-Konsole auf UTF-8 Modus
+                    import os
+                    os.system('chcp 65001 >nul 2>&1')
+
+                # Erstelle UTF-8 StreamHandler mit Fehlerbehandlung
+                utf8_stdout = io.TextIOWrapper(
+                    sys.stdout.buffer,
+                    encoding='utf-8',
+                    errors='replace',  # Ersetze nicht-darstellbare Zeichen
+                    line_buffering=True
+                )
+                console_handler = logging.StreamHandler(utf8_stdout)
+                console_handler.setLevel(level)
+                console_handler.setFormatter(log_format)
+                root_logger.addHandler(console_handler)
+            except (AttributeError, OSError) as e:
+                # Fallback: Verwende Standard-StreamHandler ohne UTF-8 Wrapper
+                console_handler = logging.StreamHandler(sys.stdout)
+                console_handler.setLevel(level)
+                console_handler.setFormatter(log_format)
+                root_logger.addHandler(console_handler)
+                root_logger.warning(f"UTF-8 Konsolen-Encoding konnte nicht aktiviert werden: {e}")
 
         # File Handler mit Rotation und UTF-8 Encoding
         if file_output:

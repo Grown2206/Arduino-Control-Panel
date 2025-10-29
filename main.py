@@ -44,9 +44,10 @@ from ui.live_stats_widget import LiveStatsWidget
 from ui.branding import get_full_stylesheet, LOGO_PATH
 from ui.sequence_info_widget import SequenceInfoWidget
 
-# NEU: Konsolidierte Tabs
-from ui.pin_management_tab import PinManagementTab
-from ui.board_setup_tab import BoardSetupTab
+# Einzelne Tab-Komponenten (flache Struktur statt verschachtelter Tabs)
+from ui.pin_tab import PinTab
+from ui.pin_overview_widget import PinOverviewWidget
+from ui.board_config_tab import BoardConfigTab
 
 # NEU: Pin Usage Tracker und Heatmap
 try:
@@ -300,9 +301,10 @@ class MainWindow(QMainWindow):
                 logger.info("Live-Stats als Dock-Widget hinzugefügt")
 
 
-        # NEU: Konsolidierte Tabs
-        self.pin_management_tab = PinManagementTab(self.pin_tracker)
-        self.board_setup_tab = BoardSetupTab(self.config_manager)
+        # Einzelne Tabs (flache Struktur - keine verschachtelten Sub-Tabs)
+        self.pin_control_tab = PinTab()
+        self.pin_overview_tab = PinOverviewWidget()
+        self.board_config_tab = BoardConfigTab(self.config_manager)
 
         # Andere Tabs
         self.sensor_tab = SensorTab()
@@ -310,24 +312,56 @@ class MainWindow(QMainWindow):
         self.chart_tab = LiveChartWidget(title="Live Pin-Aufzeichnung")
         self.archive_tab = ArchiveTab()
 
-        # Backward compatibility - Zugriff auf Subtabs
-        self.pin_control_tab = self.pin_management_tab.pin_control
-        self.pin_overview_tab = self.pin_management_tab.pin_overview
-        self.board_config_tab = self.board_setup_tab.board_config
-
         self._create_menu_bar()
         self._create_quick_actions_toolbar()
         main_layout.addLayout(self._create_connection_bar())
 
         self.tabs.addTab(self.dashboard_tab, "🏠 Dashboard")
 
-        # NEU: Konsolidierte Tabs
-        self.tabs.addTab(self.board_setup_tab, "🛠️ Board Setup")
-        self.tabs.addTab(self.pin_management_tab, "🔌 Pin Management")
+        # Flache Tab-Struktur (keine verschachtelten Sub-Tabs mehr)
+        self.tabs.addTab(self.board_config_tab, "🛠️ Board Config")
+        self.tabs.addTab(self.pin_control_tab, "🔌 Pin Steuerung")
+        self.tabs.addTab(self.pin_overview_tab, "📊 Pin Übersicht")
         self.tabs.addTab(self.sensor_tab, "🌡️ Sensoren")
         self.tabs.addTab(self.sequence_tab, "⚙️ Sequenzen")
         self.tabs.addTab(self.chart_tab, "📈 Live-Aufzeichnung")
         self.tabs.addTab(self.archive_tab, "🗄️ Archiv")
+
+        # Pin Heatmap Tab (falls verfügbar)
+        if PIN_HEATMAP_AVAILABLE and self.pin_tracker:
+            try:
+                self.heatmap_tab = PinHeatmapWidget(self.pin_tracker)
+                self.tabs.addTab(self.heatmap_tab, "🔥 Pin Heatmap")
+                logger.info("Pin Heatmap Tab hinzugefügt")
+            except Exception as e:
+                logger.error(f"Pin Heatmap konnte nicht geladen werden: {e}")
+                self.heatmap_tab = None
+        else:
+            self.heatmap_tab = None
+
+        # 3D Board Visualizer Tab (falls verfügbar)
+        if BOARD_3D_AVAILABLE:
+            try:
+                self.board_3d_tab = Board3DVisualizerTab()
+                self.tabs.addTab(self.board_3d_tab, "🎮 3D Board")
+                logger.info("3D Board Visualizer Tab hinzugefügt")
+            except Exception as e:
+                logger.error(f"3D Board Visualizer konnte nicht geladen werden: {e}")
+                self.board_3d_tab = None
+        else:
+            self.board_3d_tab = None
+
+        # Hardware Profile Tab (falls verfügbar)
+        if HARDWARE_PROFILE_AVAILABLE:
+            try:
+                self.hardware_profile_tab = HardwareProfileTab()
+                self.tabs.addTab(self.hardware_profile_tab, "💾 Hardware Profile")
+                logger.info("Hardware Profile Tab hinzugefügt")
+            except Exception as e:
+                logger.error(f"Hardware Profile konnte nicht geladen werden: {e}")
+                self.hardware_profile_tab = None
+        else:
+            self.hardware_profile_tab = None
 
         # NEU: Analytics Dashboard Tab
         if ANALYTICS_DASHBOARD_AVAILABLE:
@@ -390,10 +424,6 @@ class MainWindow(QMainWindow):
                 self.multi_board_tab = None
         else:
             self.multi_board_tab = None
-
-        # Backward compatibility für Heatmap und 3D Board (jetzt in konsolidierten Tabs)
-        self.heatmap_tab = self.pin_management_tab.pin_heatmap if hasattr(self.pin_management_tab, 'pin_heatmap') else None
-        self.board_3d_tab = self.board_setup_tab.board_3d if hasattr(self.board_setup_tab, 'board_3d') else None
 
         self._add_optional_tabs() # Fügt weitere Tabs hinzu
         self._add_optional_tabs_to_dashboard() # Fügt Widgets zum Dashboard hinzu
@@ -817,6 +847,11 @@ class MainWindow(QMainWindow):
             # Connect command signal für Broadcast
             self.multi_board_tab.command_signal.connect(self.send_command)
             logger.info("Multi-Board Signals verbunden")
+
+        # === Hardware Profile Signals ===
+        if hasattr(self, 'hardware_profile_tab') and self.hardware_profile_tab:
+            self.hardware_profile_tab.load_profile_signal.connect(self.load_hardware_profile)
+            logger.info("Hardware Profile Signals verbunden")
 
     def setup_shortcuts(self):
         """Richtet Keyboard Shortcuts ein."""

@@ -4,6 +4,9 @@ import time
 import uuid
 from PyQt6.QtCore import QThread, pyqtSignal
 import random
+from core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 class SerialWorker(QThread):
     """
@@ -28,10 +31,10 @@ class SerialWorker(QThread):
             self.running = True
             self.start()
             self.status_changed.emit(f"Verbunden mit: {port}")
-            print(f"Verbindung zu {port} hergestellt.")
+            logger.info(f"Verbindung zu {port} hergestellt.")
         except serial.SerialException as e:
             self.status_changed.emit(f"Fehler: {e}")
-            print(f"Fehler bei der Verbindung: {e}")
+            logger.error(f"Fehler bei der Verbindung: {e}")
 
     def connect_simulation(self):
         """Starts the simulation mode."""
@@ -39,7 +42,7 @@ class SerialWorker(QThread):
         self.ser = "SIMULATION" # Set sentinel for simulation
         self.start()
         self.status_changed.emit("Simulation gestartet")
-        print("Simulationsmodus gestartet.")
+        logger.info("Simulationsmodus gestartet.")
 
     def disconnect_serial(self):
         """Gracefully disconnects from the serial port."""
@@ -50,12 +53,12 @@ class SerialWorker(QThread):
                 self.ser.close()
             self.ser = None
             self.status_changed.emit("Verbindung getrennt")
-            print("Verbindung getrennt.")
+            logger.info("Verbindung getrennt.")
 
     def send_command(self, command_dict):
         """Sends a JSON command to the Arduino."""
         if not self.is_connected():
-            print(f"❌ SerialWorker: Nicht verbunden, kann Command nicht senden: {command_dict}")
+            logger.warning(f"SerialWorker: Nicht verbunden, kann Command nicht senden: {command_dict}")
             return
 
         try:
@@ -66,9 +69,9 @@ class SerialWorker(QThread):
             command_str = json.dumps(command_dict) + '\n'
 
             if self.ser == "SIMULATION":
-                print(f"SIM -> Arduino: {command_str.strip()}")
+                logger.debug(f"SIM -> Arduino: {command_str.strip()}")
             else:
-                print(f"📤 -> Arduino: {command_str.strip()}")
+                logger.debug(f"-> Arduino: {command_str.strip()}")
                 self.ser.write(command_str.encode('utf-8'))
                 self.ser.flush()  # Stelle sicher, dass Daten gesendet werden
 
@@ -79,7 +82,7 @@ class SerialWorker(QThread):
 
         except (serial.SerialException, TypeError, AttributeError) as e:
             self.status_changed.emit(f"Sendefehler: {e}")
-            print(f"❌ Fehler beim Senden: {e}")
+            logger.error(f"Fehler beim Senden: {e}")
 
     def is_connected(self):
         """Checks if the connection is active."""
@@ -102,21 +105,21 @@ class SerialWorker(QThread):
                                 self.data_received.emit(data)
                             except json.JSONDecodeError:
                                 # Manchmal sendet der Arduino Debug-Infos
-                                print(f"Ungültiges JSON empfangen: {line}")
+                                logger.warning(f"Ungültiges JSON empfangen: {line}")
                 except serial.SerialException:
                     # Port wurde wahrscheinlich geschlossen
                     self.status_changed.emit("Fehler: Port nicht verfügbar.")
                     break
                 except Exception as e:
-                    print(f"Unerwarteter Fehler im Lesethread: {e}")
+                    logger.error(f"Unerwarteter Fehler im Lesethread: {e}")
                     break
             else:
                 # Beende den Thread, wenn keine Verbindung mehr besteht
                 break
-        
+
         # Aufräumen, falls der Thread unerwartet endet
         self.running = False
-        print("Serial-Worker-Thread beendet.")
+        logger.info("Serial-Worker-Thread beendet.")
     
     def _run_simulation_cycle(self):
         """Generates a cycle of simulated data."""

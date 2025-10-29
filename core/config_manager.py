@@ -1,6 +1,9 @@
 import json
 import os
 import sys
+from core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 class ConfigManager:
     """
@@ -29,25 +32,25 @@ class ConfigManager:
                 with open(self.config_file, 'r') as f:
                     self.config = json.load(f)
                     if not isinstance(self.config, dict):
-                        print(f"Warnung: Konfigurationsdatei {self.config_file} ist beschädigt. Erstelle neue Konfiguration.")
+                        logger.warning(f"Konfigurationsdatei {self.config_file} ist beschädigt. Erstelle neue Konfiguration.")
                         self.config = {}
                     return self.config
             else:
-                print(f"Hinweis: Konfigurationsdatei {self.config_file} nicht gefunden. Erstelle neue Konfiguration.")
+                logger.info(f"Konfigurationsdatei {self.config_file} nicht gefunden. Erstelle neue Konfiguration.")
                 self.config = {}
                 return self.config
         except json.JSONDecodeError:
-            print(f"Fehler: Konfigurationsdatei {self.config_file} konnte nicht dekodiert werden. Erstelle Backup und neue Konfiguration.")
+            logger.error(f"Konfigurationsdatei {self.config_file} konnte nicht dekodiert werden. Erstelle Backup und neue Konfiguration.")
             # Versuche, ein Backup zu erstellen
             try:
                 if os.path.exists(self.config_file):
                     os.rename(self.config_file, f"{self.config_file}.bak")
             except OSError as e:
-                print(f"Konnte Backup-Datei nicht erstellen: {e}")
+                logger.error(f"Konnte Backup-Datei nicht erstellen: {e}")
             self.config = {}
             return self.config
         except Exception as e:
-            print(f"Allgemeiner Fehler beim Laden der Konfiguration: {e}")
+            logger.error(f"Allgemeiner Fehler beim Laden der Konfiguration: {e}")
             self.config = {}
             return self.config
 
@@ -58,11 +61,11 @@ class ConfigManager:
         try:
             with open(self.config_file, 'w') as f:
                 json.dump(self.config, f, indent=4, sort_keys=True)
-            # print("Konfiguration erfolgreich gespeichert.") # Optional: für Debugging
+            # logger.debug("Konfiguration erfolgreich gespeichert.") # Optional: für Debugging
         except IOError as e:
-            print(f"Fehler beim Speichern der Konfiguration in {self.config_file}: {e}")
+            logger.error(f"Fehler beim Speichern der Konfiguration in {self.config_file}: {e}")
         except Exception as e:
-            print(f"Allgemeiner Fehler beim Speichern der Konfiguration: {e}")
+            logger.error(f"Allgemeiner Fehler beim Speichern der Konfiguration: {e}")
 
     def get(self, key, default=None):
         """
@@ -84,7 +87,7 @@ class ConfigManager:
         try:
             self.config[key] = value
         except Exception as e:
-            print(f"Fehler beim Setzen des Konfigurationswerts für {key}: {e}")
+            logger.error(f"Fehler beim Setzen des Konfigurationswerts für {key}: {e}")
 
     # --- Kompatibilitätsmethoden für main.py ---
 

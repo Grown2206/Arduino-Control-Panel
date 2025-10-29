@@ -129,6 +129,27 @@ except ImportError as e:
     PLUGIN_SYSTEM_AVAILABLE = False
     logger.warning(f'Plugin-System nicht verfügbar: {e}')
 
+# === SCHEDULING & AUTOMATION ===
+try:
+    from core.scheduler_manager import SchedulerManager
+    from core.trigger_system import TriggerSystem
+    from ui.scheduler_tab import SchedulerTab
+    SCHEDULER_AVAILABLE = True
+    logger.info('Scheduler & Automation verfügbar')
+except ImportError as e:
+    SCHEDULER_AVAILABLE = False
+    logger.warning(f'Scheduler & Automation nicht verfügbar: {e}')
+
+# === MULTI-BOARD MANAGEMENT ===
+try:
+    from core.multi_board_manager import MultiBoardManager
+    from ui.multi_board_tab import MultiBoardTab
+    MULTI_BOARD_AVAILABLE = True
+    logger.info('Multi-Board Management verfügbar')
+except ImportError as e:
+    MULTI_BOARD_AVAILABLE = False
+    logger.warning(f'Multi-Board Management nicht verfügbar: {e}')
+
 class MainWindow(QMainWindow):
     pin_update_for_runner = pyqtSignal(str, int)
 
@@ -201,6 +222,36 @@ class MainWindow(QMainWindow):
                 logger.error(f"Fehler beim Initialisieren des Plugin-Systems: {e}", exc_info=True)
         else:
             self.plugin_manager = None
+
+        # === Scheduler & Automation initialisieren ===
+        if SCHEDULER_AVAILABLE:
+            logger.info("Initialisiere Scheduler & Automation...")
+            try:
+                self.scheduler_manager = SchedulerManager()
+                self.trigger_system = TriggerSystem()
+
+                # Lade gespeicherte Aufgaben und Trigger
+                self.scheduler_manager.load_tasks("scheduled_tasks.json")
+                self.trigger_system.load_triggers("triggers.json")
+
+                logger.info(f"Scheduler initialisiert: {len(self.scheduler_manager.get_all_tasks())} Aufgaben, "
+                          f"{len(self.trigger_system.get_all_triggers())} Trigger")
+            except Exception as e:
+                logger.error(f"Fehler beim Initialisieren des Schedulers: {e}", exc_info=True)
+        else:
+            self.scheduler_manager = None
+            self.trigger_system = None
+
+        # === Multi-Board Management initialisieren ===
+        if MULTI_BOARD_AVAILABLE:
+            logger.info("Initialisiere Multi-Board Management...")
+            try:
+                self.multi_board_manager = MultiBoardManager()
+                logger.info("Multi-Board Manager initialisiert")
+            except Exception as e:
+                logger.error(f"Fehler beim Initialisieren des Multi-Board Managers: {e}", exc_info=True)
+        else:
+            self.multi_board_manager = None
 
         # Keyboard Shortcuts einrichten
         self.setup_shortcuts()
@@ -313,6 +364,32 @@ class MainWindow(QMainWindow):
                 self.plugin_manager_tab = None
         else:
             self.plugin_manager_tab = None
+
+        # === Scheduler & Automation Tab ===
+        if SCHEDULER_AVAILABLE and hasattr(self, 'scheduler_manager'):
+            try:
+                self.scheduler_tab = SchedulerTab(self.scheduler_manager, self.trigger_system, self.sequences)
+                self.tabs.addTab(self.scheduler_tab, "⏰ Scheduler")
+                logger.info("Scheduler Tab hinzugefügt")
+            except Exception as e:
+                logger.error(f"Scheduler Tab konnte nicht geladen werden: {e}")
+                self.scheduler_tab = None
+        else:
+            self.scheduler_tab = None
+
+        # === Multi-Board Management Tab ===
+        if MULTI_BOARD_AVAILABLE and hasattr(self, 'multi_board_manager'):
+            try:
+                # Hole verfügbare Ports
+                available_ports = [port.device for port in serial.tools.list_ports.comports()]
+                self.multi_board_tab = MultiBoardTab(self.multi_board_manager, available_ports)
+                self.tabs.addTab(self.multi_board_tab, "🔌 Multi-Board")
+                logger.info("Multi-Board Tab hinzugefügt")
+            except Exception as e:
+                logger.error(f"Multi-Board Tab konnte nicht geladen werden: {e}")
+                self.multi_board_tab = None
+        else:
+            self.multi_board_tab = None
 
         # Backward compatibility für Heatmap und 3D Board (jetzt in konsolidierten Tabs)
         self.heatmap_tab = self.pin_management_tab.pin_heatmap if hasattr(self.pin_management_tab, 'pin_heatmap') else None
@@ -722,6 +799,24 @@ class MainWindow(QMainWindow):
         try: # Relay Quick Widget
             if hasattr(self.dashboard_tab, 'relay_quick_widget'): self.dashboard_tab.relay_quick_widget.command_signal.connect(self.send_command)
         except AttributeError: pass
+
+        # === Scheduler & Automation Signals ===
+        if hasattr(self, 'scheduler_tab') and self.scheduler_tab:
+            # Wenn Scheduler eine Sequenz triggert
+            self.scheduler_tab.task_triggered.connect(self.start_sequence_from_scheduler)
+            self.scheduler_tab.trigger_activated.connect(self.start_sequence_from_trigger)
+            logger.info("Scheduler Signals verbunden")
+
+        if hasattr(self, 'trigger_system') and self.trigger_system:
+            # Forward alle Data-Events zum Trigger-System
+            self.worker.data_received.connect(self.trigger_system.process_event)
+            logger.info("Trigger System mit Data-Events verbunden")
+
+        # === Multi-Board Signals ===
+        if hasattr(self, 'multi_board_tab') and self.multi_board_tab:
+            # Connect command signal für Broadcast
+            self.multi_board_tab.command_signal.connect(self.send_command)
+            logger.info("Multi-Board Signals verbunden")
 
     def setup_shortcuts(self):
         """Richtet Keyboard Shortcuts ein."""
@@ -1726,6 +1821,26 @@ class MainWindow(QMainWindow):
         dialog.exec()
         logger.info("Über-Dialog angezeigt")
 
+    def start_sequence_from_scheduler(self, sequence_id):
+        """Startet eine Sequenz aus dem Scheduler."""
+        logger.info(f"Starte Sequenz aus Scheduler: {sequence_id}")
+        if sequence_id in self.sequences:
+            self.start_sequence(sequence_id)
+            self.status_bar.showMessage(f"⏰ Geplante Sequenz gestartet", 3000)
+        else:
+            logger.error(f"Sequenz nicht gefunden: {sequence_id}")
+            self.status_bar.showMessage(f"❌ Sequenz nicht gefunden: {sequence_id}", 3000)
+
+    def start_sequence_from_trigger(self, sequence_id):
+        """Startet eine Sequenz aus dem Trigger-System."""
+        logger.info(f"Starte Sequenz aus Trigger: {sequence_id}")
+        if sequence_id in self.sequences:
+            self.start_sequence(sequence_id)
+            self.status_bar.showMessage(f"🎯 Trigger-Sequenz gestartet", 3000)
+        else:
+            logger.error(f"Sequenz nicht gefunden: {sequence_id}")
+            self.status_bar.showMessage(f"❌ Sequenz nicht gefunden: {sequence_id}", 3000)
+
     def closeEvent(self, event):
         """Sauberer Shutdown mit Thread-Cleanup und Ressourcen-Freigabe."""
         logger.info("Anwendung wird beendet...")
@@ -1772,7 +1887,31 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 logger.error(f"Fehler beim Herunterfahren des Plugin-Systems: {e}")
 
-        # 6. Datenbank-Thread beenden
+        # 6. Scheduler & Automation speichern und stoppen
+        if hasattr(self, 'scheduler_manager') and self.scheduler_manager:
+            try:
+                self.scheduler_manager.save_tasks("scheduled_tasks.json")
+                self.scheduler_manager.stop()
+                logger.info("Scheduler beendet")
+            except Exception as e:
+                logger.error(f"Fehler beim Speichern/Stoppen des Schedulers: {e}")
+
+        if hasattr(self, 'trigger_system') and self.trigger_system:
+            try:
+                self.trigger_system.save_triggers("triggers.json")
+                logger.info("Trigger gespeichert")
+            except Exception as e:
+                logger.error(f"Fehler beim Speichern der Trigger: {e}")
+
+        # 7. Multi-Board Verbindungen trennen
+        if hasattr(self, 'multi_board_manager') and self.multi_board_manager:
+            try:
+                self.multi_board_manager.disconnect_all()
+                logger.info("Alle Multi-Board Verbindungen getrennt")
+            except Exception as e:
+                logger.error(f"Fehler beim Trennen der Multi-Board Verbindungen: {e}")
+
+        # 8. Datenbank-Thread beenden
         if hasattr(self, 'db_thread'):
             self.db_thread.quit()
             if not self.db_thread.wait(3000):

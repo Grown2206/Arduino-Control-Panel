@@ -6,23 +6,10 @@ import serial.tools.list_ports
 import time
 import numpy as np
 import base64
-import logging
 
-# Setup Logging with UTF-8 encoding to support Unicode characters (emojis, etc.)
-import io
-
-# Create a UTF-8 encoded stdout wrapper for logging to prevent UnicodeEncodeError on Windows
-utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('arduino_panel.log', encoding='utf-8'),
-        logging.StreamHandler(utf8_stdout)
-    ]
-)
-logger = logging.getLogger("ArduinoPanel")
+# Zentrales Logging-System (ersetzt altes Setup)
+from core.logging_config import get_logger
+logger = get_logger(__name__)
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLabel, QComboBox, QPushButton, QCheckBox, QStatusBar, QTabWidget,
@@ -66,57 +53,57 @@ try:
     from core.pin_usage_tracker import PinUsageTracker, get_pin_tracker
     from ui.pin_heatmap_widget import PinHeatmapWidget
     PIN_HEATMAP_AVAILABLE = True
-    print('✅ Pin Heatmap verfügbar')
+    logger.info('Pin Heatmap verfügbar')
 except ImportError as e:
     PIN_HEATMAP_AVAILABLE = False
-    print(f'⚠️ Pin Heatmap nicht verfügbar: {e}')
+    logger.warning(f'Pin Heatmap nicht verfügbar: {e}')
 
 # NEU: Dashboard Builder
 try:
     from ui.dashboard_builder import DashboardBuilderWidget
     DASHBOARD_BUILDER_AVAILABLE = True
-    print('✅ Dashboard Builder verfügbar')
+    logger.info('Dashboard Builder verfügbar')
 except ImportError as e:
     DASHBOARD_BUILDER_AVAILABLE = False
-    print(f'⚠️ Dashboard Builder nicht verfügbar: {e}')
+    logger.warning(f'Dashboard Builder nicht verfügbar: {e}')
 
 # NEU: 3D Board Visualizer
 try:
     from ui.board_3d_visualizer import Board3DVisualizerTab
     BOARD_3D_AVAILABLE = True
-    print('✅ 3D Board Visualizer verfügbar')
+    logger.info('3D Board Visualizer verfügbar')
 except ImportError as e:
     BOARD_3D_AVAILABLE = False
-    print(f'⚠️ 3D Board Visualizer nicht verfügbar: {e}')
+    logger.warning(f'3D Board Visualizer nicht verfügbar: {e}')
 
 # NEU: Analytics Dashboard
 try:
     from ui.analytics_dashboard import AnalyticsDashboardTab
     ANALYTICS_DASHBOARD_AVAILABLE = True
-    print('✅ Analytics Dashboard verfügbar')
+    logger.info('Analytics Dashboard verfügbar')
 except ImportError as e:
     ANALYTICS_DASHBOARD_AVAILABLE = False
-    print(f'⚠️ Analytics Dashboard nicht verfügbar: {e}')
+    logger.warning(f'Analytics Dashboard nicht verfügbar: {e}')
 
 # NEU: Hardware Profile Management
 try:
     from ui.hardware_profile_tab import HardwareProfileTab
     from core.hardware_profile_manager import HardwareProfileManager
     HARDWARE_PROFILE_AVAILABLE = True
-    print('✅ Hardware Profile Management verfügbar')
+    logger.info('Hardware Profile Management verfügbar')
 except ImportError as e:
     HARDWARE_PROFILE_AVAILABLE = False
-    print(f'⚠️ Hardware Profile Management nicht verfügbar: {e}')
+    logger.warning(f'Hardware Profile Management nicht verfügbar: {e}')
 
 # === NEUE FEATURES ===
 # Hardware-Simulation
 try:
     from hardware_simulator import ArduinoSimulator, create_simulator
     SIMULATOR_AVAILABLE = True
-    print('✅ Hardware-Simulator verfügbar')
+    logger.info('Hardware-Simulator verfügbar')
 except ImportError:
     SIMULATOR_AVAILABLE = False
-    print('⚠️ Hardware-Simulator nicht gefunden')
+    logger.warning('Hardware-Simulator nicht gefunden')
 
 # Theme-Manager
 try:
@@ -137,10 +124,10 @@ try:
     from plugins import PluginManager, ApplicationContext
     from ui.plugin_manager_tab import PluginManagerTab
     PLUGIN_SYSTEM_AVAILABLE = True
-    print('✅ Plugin-System verfügbar')
+    logger.info('Plugin-System verfügbar')
 except ImportError as e:
     PLUGIN_SYSTEM_AVAILABLE = False
-    print(f'⚠️ Plugin-System nicht verfügbar: {e}')
+    logger.warning(f'Plugin-System nicht verfügbar: {e}')
 
 class MainWindow(QMainWindow):
     pin_update_for_runner = pyqtSignal(str, int)
@@ -151,14 +138,14 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Drexler Dynamics - Arduino Control Panel")
         self.setGeometry(100, 100, 1600, 950)
         if os.path.exists(LOGO_PATH): self.setWindowIcon(QIcon(LOGO_PATH))
-        print("Starte Arduino Control Panel...")
+        logger.info("Starte Arduino Control Panel...")
         self.data_handlers = []
         self.sequences = {}
         self.dashboard_layouts = {}
         self.db = Database(db_file="arduino_tests.db")
         self.db_thread = QThread(); self.db_worker = DatabaseWorker(db_file="arduino_tests.db")
         self.db_worker.moveToThread(self.db_thread); self.db_thread.start()
-        print("Asynchroner Datenbank-Worker gestartet.")
+        logger.info("Asynchroner Datenbank-Worker gestartet.")
         self.config_manager = ConfigManager(config_file="arduino_config.json")
         self.worker = SerialWorker()
         self.seq_runner = SequenceRunner()
@@ -174,12 +161,12 @@ class MainWindow(QMainWindow):
 
         # === Live-Statistik-Widget ===
         self.live_stats_widget = LiveStatsWidget()
-        print("✅ Live-Statistik-Widget initialisiert")
+        logger.info("Live-Statistik-Widget initialisiert")
 
         # === Pin Usage Tracker ===
         if PIN_HEATMAP_AVAILABLE:
             self.pin_tracker = get_pin_tracker()
-            print("✅ Pin Usage Tracker initialisiert")
+            logger.info("Pin Usage Tracker initialisiert")
         else:
             self.pin_tracker = None
 
@@ -190,15 +177,15 @@ class MainWindow(QMainWindow):
 
         # ... (Advanced Features, Timer, etc.) ...
         if ADVANCED_FEATURES_AVAILABLE:
-            print("\n🔧 Integriere Advanced Features...")
+            logger.info("Integriere Advanced Features...")
             integrate_advanced_features(self)
-            print("✅ Advanced Features erfolgreich integriert!")
+            logger.info("Advanced Features erfolgreich integriert!")
         self.auto_save_timer = QTimer(self, timeout=self.auto_save_config, interval=30000); self.auto_save_timer.start()
         self.sensor_poll_timer = QTimer(self, timeout=self.poll_sensors)
 
         # === Plugin-System initialisieren ===
         if PLUGIN_SYSTEM_AVAILABLE:
-            print("\n🔌 Initialisiere Plugin-System...")
+            logger.info("Initialisiere Plugin-System...")
             try:
                 # Erstelle Application Context
                 self.app_context = ApplicationContext(self, self.db, self.config_manager)
@@ -209,18 +196,16 @@ class MainWindow(QMainWindow):
                 # Lade alle Plugins
                 self.plugin_manager.load_all_plugins()
 
-                print(f"✅ Plugin-System initialisiert: {len(self.plugin_manager.enabled_plugins)} Plugins aktiv")
+                logger.info(f"Plugin-System initialisiert: {len(self.plugin_manager.enabled_plugins)} Plugins aktiv")
             except Exception as e:
-                print(f"⚠️ Fehler beim Initialisieren des Plugin-Systems: {e}")
-                import traceback
-                traceback.print_exc()
+                logger.error(f"Fehler beim Initialisieren des Plugin-Systems: {e}", exc_info=True)
         else:
             self.plugin_manager = None
 
         # Keyboard Shortcuts einrichten
         self.setup_shortcuts()
 
-        print("\nAnwendung bereit.")
+        logger.info("Anwendung bereit.")
 
 
     def setup_ui(self):
@@ -246,14 +231,14 @@ class MainWindow(QMainWindow):
                     geometry=(10, 400, 400, 550),
                     category="Monitoring"
                 )
-                print("✅ Live-Stats zum Dashboard hinzugefügt")
+                logger.info("Live-Stats zum Dashboard hinzugefügt")
             except Exception as e:
-                print(f"⚠️ Dashboard-Integration fehlgeschlagen: {e}")
+                logger.warning(f"Dashboard-Integration fehlgeschlagen: {e}")
                 # Fallback: Dock-Widget
                 # Fallback: Als Dock-Widget
                 from PyQt6.QtWidgets import QDockWidget
                 from PyQt6.QtCore import Qt
-                
+
                 self.live_stats_dock = QDockWidget("📊 Live-Statistiken", self)
                 self.live_stats_dock.setWidget(self.live_stats_widget)
                 self.live_stats_dock.setFeatures(
@@ -261,7 +246,7 @@ class MainWindow(QMainWindow):
                     QDockWidget.DockWidgetFeature.DockWidgetFloatable
                 )
                 self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.live_stats_dock)
-                print("✅ Live-Stats als Dock-Widget hinzugefügt")
+                logger.info("Live-Stats als Dock-Widget hinzugefügt")
 
 
         # NEU: Konsolidierte Tabs
@@ -297,9 +282,9 @@ class MainWindow(QMainWindow):
             try:
                 self.analytics_tab = AnalyticsDashboardTab(db_file="arduino_tests.db")
                 self.tabs.addTab(self.analytics_tab, "📊 Analytics")
-                print("✅ Analytics Dashboard Tab hinzugefügt")
+                logger.info("Analytics Dashboard Tab hinzugefügt")
             except Exception as e:
-                print(f"⚠️ Analytics Dashboard konnte nicht geladen werden: {e}")
+                logger.error(f"Analytics Dashboard konnte nicht geladen werden: {e}")
                 self.analytics_tab = None
         else:
             self.analytics_tab = None
@@ -309,9 +294,9 @@ class MainWindow(QMainWindow):
             try:
                 self.dashboard_builder_tab = DashboardBuilderWidget()
                 self.tabs.addTab(self.dashboard_builder_tab, "🎨 Dashboard Builder")
-                print("✅ Dashboard Builder Tab hinzugefügt")
+                logger.info("Dashboard Builder Tab hinzugefügt")
             except Exception as e:
-                print(f"⚠️ Dashboard Builder Tab konnte nicht geladen werden: {e}")
+                logger.error(f"Dashboard Builder Tab konnte nicht geladen werden: {e}")
                 self.dashboard_builder_tab = None
         else:
             self.dashboard_builder_tab = None
@@ -321,9 +306,9 @@ class MainWindow(QMainWindow):
             try:
                 self.plugin_manager_tab = PluginManagerTab(self.plugin_manager)
                 self.tabs.addTab(self.plugin_manager_tab, "🧩 Plugins")
-                print("✅ Plugin-Manager Tab hinzugefügt")
+                logger.info("Plugin-Manager Tab hinzugefügt")
             except Exception as e:
-                print(f"⚠️ Plugin-Manager Tab konnte nicht geladen werden: {e}")
+                logger.error(f"Plugin-Manager Tab konnte nicht geladen werden: {e}")
                 self.plugin_manager_tab = None
         else:
             self.plugin_manager_tab = None
@@ -340,10 +325,10 @@ class MainWindow(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Bereit")
-        
+
         # In main.py, nach setup_ui()
-        print(f"Live-Stats erstellt: {hasattr(self, 'live_stats_widget')}")
-        print(f"Dashboard vorhanden: {hasattr(self, 'dashboard_tab')}")
+        logger.debug(f"Live-Stats erstellt: {hasattr(self, 'live_stats_widget')}")
+        logger.debug(f"Dashboard vorhanden: {hasattr(self, 'dashboard_tab')}")
 
 
         # === GARANTIERT: Live-Stats als Dock-Widget ===
@@ -359,30 +344,30 @@ class MainWindow(QMainWindow):
                 QDockWidget.DockWidgetFeature.DockWidgetFloatable
             )
             self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.live_stats_dock)
-            print('✅ Live-Stats Dock-Widget (Garantie-Code) hinzugefügt')
+            logger.info('Live-Stats Dock-Widget (Garantie-Code) hinzugefügt')
 
     def _add_optional_tabs(self):
         """ Fügt optionale Tabs hinzu (ohne PWM/Servo, LED Matrix) """
         try:
             from ui.data_logger_widget import DataLoggerWidget
             self.data_logger_tab = DataLoggerWidget(); self.tabs.addTab(self.data_logger_tab, "📝 Data Logger")
-            print("✅ Data Logger geladen")
+            logger.info("Data Logger geladen")
         except ImportError: self.data_logger_tab = None
         try:
             from ui.oscilloscope_widget import OscilloscopeWidget
             self.oscilloscope_tab = OscilloscopeWidget(); self.tabs.addTab(self.oscilloscope_tab, "📡 Oszilloskop")
-            print("✅ Oszilloskop geladen")
+            logger.info("Oszilloskop geladen")
         except ImportError: self.oscilloscope_tab = None
         try:
             from ui.macro_system import MacroRecorder
             self.macro_tab = MacroRecorder(); self.tabs.addTab(self.macro_tab, "🤖 Makros")
-            print("✅ Makro-Recorder geladen")
+            logger.info("Makro-Recorder geladen")
         except ImportError: self.macro_tab = None
         try:
             from ui.relay_control_tab import RelayControlTab
             self.relay_tab = RelayControlTab(self.config_manager); self.tabs.addTab(self.relay_tab, "🔩 Relais Steuerung")
-            print("✅ Relais Steuerung geladen")
-        except ImportError as e: self.relay_tab = None; print(f"⚠️ Relais Steuerung nicht verfügbar: {e}")
+            logger.info("Relais Steuerung geladen")
+        except ImportError as e: self.relay_tab = None; logger.warning(f"Relais Steuerung nicht verfügbar: {e}")
 
     def _add_optional_tabs_to_dashboard(self):
          """ Fügt Widgets zum Dashboard hinzu (ohne PWM/Servo, LED Matrix) """
@@ -418,8 +403,8 @@ class MainWindow(QMainWindow):
                 from ui.relay_quick_widget import RelayQuickWidget
                 dashboard_relay = RelayQuickWidget(self.config_manager); dashboard_relay.command_signal.connect(self.send_command)
                 self.dashboard_tab.add_optional_widget('relay_quick','Relais Schnellzugriff','🔩',dashboard_relay,(1270, 430, 280, 200),'Steuerung')
-                print("✅ Relais Schnellzugriff geladen und verbunden.")
-            except ImportError as e: print(f"⚠️ Relais Schnellzugriff nicht verfügbar: {e}")
+                logger.info("Relais Schnellzugriff geladen und verbunden.")
+            except ImportError as e: logger.warning(f"Relais Schnellzugriff nicht verfügbar: {e}")
 
     def _create_menu_bar(self):
         menubar = self.menuBar()
@@ -528,9 +513,9 @@ class MainWindow(QMainWindow):
             self.seq_runner.cycle_completed.connect(
                 self.live_stats_widget.add_cycle
             )
-            print("✅ Live-Stats Signals verbunden")
+            logger.info("Live-Stats Signals verbunden")
         else:
-            print("⚠️ SequenceRunner hat kein cycle_completed Signal")
+            logger.warning("SequenceRunner hat kein cycle_completed Signal")
 
         self.db.add_run_requested.connect(self.db_worker.add_run)
         self.db.update_run_requested.connect(self.db_worker.update_run)
@@ -747,14 +732,14 @@ class MainWindow(QMainWindow):
         else:
             if self.sim_check.isChecked():
                 # Simulation direkt starten
-                print("Starte Simulation...")
+                logger.info("Starte Simulation...")
                 self.worker.connect_simulation()
                 self.sensor_poll_timer.setInterval(self.sensor_tab.get_poll_interval())
                 self.sensor_poll_timer.start()
                 self.connect_btn.setText("Trennen")
             elif self.port_combo.currentText():
                 # Zeige Board Config Tab vor der echten Verbindung
-                print("Zeige Board Konfiguration vor Verbindung...")
+                logger.info("Zeige Board Konfiguration vor Verbindung...")
                 self.tabs.setCurrentWidget(self.board_config_tab)
                 # Der eigentliche Verbindungsaufbau geschieht in apply_config_and_connect
             else:
@@ -767,13 +752,13 @@ class MainWindow(QMainWindow):
              QMessageBox.warning(self, "Fehler", "Kein Port ausgewählt für Verbindung nach Konfiguration!")
              return
 
-        print(f"Empfangene Konfiguration zum Senden an {port}: {config_data}")
+        logger.info(f"Empfangene Konfiguration zum Senden an {port}: {config_data}")
         self.active_sensor_config_for_polling = config_data.get('active_sensors', {})
 
         # 1. Konfigurationsbefehle senden (sobald Verbindung steht)
         def send_config_after_connect(status_message):
             if "Verbunden" in status_message:
-                print("Verbindung hergestellt, sende Sensor-Konfiguration...")
+                logger.info("Verbindung hergestellt, sende Sensor-Konfiguration...")
                 # Trenne dieses Signal, um Endlosschleife zu vermeiden
                 try: self.worker.status_changed.disconnect(send_config_after_connect)
                 except TypeError: pass # Falls schon getrennt
@@ -806,31 +791,31 @@ class MainWindow(QMainWindow):
                 if commands:
                     self._queue_commands(commands, interval_ms=20)
 
-                print("Sensor-Konfiguration gesendet.")
+                logger.info("Sensor-Konfiguration gesendet.")
                 # Starte Polling Timer NACHDEM Konfig gesendet wurde
                 self.sensor_poll_timer.setInterval(self.sensor_tab.get_poll_interval()) # Nutze Intervall vom SensorTab
                 self.sensor_poll_timer.start()
-                print(f"Sensor Polling gestartet (Intervall: {self.sensor_poll_timer.interval()}ms).")
+                logger.info(f"Sensor Polling gestartet (Intervall: {self.sensor_poll_timer.interval()}ms).")
                 self.connect_btn.setText("Trennen")
                 # Wechsle zurück zum Dashboard nach erfolgreicher Konfiguration/Verbindung
                 self.tabs.setCurrentWidget(self.dashboard_tab)
 
 
             elif "Fehler" in status_message:
-                 print("Verbindungsfehler, Konfiguration nicht gesendet.")
+                 logger.error("Verbindungsfehler, Konfiguration nicht gesendet.")
                  try: self.worker.status_changed.disconnect(send_config_after_connect)
                  except TypeError: pass
 
         # Verbinde das Signal *bevor* der Verbindungsversuch gestartet wird
         self.worker.status_changed.connect(send_config_after_connect)
-        print(f"Versuche Verbindung zu {port}...")
+        logger.info(f"Versuche Verbindung zu {port}...")
         self.worker.connect_serial(port)
         # Button wird erst in send_config_after_connect auf "Trennen" gesetzt
 
     def disconnect_connection(self):
         """ Trennt die Verbindung und stoppt Timer """
         if self.worker.is_connected():
-            print("Trenne Verbindung...")
+            logger.info("Trenne Verbindung...")
             self.sensor_poll_timer.stop()
             self.worker.disconnect_serial()
             self.connect_btn.setText("Verbinden")
@@ -1385,7 +1370,8 @@ class MainWindow(QMainWindow):
 # --- Main execution ---
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    if not os.path.exists("assets"): print("WARNUNG: 'assets'-Ordner nicht gefunden...")
+    if not os.path.exists("assets"):
+        logger.warning("'assets'-Ordner nicht gefunden...")
     # Optional: Lade Stylesheet
     try: from ui.branding import get_full_stylesheet; app.setStyleSheet(get_full_stylesheet())
     except ImportError: pass
@@ -1421,13 +1407,13 @@ if __name__ == "__main__":
             self.worker.connect('SIM')
             
             self.status_bar.showMessage('🎮 Simulator-Modus aktiviert')
-            print('🎮 Simulator-Modus aktiviert')
+            logger.info('Simulator-Modus aktiviert')
         else:
             # Zurück zu echtem Arduino
             self.worker = SerialWorker()
             self.setup_connections()
             self.status_bar.showMessage('🔌 Arduino-Modus aktiviert')
-            print('🔌 Arduino-Modus aktiviert')
+            logger.info('Arduino-Modus aktiviert')
 
     def change_theme(self, theme_name: str):
         """Ändert das UI-Theme."""
@@ -1436,7 +1422,7 @@ if __name__ == "__main__":
         
         self.theme_manager.apply_theme(theme_name)
         self.status_bar.showMessage(f'Theme geändert: {theme_name}')
-        print(f'🎨 Theme gewechselt zu: {theme_name}')
+        logger.info(f'Theme gewechselt zu: {theme_name}')
 
     def toggle_fullscreen(self):
         """Wechselt zwischen Fullscreen und Normal."""
@@ -1518,13 +1504,13 @@ if __name__ == "__main__":
             self.worker.connect('SIM')
             
             self.status_bar.showMessage('🎮 Simulator-Modus aktiviert')
-            print('🎮 Simulator-Modus aktiviert')
+            logger.info('Simulator-Modus aktiviert')
         else:
             # Zurück zu echtem Arduino
             self.worker = SerialWorker()
             self.setup_connections()
             self.status_bar.showMessage('🔌 Arduino-Modus aktiviert')
-            print('🔌 Arduino-Modus aktiviert')
+            logger.info('Arduino-Modus aktiviert')
 
     def change_theme(self, theme_name: str):
         """Ändert das UI-Theme."""
@@ -1533,7 +1519,7 @@ if __name__ == "__main__":
         
         self.theme_manager.apply_theme(theme_name)
         self.status_bar.showMessage(f'Theme geändert: {theme_name}')
-        print(f'🎨 Theme gewechselt zu: {theme_name}')
+        logger.info(f'Theme gewechselt zu: {theme_name}')
 
     def toggle_fullscreen(self):
         """Wechselt zwischen Fullscreen und Normal."""
@@ -1578,7 +1564,7 @@ if __name__ == "__main__":
             QDockWidget.DockWidgetFeature.DockWidgetFloatable
         )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.live_stats_dock)
-        print("✅ Live-Stats als Dock-Widget hinzugefügt (Fallback)")
+        logger.info("Live-Stats als Dock-Widget hinzugefügt (Fallback)")
 
         
         # Fehlerrate

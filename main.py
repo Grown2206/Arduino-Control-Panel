@@ -24,10 +24,10 @@ from core.database_worker import DatabaseWorker
 from core.config_manager import ConfigManager
 from core.serial_worker import SerialWorker
 from core.sequence_runner import SequenceRunner
-from core.validators import PinValidator, SensorValidator, ConfigValidator
+from core.validators import ConfigValidator
 
 # --- ANALYSIS ---
-from analysis.trend_analyzer import TrendAnalyzer  # ✅ Erweiterte Version mit Quality-Metrics  # ✅ Erweiterte Version mit Quality-Metrics
+from analysis.trend_analyzer import TrendAnalyzer
 from analysis.report_generator import ReportGenerator
 from analysis.report_viewer import ReportViewerDialog
 from analysis.comparison_viewer import ComparisonViewerDialog
@@ -106,19 +106,7 @@ except ImportError:
     SIMULATOR_AVAILABLE = False
     logger.warning('Hardware-Simulator nicht gefunden')
 
-# Theme-Manager
-try:
-    from ui.theme_manager import ThemeManager
-    THEME_MANAGER_AVAILABLE = True
-except ImportError:
-    THEME_MANAGER_AVAILABLE = False
-
-# --- ADVANCED FEATURES ---
-try:
-    from advanced_features_fixed import integrate_advanced_features
-    ADVANCED_FEATURES_AVAILABLE = True
-except ImportError:
-    ADVANCED_FEATURES_AVAILABLE = False
+# Theme-Manager und Advanced Features wurden entfernt (Dateien existieren nicht)
 
 # === PLUGIN SYSTEM ===
 try:
@@ -197,11 +185,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(get_full_stylesheet())
         self.load_saved_config() # Lädt auch Board Config
 
-        # ... (Advanced Features, Timer, etc.) ...
-        if ADVANCED_FEATURES_AVAILABLE:
-            logger.info("Integriere Advanced Features...")
-            integrate_advanced_features(self)
-            logger.info("Advanced Features erfolgreich integriert!")
+        # Auto-Save Timer
         self.auto_save_timer = QTimer(self, timeout=self.auto_save_config, interval=30000); self.auto_save_timer.start()
         self.sensor_poll_timer = QTimer(self, timeout=self.poll_sensors)
 
